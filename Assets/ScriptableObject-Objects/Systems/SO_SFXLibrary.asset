@@ -1,0 +1,82 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f5b1abc36e91fb34dba9e1d3dfeed08b, type: 3}
+  m_Name: SO_SFXLibrary
+  m_EditorClassIdentifier: Assembly-CSharp::SfxLibrary
+  Entries:
+  - Type: 0
+    Clips:
+    - {fileID: 8300000, guid: 7a2e0d7abdec7124d98e0ac3147538be, type: 3}
+    - {fileID: 8300000, guid: 9a0d7e3d781535340b8c0daa2e6de610, type: 3}
+    - {fileID: 8300000, guid: 204944b878fa0d14d8a05008bbfe4d41, type: 3}
+    - {fileID: 8300000, guid: 343bffa4873000a49a824934f95c357a, type: 3}
+    - {fileID: 8300000, guid: 7b1c869aaea74194dbc44522b3011642, type: 3}
+    - {fileID: 8300000, guid: 1e75ae2416e604a4392fa8a891af1043, type: 3}
+    - {fileID: 8300000, guid: 3b1fb8e229fc3dc4ba2956a461906c34, type: 3}
+    - {fileID: 8300000, guid: 51c3d89ce70293e44acb39b341733266, type: 3}
+    - {fileID: 8300000, guid: 12deac279d676ea48864328d3760e910, type: 3}
+    - {fileID: 8300000, guid: 063a1edf98abe0446b882f05510a40e3, type: 3}
+    - {fileID: 8300000, guid: 7f91d46fc84169d42acb806e5c6d673c, type: 3}
+    - {fileID: 8300000, guid: 2bef4e722b58fab4880d209abb369f56, type: 3}
+    - {fileID: 8300000, guid: d3dfe3b14d850d84880956c4fd502425, type: 3}
+    - {fileID: 8300000, guid: 4603aa643245cf24a9ffee4a51b7c929, type: 3}
+    - {fileID: 8300000, guid: 8fbb845ad0094144bbaec913873276aa, type: 3}
+    - {fileID: 8300000, guid: 9e17b9fcfd5dc174fad2e77218ba5b60, type: 3}
+    - {fileID: 8300000, guid: 82614423ad96f4047b9a3ab288613a5a, type: 3}
+    - {fileID: 8300000, guid: 53fe9f52c3b05564b81da58708d9279f, type: 3}
+    - {fileID: 8300000, guid: 86c51b9080e057740aecc83284529fca, type: 3}
+    - {fileID: 8300000, guid: 851d2e70dcb0fca4999344c3994ae1fd, type: 3}
+    - {fileID: 8300000, guid: 15dba9c9a62889446969dabe01c3497a, type: 3}
+    - {fileID: 8300000, guid: 9d205a4bf96e8504cbb3bee911e998d4, type: 3}
+    MinVolume: 0.5
+    MaxVolume: 0.65
+    MinPitch: 1.05
+    MaxPitch: 1.25
+  - Type: 2
+    Clips:
+    - {fileID: 8300000, guid: aa50277cee2aab244951a6eda430c175, type: 3}
+    MinVolume: 0.35
+    MaxVolume: 0.38
+    MinPitch: 1.5
+    MaxPitch: 1.54
+  - Type: 3
+    Clips:
+    - {fileID: 8300000, guid: 98c738cd0c793ac45926332061d2755d, type: 3}
+    MinVolume: 0.7
+    MaxVolume: 0.75
+    MinPitch: 1.25
+    MaxPitch: 1.5
+  - Type: 4
+    Clips:
+    - {fileID: 8300000, guid: 3b986a8c02b40954ca3e3e50733b207d, type: 3}
+    - {fileID: 8300000, guid: cd8de1f499030a04f894c81815a87512, type: 3}
+    - {fileID: 8300000, guid: 7fc952e16b11e8d4d826d653d2de1393, type: 3}
+    - {fileID: 8300000, guid: c773bd629920b7e4f91d3c50330abfdc, type: 3}
+    - {fileID: 8300000, guid: 8356a0cea8cb0bd499294cc8d8b09a5f, type: 3}
+    MinVolume: 0.07
+    MaxVolume: 0.1
+    MinPitch: 1.1
+    MaxPitch: 1.25
+  - Type: 1
+    Clips:
+    - {fileID: 8300000, guid: 5f5adf9a27b773d44b88d350dd647852, type: 3}
+    MinVolume: 0.5
+    MaxVolume: 0.65
+    MinPitch: 0.9
+    MaxPitch: 1
+  - Type: 5
+    Clips:
+    - {fileID: 8300000, guid: 5f5adf9a27b773d44b88d350dd647852, type: 3}
+    MinVolume: 0.5
+    MaxVolume: 0.65
+    MinPitch: 0.9
+    MaxPitch: 1

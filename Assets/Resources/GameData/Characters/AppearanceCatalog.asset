@@ -1,0 +1,265 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: AppearanceCatalog
+  m_EditorClassIdentifier: Assembly-CSharp::CharacterAppearanceCatalogAsset
+  headOptions:
+  - Id: Head01_Male
+    DisplayName: Head01 Male
+  - Id: Head02_Female
+    DisplayName: Head02 Female
+  - Id: Head03_Blue
+    DisplayName: Head03 Blue
+  - Id: Head03_Brown
+    DisplayName: Head03 Brown
+  - Id: Head03_Grey
+    DisplayName: Head03 Grey
+  - Id: Head03_Purple
+    DisplayName: Head03 Purple
+  - Id: Head03_Red
+    DisplayName: Head03 Red
+  - Id: Head03_Yellow
+    DisplayName: Head03 Yellow
+  - Id: Head04_Blue
+    DisplayName: Head04 Blue
+  - Id: Head04_Brown
+    DisplayName: Head04 Brown
+  - Id: Head04_Grey
+    DisplayName: Head04 Grey
+  - Id: Head04_Purple
+    DisplayName: Head04 Purple
+  - Id: Head04_Red
+    DisplayName: Head04 Red
+  - Id: Head04_Yellow
+    DisplayName: Head04 Yellow
+  - Id: Head05_Santa
+    DisplayName: Head05 Santa
+  - Id: HeadArmor01
+    DisplayName: HeadArmor01
+  - Id: HeadArmor02
+    DisplayName: HeadArmor02
+  - Id: HeadArmor03
+    DisplayName: HeadArmor03
+  - Id: HeadArmor04
+    DisplayName: HeadArmor04
+  - Id: HeadArmor05
+    DisplayName: HeadArmor05
+  hairOptions:
+  - Id: Hair01
+    DisplayName: Hair01
+  - Id: Hair02
+    DisplayName: Hair02
+  - Id: Hair03
+    DisplayName: Hair03
+  - Id: Hair04
+    DisplayName: Hair04
+  - Id: Hair05
+    DisplayName: Hair05
+  - Id: Hair06
+    DisplayName: Hair06
+  - Id: Hair07
+    DisplayName: Hair07
+  - Id: Hair08
+    DisplayName: Hair08
+  - Id: Hair09
+    DisplayName: Hair09
+  - Id: Hair10
+    DisplayName: Hair10
+  - Id: Hair11
+    DisplayName: Hair11
+  - Id: Hair12
+    DisplayName: Hair12
+  - Id: Hair13
+    DisplayName: Hair13
+  eyeOptions:
+  - Id: Eye01
+    DisplayName: Eye01
+  - Id: Eye02
+    DisplayName: Eye02
+  - Id: Eye03
+    DisplayName: Eye03
+  - Id: Eye04
+    DisplayName: Eye04
+  - Id: Eye05
+    DisplayName: Eye05
+  - Id: Eye06
+    DisplayName: Eye06
+  - Id: Eye07
+    DisplayName: Eye07
+  - Id: Eye08
+    DisplayName: Eye08
+  - Id: Eye09
+    DisplayName: Eye09
+  - Id: Eye10
+    DisplayName: Eye10
+  - Id: Eye11
+    DisplayName: Eye11
+  - Id: Eye12
+    DisplayName: Eye12
+  - Id: Eyebrow01
+    DisplayName: Eyebrow01
+  - Id: Eyebrow02
+    DisplayName: Eyebrow02
+  mouthOptions:
+  - Id: Mouth01
+    DisplayName: Mouth01
+  - Id: Mouth02
+    DisplayName: Mouth02
+  - Id: Mouth03
+    DisplayName: Mouth03
+  - Id: Mouth04
+    DisplayName: Mouth04
+  - Id: Mouth05
+    DisplayName: Mouth05
+  - Id: Mouth06
+    DisplayName: Mouth06
+  - Id: Mouth07
+    DisplayName: Mouth07
+  - Id: Mouth08
+    DisplayName: Mouth08
+  - Id: Mouth09
+    DisplayName: Mouth09
+  - Id: Mouth10
+    DisplayName: Mouth10
+  - Id: Mouth11
+    DisplayName: Mouth11
+  - Id: Mouth12
+    DisplayName: Mouth12
+  outfitOptions:
+  - Id: Body01
+    DisplayName: Body 01
+  - Id: Body02
+    DisplayName: Body 02
+  - Id: Body03
+    DisplayName: Body 03
+  weaponRightOptions:
+  - Id: None
+    DisplayName: None
+  - Id: OHS01_Stick
+    DisplayName: OHS01 Stick
+  - Id: OHS02_Niddle
+    DisplayName: OHS02 Niddle
+  - Id: OHS03_Sword
+    DisplayName: OHS03 Sword
+  - Id: OHS04_Sword
+    DisplayName: OHS04 Sword
+  - Id: OHS05_Sword
+    DisplayName: OHS05 Sword
+  - Id: OHS06_Sword
+    DisplayName: OHS06 Sword
+  - Id: OHS07_Sword
+    DisplayName: OHS07 Sword
+  - Id: OHS08_Sword
+    DisplayName: OHS08 Sword
+  - Id: OHS09_Sword
+    DisplayName: OHS09 Sword
+  - Id: OHS10_Axe
+    DisplayName: OHS10 Axe
+  - Id: OHS11_Hammer
+    DisplayName: OHS11 Hammer
+  - Id: OHS12_Sword
+    DisplayName: OHS12 Sword
+  hatOptions:
+  - Id: None
+    DisplayName: None
+  - Id: Hat01
+    DisplayName: Hat01
+  - Id: Hat02
+    DisplayName: Hat02
+  - Id: Hat03
+    DisplayName: Hat03
+  - Id: Hat04
+    DisplayName: Hat04
+  - Id: Hat05
+    DisplayName: Hat05
+  - Id: Hat06
+    DisplayName: Hat06
+  - Id: Hat07
+    DisplayName: Hat07
+  - Id: Hat08
+    DisplayName: Hat08
+  - Id: Hat09
+    DisplayName: Hat09
+  - Id: Hat10
+    DisplayName: Hat10
+  - Id: Hat11
+    DisplayName: Hat11
+  - Id: Hat12
+    DisplayName: Hat12
+  - Id: Hat13
+    DisplayName: Hat13
+  - Id: Hat14
+    DisplayName: Hat14
+  capeOptions:
+  - Id: None
+    DisplayName: None
+  hornsOptions:
+  - Id: None
+    DisplayName: None
+  - Id: AC05_Horn01
+    DisplayName: AC05 Horn01
+  - Id: AC05_Horn02
+    DisplayName: AC05 Horn02
+  - Id: AC05_Horn03
+    DisplayName: AC05 Horn03
+  - Id: AC05_Horn04
+    DisplayName: AC05 Horn04
+  accessoryOptions:
+  - Id: None
+    DisplayName: None
+  ninjaMaskOptions:
+  - Id: None
+    DisplayName: None
+  - Id: AC08_NinjaMask01
+    DisplayName: AC08 NinjaMask01
+  - Id: AC08_NinjaMask02
+    DisplayName: AC08 NinjaMask02
+  - Id: AC08_NinjaMask03
+    DisplayName: AC08 NinjaMask03
+  - Id: AC08_NinjaMask04
+    DisplayName: AC08 NinjaMask04
+  - Id: AC08_NinjaMask05
+    DisplayName: AC08 NinjaMask05
+  - Id: AC08_NinjaMask06
+    DisplayName: AC08 NinjaMask06
+  - Id: AC08_NinjaMask07
+    DisplayName: AC08 NinjaMask07
+  - Id: AC08_NinjaMask08
+    DisplayName: AC08 NinjaMask08
+  mustacheOptions:
+  - Id: None
+    DisplayName: None
+  - Id: AC10_Mustache01
+    DisplayName: AC10 Mustache01
+  - Id: AC10_Mustache02
+    DisplayName: AC10 Mustache02
+  - Id: AC10_Mustache03
+    DisplayName: AC10 Mustache03
+  - Id: AC10_Mustache04
+    DisplayName: AC10 Mustache04
+  - Id: AC10_Mustache05
+    DisplayName: AC10 Mustache05
+  - Id: AC10_Mustache06
+    DisplayName: AC10 Mustache06
+  paletteOptions:
+  - {r: 1, g: 1, b: 1, a: 1}
+  - {r: 0.92, g: 0.8, b: 0.67, a: 1}
+  - {r: 0.72, g: 0.56, b: 0.42, a: 1}
+  - {r: 0.38, g: 0.24, b: 0.16, a: 1}
+  - {r: 0.95, g: 0.75, b: 0.2, a: 1}
+  - {r: 0.92, g: 0.38, b: 0.34, a: 1}
+  - {r: 0.92, g: 0.52, b: 0.82, a: 1}
+  - {r: 0.57, g: 0.42, b: 0.89, a: 1}
+  - {r: 0.22, g: 0.56, b: 0.96, a: 1}
+  - {r: 0.18, g: 0.82, b: 0.86, a: 1}
+  - {r: 0.44, g: 0.74, b: 0.38, a: 1}
+  - {r: 0.12, g: 0.12, b: 0.14, a: 1}

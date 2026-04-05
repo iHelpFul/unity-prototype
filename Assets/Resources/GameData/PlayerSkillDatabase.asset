@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 34d1197f27e44454fabeacc66883f39d, type: 3}
+  m_Name: PlayerSkillDatabase
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerSkillDatabaseAsset
+  definitions:
+  - {fileID: 11400000, guid: f4de2aa7c88341b409634152539241fd, type: 2}
+  - {fileID: 11400000, guid: e87a90b6b2e76ea4c945f305f8fc8c55, type: 2}
+  - {fileID: 11400000, guid: d28a88ab4d766814ba646e73b88bb4a6, type: 2}
+  - {fileID: 11400000, guid: eb4b65d3c30710d4093b3fd8861c1099, type: 2}
+  - {fileID: 11400000, guid: 0f156011f61469f4ab028edd50646dba, type: 2}
+  - {fileID: 11400000, guid: 887f88b7e160e4a41832e88e97651424, type: 2}
+  - {fileID: 11400000, guid: 4394c9df15f83074785cf2f2af700db7, type: 2}
+  - {fileID: 11400000, guid: 851ba2d7e97597445af1fd1bfdcf5ded, type: 2}
+  - {fileID: 11400000, guid: abb9a479c30f037438f95c2a1742dc89, type: 2}

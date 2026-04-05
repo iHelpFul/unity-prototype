@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fa856fa0726af624e8f3c4baaa180a9e, type: 3}
+  m_Name: PowerStrike
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerSkillDefinition
+  skillId: warrior_power_strike
+  displayName: Power Strike
+  jobType: 1
+  skillType: 2
+  maxLevel: 20
+  defaultSlotIndex: 1
+  manaCost: 8
+  cooldown: 0
+  range: 1.9
+  damageMultiplier: 1.85
+  hitCount: 1
+  hitInterval: 0
+  animationVariantIndex: 4
+  animatorStateName: Combo04_InPlace_SingleSword
+  animationSpeed: 1.08
+  attackDuration: 0.92
+  targetingMode: 0
+  maxTargets: 3
+  projectileCount: 1
+  projectileSpeed: 0
+  projectileRadius: 0.2
+  projectileLifetime: 0.5
+  projectileSpreadAngle: 0
+  projectileSpawnForwardOffset: 0.8
+  projectileSpawnUpOffset: 1
+  projectileVisualScale: 0.2

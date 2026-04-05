@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 61f9975f809c25f4fbf1c89c9d479653, type: 3}
+  m_Name: ThiefBasicAttack
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerBasicAttackProfile
+  jobType: 2
+  animationVariantCount: 2
+  maxChainCount: 2
+  selectionMode: 1
+  attackCooldown: 0.6
+  maxAttackDuration: 1
+  attackAnimationSpeed: 0.86
+  maxTargets: 1
+  basicDamageMultiplier: 1
+  maxComboCounter: 0
+  comboResetDelay: 0
+  comboDamageBonusPerStack: 0
+  supportsComboCounter: 0

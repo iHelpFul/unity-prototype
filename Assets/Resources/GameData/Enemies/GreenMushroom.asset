@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ab44b42e34c35c741bf4c74cc2783f5b, type: 3}
+  m_Name: GreenMushroom
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyDefinition
+  enemyType: 2
+  maxHP: 30
+  defense: 1
+  expReward: 11
+  contactDamage: 5
+  animatedAttackDamage: 9
+  minMesoDrop: 6
+  maxMesoDrop: 14
+  mesoDropChance: 0.85
+  redPotionDropCount: 1
+  redPotionDropChance: 0.22
+  bluePotionDropCount: 1
+  bluePotionDropChance: 0.2
+  commonEtcItem: {fileID: 0}
+  commonEtcDropCount: 1
+  commonEtcDropChance: 0.4
+  corpseDuration: 1.25
+  respawnDelay: 6.5

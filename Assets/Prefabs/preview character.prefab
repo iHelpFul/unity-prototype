@@ -1,0 +1,418 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &8037118814750053398
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5271194171015659004}
+  - component: {fileID: 788695554066599553}
+  - component: {fileID: 8187249432561774761}
+  - component: {fileID: 4118400871414156198}
+  m_Layer: 0
+  m_Name: preview character
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5271194171015659004
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8037118814750053398}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &788695554066599553
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8037118814750053398}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a07442018dd775442976203e51e0d6aa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CharacterAppearanceVisualController
+  headOptions:
+  - OptionId: Head01_Male
+    Root: {fileID: 0}
+    HairColorSlot: 0
+    SkinColorSlot: 9
+    WeaponRightColorSlot: 0
+    PrimaryColorSlot: 0
+    SecondaryColorSlot: 0
+  - OptionId: Head02_Female
+    Root: {fileID: 0}
+    HairColorSlot: 0
+    SkinColorSlot: 9
+    WeaponRightColorSlot: 0
+    PrimaryColorSlot: 0
+    SecondaryColorSlot: 0
+  - OptionId: Head03_Blue
+    Root: {fileID: 0}
+    HairColorSlot: 0
+    SkinColorSlot: 9
+    WeaponRightColorSlot: 0
+    PrimaryColorSlot: 0
+    SecondaryColorSlot: 0
+  - OptionId: Head03_Brown
+    Root: {fileID: 0}
+    HairColorSlot: 0
+    SkinColorSlot: 9
+    WeaponRightColorSlot: 0
+    PrimaryColorSlot: 0
+    SecondaryColorSlot: 0
+  - OptionId: Head03_Grey
+    Root: {fileID: 0}
+    HairColorSlot: 0
+    SkinColorSlot: 9
+    WeaponRightColorSlot: 0
+    PrimaryColorSlot: 0
+    SecondaryColorSlot: 0
+  - OptionId: Head03_Purple
+    Root: {fileID: 0}
+    HairColorSlot: 0
+    SkinColorSlot: 9
+    WeaponRightColorSlot: 0
+    PrimaryColorSlot: 0
+    SecondaryColorSlot: 0
+  - OptionId: Head03_Red
+    Root: {fileID: 0}
+    HairColorSlot: 0
+    SkinColorSlot: 9
+    WeaponRightColorSlot: 0
+    PrimaryColorSlot: 0
+    SecondaryColorSlot: 0
+  - OptionId: Head03_Yellow
+    Root: {fileID: 0}
+    HairColorSlot: 0
+    SkinColorSlot: 9
+    WeaponRightColorSlot: 0
+    PrimaryColorSlot: 0
+    SecondaryColorSlot: 0
+  - OptionId: Head04_Blue
+    Root: {fileID: 0}
+    HairColorSlot: 0
+    SkinColorSlot: 9
+    WeaponRightColorSlot: 0
+    PrimaryColorSlot: 0
+    SecondaryColorSlot: 0
+  - OptionId: Head04_Brown
+    Root: {fileID: 0}
+    HairColorSlot: 0
+    SkinColorSlot: 9
+    WeaponRightColorSlot: 0
+    PrimaryColorSlot: 0
+    SecondaryColorSlot: 0
+  - OptionId: Head04_Grey
+    Root: {fileID: 0}
+    HairColorSlot: 0
+    SkinColorSlot: 9
+    WeaponRightColorSlot: 0
+    PrimaryColorSlot: 0
+    SecondaryColorSlot: 0
+  hairOptions:
+  - OptionId: Hair01
+    Root: {fileID: 0}
+    HairColorSlot: 4
+    SkinColorSlot: 0
+    WeaponRightColorSlot: 0
+    PrimaryColorSlot: 0
+    SecondaryColorSlot: 0
+  - OptionId: Hair02
+    Root: {fileID: 0}
+    HairColorSlot: 7
+    SkinColorSlot: 0
+    WeaponRightColorSlot: 0
+    PrimaryColorSlot: 0
+    SecondaryColorSlot: 0
+  - OptionId: Hair03
+    Root: {fileID: 0}
+    HairColorSlot: 1
+    SkinColorSlot: 0
+    WeaponRightColorSlot: 0
+    PrimaryColorSlot: 0
+    SecondaryColorSlot: 0
+  eyeOptions:
+  - OptionId: Eye01
+    Root: {fileID: 0}
+    HairColorSlot: 0
+    SkinColorSlot: 0
+    WeaponRightColorSlot: 0
+    PrimaryColorSlot: 0
+    SecondaryColorSlot: 0
+  - OptionId: Eye02
+    Root: {fileID: 0}
+    HairColorSlot: 0
+    SkinColorSlot: 0
+    WeaponRightColorSlot: 0
+    PrimaryColorSlot: 0
+    SecondaryColorSlot: 0
+  - OptionId: Eye03
+    Root: {fileID: 0}
+    HairColorSlot: 0
+    SkinColorSlot: 0
+    WeaponRightColorSlot: 0
+    PrimaryColorSlot: 0
+    SecondaryColorSlot: 0
+  - OptionId: Eye04
+    Root: {fileID: 0}
+    HairColorSlot: 0
+    SkinColorSlot: 0
+    WeaponRightColorSlot: 0
+    PrimaryColorSlot: 0
+    SecondaryColorSlot: 0
+  - OptionId: Eye05
+    Root: {fileID: 0}
+    HairColorSlot: 0
+    SkinColorSlot: 0
+    WeaponRightColorSlot: 0
+    PrimaryColorSlot: 0
+    SecondaryColorSlot: 0
+  - OptionId: Eye06
+    Root: {fileID: 0}
+    HairColorSlot: 0
+    SkinColorSlot: 0
+    WeaponRightColorSlot: 0
+    PrimaryColorSlot: 0
+    SecondaryColorSlot: 0
+  - OptionId: Eye07
+    Root: {fileID: 0}
+    HairColorSlot: 0
+    SkinColorSlot: 0
+    WeaponRightColorSlot: 0
+    PrimaryColorSlot: 0
+    SecondaryColorSlot: 0
+  - OptionId: Eye08
+    Root: {fileID: 0}
+    HairColorSlot: 0
+    SkinColorSlot: 0
+    WeaponRightColorSlot: 0
+    PrimaryColorSlot: 0
+    SecondaryColorSlot: 0
+  - OptionId: Eye09
+    Root: {fileID: 0}
+    HairColorSlot: 0
+    SkinColorSlot: 0
+    WeaponRightColorSlot: 0
+    PrimaryColorSlot: 0
+    SecondaryColorSlot: 0
+  - OptionId: Eye10
+    Root: {fileID: 0}
+    HairColorSlot: 0
+    SkinColorSlot: 0
+    WeaponRightColorSlot: 0
+    PrimaryColorSlot: 0
+    SecondaryColorSlot: 0
+  - OptionId: Eye11
+    Root: {fileID: 0}
+    HairColorSlot: 0
+    SkinColorSlot: 0
+    WeaponRightColorSlot: 0
+    PrimaryColorSlot: 0
+    SecondaryColorSlot: 0
+  - OptionId: Eye12
+    Root: {fileID: 0}
+    HairColorSlot: 0
+    SkinColorSlot: 0
+    WeaponRightColorSlot: 0
+    PrimaryColorSlot: 0
+    SecondaryColorSlot: 0
+  mouthOptions:
+  - OptionId: Mouth01
+    Root: {fileID: 0}
+    HairColorSlot: 0
+    SkinColorSlot: 0
+    WeaponRightColorSlot: 0
+    PrimaryColorSlot: 0
+    SecondaryColorSlot: 0
+  - OptionId: Mouth02
+    Root: {fileID: 0}
+    HairColorSlot: 0
+    SkinColorSlot: 0
+    WeaponRightColorSlot: 0
+    PrimaryColorSlot: 0
+    SecondaryColorSlot: 0
+  - OptionId: Mouth03
+    Root: {fileID: 0}
+    HairColorSlot: 0
+    SkinColorSlot: 0
+    WeaponRightColorSlot: 0
+    PrimaryColorSlot: 0
+    SecondaryColorSlot: 0
+  - OptionId: Mouth04
+    Root: {fileID: 0}
+    HairColorSlot: 0
+    SkinColorSlot: 0
+    WeaponRightColorSlot: 0
+    PrimaryColorSlot: 0
+    SecondaryColorSlot: 0
+  - OptionId: Mouth05
+    Root: {fileID: 0}
+    HairColorSlot: 0
+    SkinColorSlot: 0
+    WeaponRightColorSlot: 0
+    PrimaryColorSlot: 0
+    SecondaryColorSlot: 0
+  - OptionId: Mouth06
+    Root: {fileID: 0}
+    HairColorSlot: 0
+    SkinColorSlot: 0
+    WeaponRightColorSlot: 0
+    PrimaryColorSlot: 0
+    SecondaryColorSlot: 0
+  - OptionId: Mouth07
+    Root: {fileID: 0}
+    HairColorSlot: 0
+    SkinColorSlot: 0
+    WeaponRightColorSlot: 0
+    PrimaryColorSlot: 0
+    SecondaryColorSlot: 0
+  - OptionId: Mouth08
+    Root: {fileID: 0}
+    HairColorSlot: 0
+    SkinColorSlot: 0
+    WeaponRightColorSlot: 0
+    PrimaryColorSlot: 0
+    SecondaryColorSlot: 0
+  - OptionId: Mouth09
+    Root: {fileID: 0}
+    HairColorSlot: 0
+    SkinColorSlot: 0
+    WeaponRightColorSlot: 0
+    PrimaryColorSlot: 0
+    SecondaryColorSlot: 0
+  - OptionId: Mouth10
+    Root: {fileID: 0}
+    HairColorSlot: 0
+    SkinColorSlot: 0
+    WeaponRightColorSlot: 0
+    PrimaryColorSlot: 0
+    SecondaryColorSlot: 0
+  - OptionId: Mouth11
+    Root: {fileID: 0}
+    HairColorSlot: 0
+    SkinColorSlot: 0
+    WeaponRightColorSlot: 0
+    PrimaryColorSlot: 0
+    SecondaryColorSlot: 0
+  - OptionId: Mouth12
+    Root: {fileID: 0}
+    HairColorSlot: 0
+    SkinColorSlot: 0
+    WeaponRightColorSlot: 0
+    PrimaryColorSlot: 0
+    SecondaryColorSlot: 0
+  outfitOptions:
+  - OptionId: Body01
+    Root: {fileID: 0}
+    HairColorSlot: 0
+    SkinColorSlot: 9
+    WeaponRightColorSlot: 0
+    PrimaryColorSlot: 0
+    SecondaryColorSlot: 3
+  - OptionId: Body02
+    Root: {fileID: 0}
+    HairColorSlot: 0
+    SkinColorSlot: 9
+    WeaponRightColorSlot: 0
+    PrimaryColorSlot: 6
+    SecondaryColorSlot: 6
+  - OptionId: Body03
+    Root: {fileID: 0}
+    HairColorSlot: 0
+    SkinColorSlot: 9
+    WeaponRightColorSlot: 0
+    PrimaryColorSlot: 4
+    SecondaryColorSlot: 7
+  - OptionId: Body04
+    Root: {fileID: 0}
+    HairColorSlot: 0
+    SkinColorSlot: 9
+    WeaponRightColorSlot: 0
+    PrimaryColorSlot: 4
+    SecondaryColorSlot: 7
+  - OptionId: Body05
+    Root: {fileID: 0}
+    HairColorSlot: 0
+    SkinColorSlot: 9
+    WeaponRightColorSlot: 0
+    PrimaryColorSlot: 4
+    SecondaryColorSlot: 7
+  weaponRightOptions:
+  - OptionId: OHS01_Stick
+    Root: {fileID: 0}
+    HairColorSlot: 0
+    SkinColorSlot: 0
+    WeaponRightColorSlot: 7
+    PrimaryColorSlot: 0
+    SecondaryColorSlot: 0
+  - OptionId: OHS02_Niddle
+    Root: {fileID: 0}
+    HairColorSlot: 0
+    SkinColorSlot: 0
+    WeaponRightColorSlot: 8
+    PrimaryColorSlot: 0
+    SecondaryColorSlot: 0
+  - OptionId: OHS17_Wand
+    Root: {fileID: 0}
+    HairColorSlot: 0
+    SkinColorSlot: 0
+    WeaponRightColorSlot: 7
+    PrimaryColorSlot: 0
+    SecondaryColorSlot: 0
+  hatOptions: []
+  capeOptions: []
+  hornsOptions: []
+  accessoryOptions: []
+  ninjaMaskOptions: []
+  mustacheOptions: []
+--- !u!114 &8187249432561774761
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8037118814750053398}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: baa83aaad3cc62249b4a59f22a2401ec, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CharacterAppearancePreviewController
+  visuals: {fileID: 788695554066599553}
+  previewRoot: {fileID: 0}
+--- !u!114 &4118400871414156198
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8037118814750053398}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8c20a3798d73db34e91c6449c44a4408, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CharacterPreviewRigController
+  modelRoot: {fileID: 0}
+  zoomTarget: {fileID: 0}
+  dragRotationSpeed: 0.35
+  buttonRotationStep: 25
+  rotationSmoothTime: 0.08
+  scrollZoomSpeed: 0.4
+  buttonZoomStep: 0.3
+  minZoomDistance: 6
+  maxZoomDistance: 9.5
+  zoomSmoothTime: 0.08

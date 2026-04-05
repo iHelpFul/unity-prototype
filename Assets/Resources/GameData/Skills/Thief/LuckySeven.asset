@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fa856fa0726af624e8f3c4baaa180a9e, type: 3}
+  m_Name: LuckySeven
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerSkillDefinition
+  skillId: thief_lucky_seven
+  displayName: Lucky Seven
+  jobType: 2
+  skillType: 2
+  maxLevel: 20
+  defaultSlotIndex: 1
+  manaCost: 6
+  cooldown: 0
+  range: 6.25
+  damageMultiplier: 1.02
+  hitCount: 1
+  hitInterval: 0.08
+  animationVariantIndex: 2
+  animatorStateName: Combo02_InPlace_SingleSword 0
+  animationSpeed: 0.96
+  attackDuration: 0.82
+  targetingMode: 2
+  maxTargets: 1
+  projectileCount: 2
+  projectileSpeed: 15
+  projectileRadius: 0.18
+  projectileLifetime: 0.65
+  projectileSpreadAngle: 7
+  projectileSpawnForwardOffset: 0.95
+  projectileSpawnUpOffset: 1.05
+  projectileVisualScale: 0.16

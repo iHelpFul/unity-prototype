@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fa856fa0726af624e8f3c4baaa180a9e, type: 3}
+  m_Name: MpBoost
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerSkillDefinition
+  skillId: mage_mp_boost
+  displayName: MP Boost
+  jobType: 3
+  skillType: 0
+  maxLevel: 20
+  defaultSlotIndex: -1
+  manaCost: 0
+  cooldown: 0
+  range: 0
+  damageMultiplier: 1
+  hitCount: 1
+  hitInterval: 0
+  animationVariantIndex: 1
+  animatorStateName: 
+  animationSpeed: 1
+  attackDuration: 0.9
+  targetingMode: 1
+  maxTargets: 1
+  projectileCount: 1
+  projectileSpeed: 0
+  projectileRadius: 0.2
+  projectileLifetime: 0.5
+  projectileSpreadAngle: 0
+  projectileSpawnForwardOffset: 0.8
+  projectileSpawnUpOffset: 1
+  projectileVisualScale: 0.2
