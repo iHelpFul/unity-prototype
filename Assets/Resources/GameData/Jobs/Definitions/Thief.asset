@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Thief
   m_EditorClassIdentifier: Assembly-CSharp::PlayerJobDefinition
   jobType: 2
-  displayName: Thief
+  displayName: Shade
   advancementLevelRequirement: 10
   basicAttackProfile: {fileID: 11400000, guid: 2e2898cf7bdc35b45b747a1eb7ae3c23, type: 2}
   defaultSkills:

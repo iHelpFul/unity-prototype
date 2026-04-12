@@ -67,13 +67,43 @@ public class WorldLootPickup : MonoBehaviour
         int amount,
         GameBootstrap sessionBootstrap)
     {
-        GameObject pickupObject = new GameObject(type == WorldLootType.Mesos ? "Mesos" : itemId);
-        pickupObject.transform.position = worldPosition;
+        GameObject pickupPrefab = sessionBootstrap != null && sessionBootstrap.RuntimePrefabCatalog != null
+            ? sessionBootstrap.RuntimePrefabCatalog.GetWorldLootPrefab(type, itemId)
+            : null;
+        bool hasPrefabVisual = false;
+        GameObject pickupObject;
 
-        WorldLootPickup pickup = pickupObject.AddComponent<WorldLootPickup>();
+        if (pickupPrefab != null)
+        {
+            pickupObject = Object.Instantiate(
+                pickupPrefab,
+                worldPosition,
+                Quaternion.identity);
+            pickupObject.name = $"{(type == WorldLootType.Mesos ? "Mesos" : itemId)}_Drop";
+            hasPrefabVisual = HasVisualContent(pickupPrefab);
+        }
+        else
+        {
+            pickupObject = new GameObject(type == WorldLootType.Mesos ? "Mesos" : itemId);
+            pickupObject.transform.position = worldPosition;
+        }
+
+        WorldLootPickup pickup = pickupObject.GetComponent<WorldLootPickup>();
+        if (pickup == null)
+            pickup = pickupObject.AddComponent<WorldLootPickup>();
         pickup.BindBootstrap(sessionBootstrap);
-        pickup.Initialize(type, itemId, amount);
+        pickup.Initialize(type, itemId, amount, hasPrefabVisual);
         return pickup;
+    }
+
+    private static bool HasVisualContent(GameObject rootObject)
+    {
+        if (rootObject == null)
+            return false;
+
+        return rootObject.GetComponentInChildren<Renderer>(true) != null
+            || rootObject.GetComponentInChildren<ParticleSystem>(true) != null
+            || rootObject.GetComponentInChildren<Light>(true) != null;
     }
 
     private void Awake()
@@ -83,13 +113,14 @@ public class WorldLootPickup : MonoBehaviour
         Destroy(gameObject, lifeTime);
     }
 
-    public void Initialize(WorldLootType type, string dropItemId, int amount)
+    public void Initialize(WorldLootType type, string dropItemId, int amount, bool hasPrefabVisual = false)
     {
         lootType = type;
         itemId = string.IsNullOrWhiteSpace(dropItemId) ? string.Empty : dropItemId.Trim();
         lootAmount = Mathf.Max(1, amount);
         isInitialized = true;
         gameObject.name = $"{GetPickupPrefix()}_{lootAmount}";
+        hasVisual = hasPrefabVisual;
 
         if (!hasVisual)
         {

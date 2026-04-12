@@ -2,19 +2,24 @@ using UnityEngine;
 
 public static class PlayerProgressionRules
 {
+    public const int StatPointsAwardedPerLevelUp = 6;
+
     public static void Normalize(PlayerRuntimeData data)
     {
         if (data == null)
             return;
 
         if (!System.Enum.IsDefined(typeof(PlayerJobType), data.CurrentJob))
-            data.CurrentJob = PlayerJobType.Novice;
+            data.CurrentJob = PlayerJobType.Drifter;
 
         if (data.Level <= 0)
             data.Level = 1;
 
         if (data.CurrentExp < 0)
             data.CurrentExp = 0;
+
+        if (data.UnspentStatPoints < 0)
+            data.UnspentStatPoints = 0;
 
         RefreshDerivedState(data);
     }
@@ -25,13 +30,18 @@ public static class PlayerProgressionRules
             return;
 
         if (!System.Enum.IsDefined(typeof(PlayerJobType), data.CurrentJob))
-            data.CurrentJob = PlayerJobType.Novice;
+            data.CurrentJob = PlayerJobType.Drifter;
 
         if (data.Level <= 0)
             data.Level = 1;
 
         data.RequiredExp = GetRequiredExpForLevel(data.Level);
         data.HasPendingJobAdvancement = PlayerJobCombatProfiles.IsJobAdvancementAvailable(data);
+    }
+
+    public static int GetStatPointsAwardedPerLevelUp()
+    {
+        return StatPointsAwardedPerLevelUp;
     }
 
     public static int GetRequiredExpForLevel(int level)
@@ -53,3 +63,4 @@ public static class PlayerProgressionRules
         return Mathf.Max(result, 15);
     }
 }
+

@@ -9780,7 +9780,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &8696767039532104207
 Transform:
   m_ObjectHideFlags: 0
@@ -10266,6 +10266,9 @@ GameObject:
   - component: {fileID: 2889057336560932318}
   - component: {fileID: 8336295670874108264}
   - component: {fileID: 5963205978891799882}
+  - component: {fileID: 234209129628156931}
+  - component: {fileID: 6292599982916083836}
+  - component: {fileID: 5173061284607984382}
   m_Layer: 3
   m_Name: PlayerNetworkPrototype
   m_TagString: Player
@@ -10318,16 +10321,19 @@ MonoBehaviour:
   characterId: 
   bootstrap: {fileID: 0}
   baseStats:
-    Strength: 5
-    Dexterity: 5
-    Intelligence: 4
-    Luck: 4
-  weaponAttack: 15
+    Might: 4
+    Precision: 4
+    Arcane: 4
+    Finesse: 4
+    HitRate: 0
+  baseWeaponPower: 0
   skillMastery: 0.6
   timeToStun: 1
   timeToInv: 2
   timeToFlash: 2
   manualPickupRange: 1.6
+  interactionController: {fileID: 0}
+  runtimeStateController: {fileID: 0}
 --- !u!114 &3159505403990584363
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10344,6 +10350,7 @@ MonoBehaviour:
   visual: {fileID: 8762550192443552275}
   cameraTransform: {fileID: 0}
   movementController: {fileID: 0}
+  combatController: {fileID: 0}
   animationController: {fileID: 2627151599857388162}
   footstepMinInterval: 0.22
   character: {fileID: 2111853801034255378}
@@ -10629,9 +10636,37 @@ MonoBehaviour:
     m_ActionId: 73ddd39b-89e7-4095-a91c-55a9169b3211
     m_ActionName: Player/SkillSlot15
   - m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 8372885736269628600}
+        m_TargetAssemblyTypeName: PlayerInputAdapter, Assembly-CSharp
+        m_MethodName: OnInventory
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
     m_ActionId: 00e7d07e-8cfe-4a41-817f-e17f8b48e64b
     m_ActionName: 'Player/Inventory[/Keyboard/i]'
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 8372885736269628600}
+        m_TargetAssemblyTypeName: PlayerInputAdapter, Assembly-CSharp
+        m_MethodName: OnProgressionToggle
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: 5b6d18ab-ec47-4959-b343-0243b26383ca
+    m_ActionName: 'Player/ProgressionToggle[/Keyboard/u]'
   m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: 
   m_DefaultActionMap: Player
@@ -11295,6 +11330,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerAppearanceController
   visuals: {fileID: 771148784156631285}
+  character: {fileID: 0}
   bootstrap: {fileID: 0}
 --- !u!114 &8995601525355035210
 MonoBehaviour:
@@ -11382,6 +11418,9 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   character: {fileID: 2111853801034255378}
   playerFacade: {fileID: 3159505403990584363}
+  movementController: {fileID: 0}
+  combatController: {fileID: 0}
+  interactionController: {fileID: 0}
   inputAdapter: {fileID: 8372885736269628600}
   playerInput: {fileID: 4436733183499579118}
   appearanceController: {fileID: 7133466082281478992}
@@ -11394,6 +11433,7 @@ MonoBehaviour:
   remoteVisualRotationSpeed: 720
   localCameraFollowSmoothTime: 0.02
   localCameraSnapDistance: 1.25
+  sessionBootstrap: {fileID: 0}
 --- !u!114 &5963205978891799882
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -11406,6 +11446,43 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e364d4a03056b3242bd564db1d04e5da, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMovementController
+--- !u!114 &234209129628156931
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3631378362000504220}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 67dccb5c0972910458a00d22f620bef1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerCombatController
+--- !u!114 &6292599982916083836
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3631378362000504220}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 82ce35cec1d1056458bfe20ddabd230d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerRuntimeStateController
+--- !u!114 &5173061284607984382
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3631378362000504220}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 927ce6d996c14d44e86b45eb0453888b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerInteractionController
+  manualPickupRange: 1.6
 --- !u!1 &3642777236025289917
 GameObject:
   m_ObjectHideFlags: 0
@@ -22706,7 +22783,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &4910498837360678896
 Transform:
   m_ObjectHideFlags: 0

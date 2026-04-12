@@ -52,13 +52,13 @@ public class PlayerSessionJobApplicationService
             return false;
         }
 
-        if (targetJob == PlayerJobType.Novice)
+        if (targetJob == PlayerJobType.Drifter)
         {
             message = "Please choose a valid job.";
             return false;
         }
 
-        if (playerData.CurrentJob != PlayerJobType.Novice)
+        if (playerData.CurrentJob != PlayerJobType.Drifter)
         {
             message = $"You are already a {FormatJobName(playerData.CurrentJob)}.";
             return false;
@@ -67,7 +67,7 @@ public class PlayerSessionJobApplicationService
         int normalizedRequiredLevel = Mathf.Max(1, requiredLevel);
         if (playerData.Level < normalizedRequiredLevel)
         {
-            message = $"Reach level {normalizedRequiredLevel} as a Novice first.";
+            message = $"Reach level {normalizedRequiredLevel} as a {FormatJobName(PlayerJobType.Drifter)} first.";
             return false;
         }
 
@@ -114,3 +114,4 @@ public class PlayerSessionJobApplicationService
         return PlayerJobCombatProfiles.GetDisplayName(jobType);
     }
 }
+

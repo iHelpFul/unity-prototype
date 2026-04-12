@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 public static class CharacterSaveFactory
 {
-    public static CharacterSaveData CreateDefaultNoviceCharacter(
+    public static CharacterSaveData CreateDefaultDrifterCharacter(
         string nickname,
         CharacterAppearanceData appearance,
         string startMapId,
@@ -25,12 +25,16 @@ public static class CharacterSaveFactory
     {
         PlayerRuntimeData runtimeData = new PlayerRuntimeData
         {
-            CurrentJob = PlayerJobType.Novice,
+            CurrentJob = PlayerJobType.Drifter,
             Level = 1,
             CurrentExp = 0,
             RequiredExp = 0,
-            Strength = 0,
-            Dexterity = 0,
+            Might = 0,
+            Precision = 0,
+            Arcane = 0,
+            Finesse = 0,
+            HitRate = 4,
+            UnspentStatPoints = 0,
             MaxHP = 100,
             CurrentHP = 100,
             MaxMP = 50,
@@ -52,3 +56,4 @@ public static class CharacterSaveFactory
         return runtimeData;
     }
 }
+

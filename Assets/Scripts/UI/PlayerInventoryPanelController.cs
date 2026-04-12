@@ -19,7 +19,6 @@ public class PlayerInventoryPanelController : MonoBehaviour
     [SerializeField] private PlayerCharacter trackedPlayer;
     [Header("Summary")]
     [SerializeField] private TextMeshProUGUI mesosText;
-    [SerializeField] private TextMeshProUGUI statsText;
     [SerializeField] private TextMeshProUGUI statusText;
     [Header("Inventory List")]
     [SerializeField] private Transform inventoryListRoot;
@@ -231,23 +230,10 @@ public class PlayerInventoryPanelController : MonoBehaviour
 
     private void RefreshSummary()
     {
-        PlayerSessionEquipmentApplicationService equipmentSession = bootstrap != null ? bootstrap.EquipmentSession : null;
         PlayerSessionCurrencyApplicationService currencySession = bootstrap != null ? bootstrap.CurrencySession : null;
 
         if (mesosText != null)
             mesosText.text = $"Mesos: {(currencySession != null ? currencySession.CurrentMesos : 0)}";
-
-        if (statsText == null || equipmentSession == null)
-            return;
-
-        ItemStatModifierData bonuses = equipmentSession.GetEquipmentStatBonuses();
-        StringBuilder builder = new StringBuilder();
-        builder.Append("STR +").Append(bonuses.Strength);
-        builder.Append("  |  DEX +").Append(bonuses.Dexterity);
-        builder.Append("  |  ATK +").Append(bonuses.WeaponAttack);
-        builder.Append("  |  HP +").Append(bonuses.MaxHP);
-        builder.Append("  |  MP +").Append(bonuses.MaxMP);
-        statsText.text = builder.ToString();
     }
 
     private void RefreshInventoryList()
@@ -327,18 +313,21 @@ public class PlayerInventoryPanelController : MonoBehaviour
             return "Select an inventory entry to inspect it.";
 
         StringBuilder builder = new StringBuilder();
-        builder.AppendLine($"Item ID: {definition.ItemId}");
-        builder.AppendLine($"Category: {definition.Category}");
+            builder.AppendLine($"Item ID: {definition.ItemId}");
+            builder.AppendLine($"Category: {definition.Category}");
 
         if (definition.IsEquipment)
         {
             builder.AppendLine($"Slot: {definition.EquipmentSlot}");
             builder.AppendLine($"Equipped: {(IsEntryEquipped(entry.EntryId) ? "Yes" : "No")}");
-            AppendStatLine(builder, "STR", definition.EquipmentStatBonuses != null ? definition.EquipmentStatBonuses.Strength : 0);
-            AppendStatLine(builder, "DEX", definition.EquipmentStatBonuses != null ? definition.EquipmentStatBonuses.Dexterity : 0);
-            AppendStatLine(builder, "ATK", definition.EquipmentStatBonuses != null ? definition.EquipmentStatBonuses.WeaponAttack : 0);
-            AppendStatLine(builder, "Max HP", definition.EquipmentStatBonuses != null ? definition.EquipmentStatBonuses.MaxHP : 0);
-            AppendStatLine(builder, "Max MP", definition.EquipmentStatBonuses != null ? definition.EquipmentStatBonuses.MaxMP : 0);
+            AppendStatLine(builder, "Might", definition.EquipmentStatBonuses != null ? definition.EquipmentStatBonuses.Might : 0);
+            AppendStatLine(builder, "Precision", definition.EquipmentStatBonuses != null ? definition.EquipmentStatBonuses.Precision : 0);
+            AppendStatLine(builder, "Arcane", definition.EquipmentStatBonuses != null ? definition.EquipmentStatBonuses.Arcane : 0);
+            AppendStatLine(builder, "Finesse", definition.EquipmentStatBonuses != null ? definition.EquipmentStatBonuses.Finesse : 0);
+            AppendStatLine(builder, "Hit Rate", definition.EquipmentStatBonuses != null ? definition.EquipmentStatBonuses.HitRate : 0);
+            AppendStatLine(builder, "Weapon Power", definition.EquipmentStatBonuses != null ? definition.EquipmentStatBonuses.WeaponPower : 0);
+            AppendStatLine(builder, "Life", definition.EquipmentStatBonuses != null ? definition.EquipmentStatBonuses.MaxHP : 0);
+            AppendStatLine(builder, "Energy", definition.EquipmentStatBonuses != null ? definition.EquipmentStatBonuses.MaxMP : 0);
         }
         else if (definition.Category == ItemCategory.Consumable)
         {

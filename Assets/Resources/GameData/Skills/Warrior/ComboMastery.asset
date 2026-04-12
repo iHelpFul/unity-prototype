@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fa856fa0726af624e8f3c4baaa180a9e, type: 3}
   m_Name: ComboMastery
   m_EditorClassIdentifier: Assembly-CSharp::PlayerSkillDefinition
-  skillId: warrior_combo_mastery
+  skillId: vanguard_combo_mastery
   displayName: Combo Mastery
   jobType: 1
   skillType: 0

@@ -16,19 +16,23 @@ MonoBehaviour:
   displayName: OHS11 Hammer
   category: 1
   maxStack: 1
-  buyPrice: 0
-  sellPrice: 0
+  buyPrice: 100
+  sellPrice: 50
   restoreHP: 0
   restoreMP: 0
   primaryColor: {r: 1, g: 1, b: 1, a: 1}
   accentColor: {r: 0.9, g: 0.9, b: 0.9, a: 1}
+  worldLootPickupPrefab: {fileID: 4655978196009682361, guid: 328e3bff60e74f34283adbfd002fb4cf, type: 3}
   equipmentSlot: 2
   equipmentStatBonuses:
-    Strength: 0
-    Dexterity: 0
-    WeaponAttack: 0
+    Might: 0
+    Precision: 0
+    Arcane: 0
+    Finesse: 0
+    WeaponPower: 50
     MaxHP: 0
     MaxMP: 0
+    HitRate: 0
   equipmentAppearance:
     OutfitId: 
     WeaponRightId: OHS11_Hammer

@@ -1,6 +1,7 @@
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Serialization;
 
 public class NpcJobAdvancementPanelController : MonoBehaviour
 {
@@ -9,12 +10,12 @@ public class NpcJobAdvancementPanelController : MonoBehaviour
     [SerializeField] private TextMeshProUGUI currentJobText;
     [SerializeField] private TextMeshProUGUI requirementText;
     [SerializeField] private TextMeshProUGUI statusText;
-    [SerializeField] private Button warriorButton;
-    [SerializeField] private Button thiefButton;
-    [SerializeField] private Button mageButton;
-    [SerializeField] private TextMeshProUGUI warriorLabel;
-    [SerializeField] private TextMeshProUGUI thiefLabel;
-    [SerializeField] private TextMeshProUGUI mageLabel;
+    [SerializeField, FormerlySerializedAs("warriorButton")] private Button vanguardButton;
+    [SerializeField, FormerlySerializedAs("thiefButton")] private Button shadeButton;
+    [SerializeField, FormerlySerializedAs("mageButton")] private Button arcanistButton;
+    [SerializeField, FormerlySerializedAs("warriorLabel")] private TextMeshProUGUI vanguardLabel;
+    [SerializeField, FormerlySerializedAs("thiefLabel")] private TextMeshProUGUI shadeLabel;
+    [SerializeField, FormerlySerializedAs("mageLabel")] private TextMeshProUGUI arcanistLabel;
 
     private NpcJobAdvancementSnapshot activeSnapshot;
 
@@ -38,9 +39,18 @@ public class NpcJobAdvancementPanelController : MonoBehaviour
         EventBus.Unsubscribe<NpcJobAdvancementResultEvent>(OnAdvancementResult);
     }
 
-    public void RequestWarrior() => RequestAdvance(PlayerJobType.Warrior);
-    public void RequestThief() => RequestAdvance(PlayerJobType.Thief);
-    public void RequestMage() => RequestAdvance(PlayerJobType.Mage);
+    public void RequestVanguard() => RequestAdvance(PlayerJobType.Vanguard);
+    public void RequestShade() => RequestAdvance(PlayerJobType.Shade);
+    public void RequestArcanist() => RequestAdvance(PlayerJobType.Arcanist);
+
+    [System.Obsolete("Use RequestVanguard().")]
+    public void RequestWarrior() => RequestVanguard();
+
+    [System.Obsolete("Use RequestShade().")]
+    public void RequestThief() => RequestShade();
+
+    [System.Obsolete("Use RequestArcanist().")]
+    public void RequestMage() => RequestArcanist();
 
     public void ClosePanel()
     {
@@ -103,7 +113,7 @@ public class NpcJobAdvancementPanelController : MonoBehaviour
         if (currentJobText != null)
             currentJobText.text = activeSnapshot != null
                 ? $"Current Job: {GameBootstrap.FormatJobName(activeSnapshot.CurrentJob)}"
-                : "Current Job: Novice";
+                : $"Current Job: {GameBootstrap.FormatJobName(PlayerJobType.Drifter)}";
 
         if (requirementText != null)
             requirementText.text = activeSnapshot != null
@@ -115,9 +125,9 @@ public class NpcJobAdvancementPanelController : MonoBehaviour
                 ? activeSnapshot.StatusMessage
                 : string.Empty;
 
-        RefreshOption(PlayerJobType.Warrior, warriorButton, warriorLabel);
-        RefreshOption(PlayerJobType.Thief, thiefButton, thiefLabel);
-        RefreshOption(PlayerJobType.Mage, mageButton, mageLabel);
+        RefreshOption(PlayerJobType.Vanguard, vanguardButton, vanguardLabel);
+        RefreshOption(PlayerJobType.Shade, shadeButton, shadeLabel);
+        RefreshOption(PlayerJobType.Arcanist, arcanistButton, arcanistLabel);
     }
 
     private void RefreshOption(PlayerJobType jobType, Button button, TextMeshProUGUI label)
@@ -173,3 +183,4 @@ public class NpcJobAdvancementPanelController : MonoBehaviour
         return string.IsNullOrWhiteSpace(npcId) || npcId == activeSnapshot.NpcId;
     }
 }
+

@@ -207,5 +207,17 @@ public static class WorldRuntimeSceneUtility
             if (notificationFeed != null)
                 notificationFeed.BindTrackedPlayer(player);
         }
+
+        PlayerProgressionPanelController[] progressionPanels = Object.FindObjectsByType<PlayerProgressionPanelController>(
+            includeInactive,
+            FindObjectsSortMode.None);
+
+        for (int index = 0; index < progressionPanels.Length; index++)
+        {
+            PlayerProgressionPanelController progressionPanel = progressionPanels[index];
+            if (progressionPanel != null)
+                progressionPanel.BindRuntimeContext(bootstrap, player);
+        }
     }
 }
+

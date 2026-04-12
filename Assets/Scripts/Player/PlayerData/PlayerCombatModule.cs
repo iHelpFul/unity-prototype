@@ -13,7 +13,7 @@ public class PlayerCombatModule
     private int comboCounter;
     private float comboCounterTimer;
     private PlayerBasicAttackProfile basicAttackProfile =
-        PlayerJobCombatProfiles.GetBasicAttackProfile(PlayerJobType.Novice);
+        PlayerJobCombatProfiles.GetBasicAttackProfile(PlayerJobType.Drifter);
     private float lastAttackTime;
 
     public int ComboIndex => currentAnimationIndex;
@@ -30,7 +30,7 @@ public class PlayerCombatModule
     public void SetBasicAttackProfile(PlayerBasicAttackProfile profile)
     {
         if (profile == null)
-            profile = PlayerJobCombatProfiles.GetBasicAttackProfile(PlayerJobType.Novice);
+            profile = PlayerJobCombatProfiles.GetBasicAttackProfile(PlayerJobType.Drifter);
 
         if (basicAttackProfile.JobType == profile.JobType
             && basicAttackProfile.AnimationVariantCount == profile.AnimationVariantCount
@@ -149,12 +149,12 @@ public class PlayerCombatModule
 
     public int CalculateDamage(PlayerCombatSnapshot snapshot)
     {
-        return DamageCalculator.CalculateDamage(
-            snapshot.Strength,
-            snapshot.Dexterity,
-            snapshot.WeaponAttack,
-            snapshot.SkillMastery
-        );
+        return DamageCalculator.CalculateDamage(snapshot, isSkillDamage: false);
+    }
+
+    public int CalculateDamage(PlayerCombatSnapshot snapshot, bool isSkillDamage)
+    {
+        return DamageCalculator.CalculateDamage(snapshot, isSkillDamage);
     }
 
     public int CalculateBasicDamage(PlayerCombatSnapshot snapshot)
@@ -228,3 +228,4 @@ public class PlayerCombatModule
         }
     }
 }
+

@@ -8,6 +8,7 @@ public class PlayerMovementController : MonoBehaviour
     private Transform visual;
     private Transform cameraTransform;
     private PlayerCharacter character;
+    private PlayerCombatController combatController;
 
     private PlayerMovementModel movementModel;
     private Vector2 moveInput;
@@ -19,14 +20,19 @@ public class PlayerMovementController : MonoBehaviour
     public bool JumpedThisFrame => movementModel != null && movementModel.JumpedThisFrame;
     public bool IsGrounded => motor != null && motor.IsGrounded;
 
-    public void Initialize(PlayerMotor motor, Transform visual, Transform cameraTransform, PlayerCharacter character)
+    public void Initialize(
+        PlayerMotor motor,
+        Transform visual,
+        Transform cameraTransform,
+        PlayerCharacter character,
+        PlayerCombatController combatController)
     {
         this.motor = motor;
         this.visual = visual != null ? visual : transform;
         this.cameraTransform = cameraTransform;
         this.character = character;
-        if (movementModel == null)
-            movementModel = new PlayerMovementModel();
+        this.combatController = combatController;
+        EnsureMovementModel();
     }
 
     private void OnEnable()
@@ -45,8 +51,7 @@ public class PlayerMovementController : MonoBehaviour
 
     public void Tick(float deltaTime)
     {
-        if (movementModel == null)
-            movementModel = new PlayerMovementModel();
+        EnsureMovementModel();
 
         UpdateCameraVectors();
 
@@ -127,11 +132,9 @@ public class PlayerMovementController : MonoBehaviour
         if (character == null || character.IsStunned || character.IsDead)
             return;
 
+        EnsureMovementModel();
         movementModel.PressJump();
-
-        PlayerFacade facade = GetComponent<PlayerFacade>();
-        if (facade != null)
-            facade.HandleJumpPressedFromMovementController();
+        combatController?.HandleJumpPressed();
     }
 
     private void OnJumpReleased(JumpReleasedEvent e)
@@ -139,7 +142,14 @@ public class PlayerMovementController : MonoBehaviour
         if (!MatchesInputPlayer(e.Player, e.CharacterId))
             return;
 
+        EnsureMovementModel();
         movementModel.ReleaseJump();
+    }
+
+    private void EnsureMovementModel()
+    {
+        if (movementModel == null)
+            movementModel = new PlayerMovementModel();
     }
 
     private bool MatchesInputPlayer(PlayerCharacter player, string characterId)

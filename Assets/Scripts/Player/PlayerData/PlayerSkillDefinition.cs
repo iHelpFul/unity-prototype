@@ -20,7 +20,7 @@ public class PlayerSkillDefinition : ScriptableObject
 {
     [SerializeField] private string skillId = string.Empty;
     [SerializeField] private string displayName = "New Skill";
-    [SerializeField] private PlayerJobType jobType = PlayerJobType.Novice;
+    [SerializeField] private PlayerJobType jobType = PlayerJobType.Drifter;
     [SerializeField] private PlayerSkillType skillType = PlayerSkillType.ActiveAttack;
     [SerializeField] private int maxLevel = 1;
     [SerializeField] private int defaultSlotIndex = -1;
@@ -218,3 +218,4 @@ public class PlayerSkillDefinition : ScriptableObject
         projectileVisualScale = Mathf.Max(0.01f, projectileVisualScale);
     }
 }
+

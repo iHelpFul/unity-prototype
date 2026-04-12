@@ -18,9 +18,9 @@ public static class GameDataAssetGenerator
         EnsureFolderPath($"{GameDataRoot}/Items/Equipment/Overalls");
         EnsureFolderPath($"{GameDataRoot}/Items/Equipment/Weapons");
         EnsureFolderPath($"{GameDataRoot}/Skills");
-        EnsureFolderPath($"{GameDataRoot}/Skills/Warrior");
-        EnsureFolderPath($"{GameDataRoot}/Skills/Thief");
-        EnsureFolderPath($"{GameDataRoot}/Skills/Mage");
+        EnsureFolderPath($"{GameDataRoot}/Skills/Vanguard");
+        EnsureFolderPath($"{GameDataRoot}/Skills/Shade");
+        EnsureFolderPath($"{GameDataRoot}/Skills/Arcanist");
         EnsureFolderPath($"{GameDataRoot}/Jobs");
         EnsureFolderPath($"{GameDataRoot}/Jobs/Profiles");
         EnsureFolderPath($"{GameDataRoot}/Jobs/Definitions");
@@ -151,29 +151,29 @@ public static class GameDataAssetGenerator
         itemDatabase.SetItems(generatedItems);
         EditorUtility.SetDirty(itemDatabase);
 
-        PlayerSkillDefinition warriorComboMastery = EnsureSkill(
-            $"{GameDataRoot}/Skills/Warrior/ComboMastery.asset",
-            PlayerSkillDatabase.WarriorComboMasteryId,
+        PlayerSkillDefinition vanguardComboMastery = EnsureSkill(
+            $"{GameDataRoot}/Skills/Vanguard/ComboMastery.asset",
+            PlayerSkillDatabase.VanguardComboMasteryId,
             "Combo Mastery",
-            PlayerJobType.Warrior,
+            PlayerJobType.Vanguard,
             PlayerSkillType.Passive,
             20,
             -1);
 
-        PlayerSkillDefinition warriorRage = EnsureSkill(
-            $"{GameDataRoot}/Skills/Warrior/Rage.asset",
-            PlayerSkillDatabase.WarriorRageId,
+        PlayerSkillDefinition vanguardRage = EnsureSkill(
+            $"{GameDataRoot}/Skills/Vanguard/Rage.asset",
+            PlayerSkillDatabase.VanguardRageId,
             "Rage",
-            PlayerJobType.Warrior,
+            PlayerJobType.Vanguard,
             PlayerSkillType.ActiveBuff,
             20,
             2);
 
-        PlayerSkillDefinition warriorPowerStrike = EnsureSkill(
-            $"{GameDataRoot}/Skills/Warrior/PowerStrike.asset",
-            PlayerSkillDatabase.WarriorPowerStrikeId,
+        PlayerSkillDefinition vanguardPowerStrike = EnsureSkill(
+            $"{GameDataRoot}/Skills/Vanguard/PowerStrike.asset",
+            PlayerSkillDatabase.VanguardPowerStrikeId,
             "Power Strike",
-            PlayerJobType.Warrior,
+            PlayerJobType.Vanguard,
             PlayerSkillType.ActiveAttack,
             20,
             1,
@@ -190,11 +190,11 @@ public static class GameDataAssetGenerator
             PlayerSkillTargetingMode.MeleeArea,
             3);
 
-        PlayerSkillDefinition thiefLuckySeven = EnsureSkill(
-            $"{GameDataRoot}/Skills/Thief/LuckySeven.asset",
-            PlayerSkillDatabase.ThiefLuckySevenId,
+        PlayerSkillDefinition shadeLuckySeven = EnsureSkill(
+            $"{GameDataRoot}/Skills/Shade/LuckySeven.asset",
+            PlayerSkillDatabase.ShadeLuckySevenId,
             "Lucky Seven",
-            PlayerJobType.Thief,
+            PlayerJobType.Shade,
             PlayerSkillType.ActiveAttack,
             20,
             1,
@@ -219,29 +219,29 @@ public static class GameDataAssetGenerator
             1.05f,
             0.16f);
 
-        PlayerSkillDefinition thiefHaste = EnsureSkill(
-            $"{GameDataRoot}/Skills/Thief/Haste.asset",
-            PlayerSkillDatabase.ThiefHasteId,
+        PlayerSkillDefinition shadeHaste = EnsureSkill(
+            $"{GameDataRoot}/Skills/Shade/Haste.asset",
+            PlayerSkillDatabase.ShadeHasteId,
             "Haste",
-            PlayerJobType.Thief,
+            PlayerJobType.Shade,
             PlayerSkillType.ActiveBuff,
             20,
             2);
 
-        PlayerSkillDefinition thiefNimbleBody = EnsureSkill(
-            $"{GameDataRoot}/Skills/Thief/NimbleBody.asset",
-            PlayerSkillDatabase.ThiefNimbleBodyId,
+        PlayerSkillDefinition shadeNimbleBody = EnsureSkill(
+            $"{GameDataRoot}/Skills/Shade/NimbleBody.asset",
+            PlayerSkillDatabase.ShadeNimbleBodyId,
             "Nimble Body",
-            PlayerJobType.Thief,
+            PlayerJobType.Shade,
             PlayerSkillType.Passive,
             20,
             -1);
 
-        PlayerSkillDefinition mageMagicClaw = EnsureSkill(
-            $"{GameDataRoot}/Skills/Mage/MagicClaw.asset",
-            PlayerSkillDatabase.MageMagicClawId,
+        PlayerSkillDefinition arcanistMagicClaw = EnsureSkill(
+            $"{GameDataRoot}/Skills/Arcanist/MagicClaw.asset",
+            PlayerSkillDatabase.ArcanistMagicClawId,
             "Magic Claw",
-            PlayerJobType.Mage,
+            PlayerJobType.Arcanist,
             PlayerSkillType.ActiveAttack,
             20,
             1,
@@ -258,20 +258,20 @@ public static class GameDataAssetGenerator
             PlayerSkillTargetingMode.FrontSingleTarget,
             1);
 
-        PlayerSkillDefinition mageMagicGuard = EnsureSkill(
-            $"{GameDataRoot}/Skills/Mage/MagicGuard.asset",
-            PlayerSkillDatabase.MageMagicGuardId,
+        PlayerSkillDefinition arcanistMagicGuard = EnsureSkill(
+            $"{GameDataRoot}/Skills/Arcanist/MagicGuard.asset",
+            PlayerSkillDatabase.ArcanistMagicGuardId,
             "Magic Guard",
-            PlayerJobType.Mage,
+            PlayerJobType.Arcanist,
             PlayerSkillType.ActiveBuff,
             20,
             2);
 
-        PlayerSkillDefinition mageMpBoost = EnsureSkill(
-            $"{GameDataRoot}/Skills/Mage/MpBoost.asset",
-            PlayerSkillDatabase.MageMpBoostId,
+        PlayerSkillDefinition arcanistMpBoost = EnsureSkill(
+            $"{GameDataRoot}/Skills/Arcanist/MpBoost.asset",
+            PlayerSkillDatabase.ArcanistMpBoostId,
             "MP Boost",
-            PlayerJobType.Mage,
+            PlayerJobType.Arcanist,
             PlayerSkillType.Passive,
             20,
             -1);
@@ -279,21 +279,21 @@ public static class GameDataAssetGenerator
         PlayerSkillDatabaseAsset skillDatabase = EnsureAsset<PlayerSkillDatabaseAsset>($"{GameDataRoot}/PlayerSkillDatabase.asset");
         skillDatabase.SetDefinitions(new[]
         {
-            warriorComboMastery,
-            warriorRage,
-            warriorPowerStrike,
-            thiefLuckySeven,
-            thiefHaste,
-            thiefNimbleBody,
-            mageMagicClaw,
-            mageMagicGuard,
-            mageMpBoost
+            vanguardComboMastery,
+            vanguardRage,
+            vanguardPowerStrike,
+            shadeLuckySeven,
+            shadeHaste,
+            shadeNimbleBody,
+            arcanistMagicClaw,
+            arcanistMagicGuard,
+            arcanistMpBoost
         });
         EditorUtility.SetDirty(skillDatabase);
 
         PlayerBasicAttackProfile noviceProfile = EnsureBasicAttackProfile(
-            $"{GameDataRoot}/Jobs/Profiles/NoviceBasicAttack.asset",
-            PlayerJobType.Novice,
+            $"{GameDataRoot}/Jobs/Profiles/DrifterBasicAttack.asset",
+            PlayerJobType.Drifter,
             2,
             2,
             PlayerBasicAttackSelectionMode.Random,
@@ -308,8 +308,8 @@ public static class GameDataAssetGenerator
             false);
 
         PlayerBasicAttackProfile warriorProfile = EnsureBasicAttackProfile(
-            $"{GameDataRoot}/Jobs/Profiles/WarriorBasicAttack.asset",
-            PlayerJobType.Warrior,
+            $"{GameDataRoot}/Jobs/Profiles/VanguardBasicAttack.asset",
+            PlayerJobType.Vanguard,
             5,
             5,
             PlayerBasicAttackSelectionMode.Sequential,
@@ -324,8 +324,8 @@ public static class GameDataAssetGenerator
             true);
 
         PlayerBasicAttackProfile thiefProfile = EnsureBasicAttackProfile(
-            $"{GameDataRoot}/Jobs/Profiles/ThiefBasicAttack.asset",
-            PlayerJobType.Thief,
+            $"{GameDataRoot}/Jobs/Profiles/ShadeBasicAttack.asset",
+            PlayerJobType.Shade,
             2,
             2,
             PlayerBasicAttackSelectionMode.Random,
@@ -340,8 +340,8 @@ public static class GameDataAssetGenerator
             false);
 
         PlayerBasicAttackProfile mageProfile = EnsureBasicAttackProfile(
-            $"{GameDataRoot}/Jobs/Profiles/MageBasicAttack.asset",
-            PlayerJobType.Mage,
+            $"{GameDataRoot}/Jobs/Profiles/ArcanistBasicAttack.asset",
+            PlayerJobType.Arcanist,
             2,
             2,
             PlayerBasicAttackSelectionMode.Random,
@@ -356,36 +356,36 @@ public static class GameDataAssetGenerator
             false);
 
         PlayerJobDefinition noviceJob = EnsureJobDefinition(
-            $"{GameDataRoot}/Jobs/Definitions/Novice.asset",
-            PlayerJobType.Novice,
-            "Novice",
+            $"{GameDataRoot}/Jobs/Definitions/Drifter.asset",
+            PlayerJobType.Drifter,
+            "Drifter",
             10,
             noviceProfile,
             new PlayerSkillDefinition[0]);
 
         PlayerJobDefinition warriorJob = EnsureJobDefinition(
-            $"{GameDataRoot}/Jobs/Definitions/Warrior.asset",
-            PlayerJobType.Warrior,
-            "Warrior",
+            $"{GameDataRoot}/Jobs/Definitions/Vanguard.asset",
+            PlayerJobType.Vanguard,
+            "Vanguard",
             10,
             warriorProfile,
-            new[] { warriorPowerStrike, warriorRage, warriorComboMastery });
+            new[] { vanguardPowerStrike, vanguardRage, vanguardComboMastery });
 
         PlayerJobDefinition thiefJob = EnsureJobDefinition(
-            $"{GameDataRoot}/Jobs/Definitions/Thief.asset",
-            PlayerJobType.Thief,
-            "Thief",
+            $"{GameDataRoot}/Jobs/Definitions/Shade.asset",
+            PlayerJobType.Shade,
+            "Shade",
             10,
             thiefProfile,
-            new[] { thiefLuckySeven, thiefHaste, thiefNimbleBody });
+            new[] { shadeLuckySeven, shadeHaste, shadeNimbleBody });
 
         PlayerJobDefinition mageJob = EnsureJobDefinition(
-            $"{GameDataRoot}/Jobs/Definitions/Mage.asset",
-            PlayerJobType.Mage,
-            "Mage",
+            $"{GameDataRoot}/Jobs/Definitions/Arcanist.asset",
+            PlayerJobType.Arcanist,
+            "Arcanist",
             10,
             mageProfile,
-            new[] { mageMagicClaw, mageMagicGuard, mageMpBoost });
+            new[] { arcanistMagicClaw, arcanistMagicGuard, arcanistMpBoost });
 
         PlayerJobDatabaseAsset jobDatabase = EnsureAsset<PlayerJobDatabaseAsset>($"{GameDataRoot}/PlayerJobDatabase.asset");
         jobDatabase.SetDefinitions(new[] { noviceJob, warriorJob, thiefJob, mageJob });
@@ -891,3 +891,4 @@ public static class GameDataAssetGenerator
         }
     }
 }
+

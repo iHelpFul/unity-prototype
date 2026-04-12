@@ -7,6 +7,9 @@ public class GameBootstrap : MonoBehaviour
     [Header("Character Defaults")]
     [SerializeField] private string defaultCharacterStartMapId = "Map_01";
     [SerializeField] private string defaultCharacterStartSpawnId = SceneSpawnPoint.DefaultSpawnId;
+    [Header("Runtime Prefabs")]
+    [Tooltip("Runtime-spawned object prefabs. If empty, code falls back to runtime-generated defaults.")]
+    [SerializeField] private RuntimeSpawnPrefabCatalog runtimePrefabCatalog;
 
     private readonly PlayerSessionPersistenceService persistenceService = new PlayerSessionPersistenceService();
     private readonly PlayerSessionInventoryService inventoryService = new PlayerSessionInventoryService();
@@ -34,6 +37,7 @@ public class GameBootstrap : MonoBehaviour
         && CharacterSession.AccountData != null
         && CharacterSession.ActiveCharacter != null
         && CharacterSession.PlayerData != null;
+    public RuntimeSpawnPrefabCatalog RuntimePrefabCatalog => runtimePrefabCatalog;
 
     private void Awake()
     {

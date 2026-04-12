@@ -34,9 +34,6 @@ public class PlayerHUDController : MonoBehaviour
     private bool lowHpActive;
     private Color currentHpBaseColor;
     private int currentLevel;
-    private int currentMesos;
-    private int currentRedPotions;
-    private int currentBluePotions;
 
     public void BindRuntimeContext(GameBootstrap sessionBootstrap, PlayerCharacter player)
     {
@@ -59,8 +56,6 @@ public class PlayerHUDController : MonoBehaviour
         EventBus.Subscribe<PlayerManaChangedEvent>(OnManaChanged);
         EventBus.Subscribe<PlayerExpChangedEvent>(OnExpChanged);
         EventBus.Subscribe<PlayerLevelUpEvent>(OnLevelChange);
-        EventBus.Subscribe<PlayerCurrencyChangedEvent>(OnCurrencyChanged);
-        EventBus.Subscribe<PlayerConsumablesChangedEvent>(OnConsumablesChanged);
         EventBus.Subscribe<MapTransitionCompletedEvent>(OnMapTransitionCompleted);
         RefreshFromRuntimeData();
     }
@@ -71,8 +66,6 @@ public class PlayerHUDController : MonoBehaviour
         EventBus.Unsubscribe<PlayerManaChangedEvent>(OnManaChanged);
         EventBus.Unsubscribe<PlayerExpChangedEvent>(OnExpChanged);
         EventBus.Unsubscribe<PlayerLevelUpEvent>(OnLevelChange);
-        EventBus.Unsubscribe<PlayerCurrencyChangedEvent>(OnCurrencyChanged);
-        EventBus.Unsubscribe<PlayerConsumablesChangedEvent>(OnConsumablesChanged);
         EventBus.Unsubscribe<MapTransitionCompletedEvent>(OnMapTransitionCompleted);
     }
 
@@ -80,13 +73,9 @@ public class PlayerHUDController : MonoBehaviour
     {
         PlayerSessionCharacterApplicationService characterSession = bootstrap != null ? bootstrap.CharacterSession : null;
         PlayerSessionEquipmentApplicationService equipmentSession = bootstrap != null ? bootstrap.EquipmentSession : null;
-        PlayerSessionInventoryApplicationService inventorySession = bootstrap != null ? bootstrap.InventorySession : null;
-        PlayerSessionCurrencyApplicationService currencySession = bootstrap != null ? bootstrap.CurrencySession : null;
 
         if (characterSession == null
             || equipmentSession == null
-            || inventorySession == null
-            || currencySession == null
             || trackedPlayer == null
             || characterSession.PlayerData == null)
             return;
@@ -99,9 +88,6 @@ public class PlayerHUDController : MonoBehaviour
         float mpPercent = effectiveMaxMP > 0 ? (float)data.CurrentMP / effectiveMaxMP : 0f;
         float expPercent = data.RequiredExp > 0 ? (float)data.CurrentExp / data.RequiredExp : 0f;
         currentLevel = data.Level;
-        currentMesos = currencySession.CurrentMesos;
-        currentRedPotions = inventorySession.GetInventoryCount(ItemDatabase.RedPotionId);
-        currentBluePotions = inventorySession.GetInventoryCount(ItemDatabase.BluePotionId);
 
         hpSlider.value = hpPercent;
         hpFill.color = EvaluateColor(hpPercent, BarType.HP);
@@ -120,7 +106,7 @@ public class PlayerHUDController : MonoBehaviour
         expText.text = $"[{data.CurrentExp}/{data.RequiredExp}]";
         expRoot.SetActive(true);
 
-        RefreshLevelAndCurrencyDisplay();
+        RefreshLevelDisplay();
     }
 
     private void OnHealthChanged(PlayerHealthChangedEvent e)
@@ -174,26 +160,7 @@ public class PlayerHUDController : MonoBehaviour
             return;
 
         currentLevel = e.NewLevel;
-        RefreshLevelAndCurrencyDisplay();
-    }
-
-    private void OnCurrencyChanged(PlayerCurrencyChangedEvent e)
-    {
-        if (!IsTrackedPlayer(e.Target, e.CharacterId))
-            return;
-
-        currentMesos = e.Mesos;
-        RefreshLevelAndCurrencyDisplay();
-    }
-
-    private void OnConsumablesChanged(PlayerConsumablesChangedEvent e)
-    {
-        if (!IsTrackedPlayer(e.Target, e.CharacterId))
-            return;
-
-        currentRedPotions = e.RedPotions;
-        currentBluePotions = e.BluePotions;
-        RefreshLevelAndCurrencyDisplay();
+        RefreshLevelDisplay();
     }
 
     private void OnMapTransitionCompleted(MapTransitionCompletedEvent e)
@@ -206,12 +173,12 @@ public class PlayerHUDController : MonoBehaviour
         RefreshFromRuntimeData();
     }
 
-    private void RefreshLevelAndCurrencyDisplay()
+    private void RefreshLevelDisplay()
     {
         if (lvlText == null)
             return;
 
-        lvlText.text = $"Lv. {currentLevel}  |  {currentMesos} Mesos  |  Red x{currentRedPotions}  |  Blue x{currentBluePotions}";
+        lvlText.text = $"Lv. {currentLevel}";
     }
 
     private IEnumerator SmoothSlider(

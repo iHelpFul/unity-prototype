@@ -80,11 +80,23 @@ public class PlayerSessionRuntimeService
 
         PlayerProgressionRules.Normalize(data);
 
-        if (data.Strength < 0)
-            data.Strength = 0;
+        if (data.UnspentStatPoints < 0)
+            data.UnspentStatPoints = 0;
 
-        if (data.Dexterity < 0)
-            data.Dexterity = 0;
+        if (data.Might < 0)
+            data.Might = 0;
+
+        if (data.Precision < 0)
+            data.Precision = 0;
+
+        if (data.Arcane < 0)
+            data.Arcane = 0;
+
+        if (data.Finesse < 0)
+            data.Finesse = 0;
+
+        if (data.HitRate < 0)
+            data.HitRate = 0;
 
         if (data.MaxHP <= 0)
             data.MaxHP = 100;

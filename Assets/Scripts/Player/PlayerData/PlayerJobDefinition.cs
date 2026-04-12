@@ -4,8 +4,8 @@ using UnityEngine;
 [CreateAssetMenu(menuName = "Game Data/Jobs/Player Job Definition")]
 public class PlayerJobDefinition : ScriptableObject
 {
-    [SerializeField] private PlayerJobType jobType = PlayerJobType.Novice;
-    [SerializeField] private string displayName = "Novice";
+    [SerializeField] private PlayerJobType jobType = PlayerJobType.Drifter;
+    [SerializeField] private string displayName = "Drifter";
     [SerializeField] private int advancementLevelRequirement = 10;
     [SerializeField] private PlayerBasicAttackProfile basicAttackProfile;
     [SerializeField] private List<PlayerSkillDefinition> defaultSkills = new List<PlayerSkillDefinition>();
@@ -99,3 +99,4 @@ public class PlayerJobDefinition : ScriptableObject
         defaultSkills = normalized;
     }
 }
+

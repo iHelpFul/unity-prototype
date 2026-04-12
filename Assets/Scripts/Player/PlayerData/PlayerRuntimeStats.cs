@@ -15,8 +15,12 @@ public class PlayerRuntimeData
     public int CurrentExp;
     public int RequiredExp;
 
-    public int Strength;
-    public int Dexterity;
+    public int Might;
+    public int Precision;
+    public int Arcane;
+    public int Finesse;
+    public int HitRate;
+    public int UnspentStatPoints;
 
     public int MaxHP;
     public int CurrentHP;

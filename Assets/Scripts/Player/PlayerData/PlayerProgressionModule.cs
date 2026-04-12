@@ -16,6 +16,29 @@ public class PlayerProgressionModule
         bootstrap = sessionBootstrap;
     }
 
+    public int GetUnspentStatPoints()
+    {
+        return data != null ? data.UnspentStatPoints : 0;
+    }
+
+    public bool TrySpendStatPoints(PlayerProgressionStatType statType, int points)
+    {
+        if (data == null || points <= 0)
+            return false;
+
+        if (data.UnspentStatPoints < points)
+            return false;
+
+        if (!TryAddToStat(statType, points))
+            return false;
+
+        data.UnspentStatPoints -= points;
+        PublishProgressionState();
+        bootstrap?.CharacterSession?.Save();
+
+        return true;
+    }
+
     public void AddExp(int amount)
     {
         if (data == null || amount <= 0)
@@ -42,7 +65,8 @@ public class PlayerProgressionModule
             Target = owner,
             CharacterId = characterId,
             CurrentExp = data.CurrentExp,
-            RequiredExp = data.RequiredExp
+            RequiredExp = data.RequiredExp,
+            UnspentStatPoints = data.UnspentStatPoints
         });
 
         if (didLevelUp)
@@ -55,6 +79,7 @@ public class PlayerProgressionModule
     {
         data.Level++;
         PlayerProgressionRules.RefreshDerivedState(data);
+        data.UnspentStatPoints += PlayerProgressionRules.StatPointsAwardedPerLevelUp;
 
         ApplyLevelGrowth();
 
@@ -64,15 +89,16 @@ public class PlayerProgressionModule
             CharacterId = owner != null
                 ? owner.CharacterId
                 : PlayerRuntimeIdentityUtility.ResolveCharacterId(bootstrap, null),
-            NewLevel = data.Level
+            NewLevel = data.Level,
+            UnspentStatPoints = data.UnspentStatPoints,
+            StatPointsAwarded = PlayerProgressionRules.StatPointsAwardedPerLevelUp
         });
+
+        PublishProgressionState();
     }
 
     private void ApplyLevelGrowth()
     {
-        data.Strength += 2;
-        data.Dexterity += 1;
-
         data.MaxHP += 20;
         data.MaxMP += 10;
 
@@ -115,5 +141,44 @@ public class PlayerProgressionModule
             CurrentMP = data.CurrentMP,
             MaxMP = data.MaxMP
         });
+    }
+
+    private void PublishProgressionState()
+    {
+        if (data == null || owner == null)
+            return;
+
+        EventBus.Publish(new PlayerExpChangedEvent
+        {
+            Target = owner,
+            CharacterId = owner != null ? owner.CharacterId : PlayerRuntimeIdentityUtility.ResolveCharacterId(bootstrap, null),
+            UnspentStatPoints = data.UnspentStatPoints,
+            CurrentExp = data.CurrentExp,
+            RequiredExp = data.RequiredExp
+        });
+    }
+
+    private bool TryAddToStat(PlayerProgressionStatType statType, int points)
+    {
+        switch (statType)
+        {
+            case PlayerProgressionStatType.Might:
+                data.Might += points;
+                return true;
+            case PlayerProgressionStatType.Precision:
+                data.Precision += points;
+                return true;
+            case PlayerProgressionStatType.Arcane:
+                data.Arcane += points;
+                return true;
+            case PlayerProgressionStatType.Finesse:
+                data.Finesse += points;
+                return true;
+            case PlayerProgressionStatType.HitRate:
+                data.HitRate += points;
+                return true;
+            default:
+                return false;
+        }
     }
 }

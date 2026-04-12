@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Warrior
   m_EditorClassIdentifier: Assembly-CSharp::PlayerJobDefinition
   jobType: 1
-  displayName: Warrior
+  displayName: Vanguard
   advancementLevelRequirement: 10
   basicAttackProfile: {fileID: 11400000, guid: 0f897e8f2c823564e9d47863092a4de0, type: 2}
   defaultSkills:

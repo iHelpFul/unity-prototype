@@ -16,3 +16,4 @@ MonoBehaviour:
   stockedItems:
   - {fileID: 11400000, guid: 0fd525f75d299624ab805080e81a7cfa, type: 2}
   - {fileID: 11400000, guid: 3daf6c060af662440af831c47b6386bf, type: 2}
+  - {fileID: 11400000, guid: 8357b7a19ad7ac64289d02603281f349, type: 2}

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Novice
   m_EditorClassIdentifier: Assembly-CSharp::PlayerJobDefinition
   jobType: 0
-  displayName: Novice
+  displayName: Drifter
   advancementLevelRequirement: 10
   basicAttackProfile: {fileID: 11400000, guid: 2602b5fd04bedd344a02114140b402bd, type: 2}
   defaultSkills: []

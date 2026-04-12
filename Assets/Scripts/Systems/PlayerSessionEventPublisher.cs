@@ -44,7 +44,8 @@ public class PlayerSessionEventPublisher
             Target = player,
             CharacterId = characterId,
             CurrentExp = data.CurrentExp,
-            RequiredExp = data.RequiredExp
+            RequiredExp = data.RequiredExp,
+            UnspentStatPoints = data.UnspentStatPoints
         });
 
         PublishCurrencyChanged(data, player);

@@ -5,6 +5,7 @@ public class PlayerSkillProjectile : MonoBehaviour
 {
     private const float DefaultImpactDuration = 0.04f;
 
+    private readonly PlayerHitApplicationService hitApplicationService = new PlayerHitApplicationService();
     private PlayerCharacter owner;
     private EnemyHealth lockedTarget;
     private LayerMask enemyLayer;
@@ -16,6 +17,7 @@ public class PlayerSkillProjectile : MonoBehaviour
     private float elapsedTime;
     private Vector3 direction;
     private bool commitDeathOnHit;
+    private bool allowDefaultVisual;
     private Transform visualRoot;
     private Material runtimeMaterial;
     private Material runtimeTrailMaterial;
@@ -31,7 +33,8 @@ public class PlayerSkillProjectile : MonoBehaviour
         float hitRadius,
         float maxLifetime,
         float visualScale,
-        bool shouldCommitDeathOnHit)
+        bool shouldCommitDeathOnHit,
+        bool shouldSkipDefaultVisual = false)
     {
         owner = ownerCharacter;
         lockedTarget = lockedEnemy;
@@ -45,6 +48,7 @@ public class PlayerSkillProjectile : MonoBehaviour
         radius = Mathf.Max(0.05f, hitRadius);
         lifetime = Mathf.Max(0.05f, maxLifetime);
         commitDeathOnHit = shouldCommitDeathOnHit;
+        allowDefaultVisual = !shouldSkipDefaultVisual;
 
         EnsureVisuals(Mathf.Max(0.08f, visualScale));
     }
@@ -179,31 +183,15 @@ public class PlayerSkillProjectile : MonoBehaviour
 
     private void ApplyHit(EnemyHealth enemy)
     {
-        if (enemy == null || enemy.IsDead)
-            return;
-
-        float directionX = Mathf.Sign(enemy.transform.position.x - transform.position.x);
-        if (Mathf.Approximately(directionX, 0f))
-            directionX = Mathf.Sign(direction.x);
-
-        EventBus.Publish(new HitImpactEvent
-        {
-            Duration = DefaultImpactDuration,
-            TimeScale = 0.1f,
-            Damage = 0
-        });
-
-        if (MultiplayerPrototypeEnemyCoordinator.TryRequestDamage(
+        hitApplicationService.ApplyHit(
             enemy,
-            directionX,
             owner,
+            transform.position.x,
+            direction.x,
+            ResolveLocalFallbackDamage(),
+            DefaultImpactDuration,
             commitDeathOnHit,
-            skillId))
-        {
-            return;
-        }
-
-        enemy.TakeDamage(ResolveLocalFallbackDamage(), directionX, owner, commitDeathOnHit);
+            skillId);
     }
 
     private int ResolveLocalFallbackDamage()
@@ -215,11 +203,7 @@ public class PlayerSkillProjectile : MonoBehaviour
             return 1;
 
         PlayerCombatSnapshot snapshot = owner.GetCombatSnapshot();
-        int baseDamage = DamageCalculator.CalculateDamage(
-            snapshot.Strength,
-            snapshot.Dexterity,
-            snapshot.WeaponAttack,
-            snapshot.SkillMastery);
+        int baseDamage = DamageCalculator.CalculateDamage(snapshot, isSkillDamage: true);
 
         if (!string.IsNullOrWhiteSpace(skillId))
         {
@@ -233,6 +217,9 @@ public class PlayerSkillProjectile : MonoBehaviour
 
     private void EnsureVisuals(float visualScale)
     {
+        if (!allowDefaultVisual)
+            return;
+
         TrailRenderer trail = GetComponent<TrailRenderer>();
         if (trail == null)
             trail = gameObject.AddComponent<TrailRenderer>();

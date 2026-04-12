@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fa856fa0726af624e8f3c4baaa180a9e, type: 3}
   m_Name: MpBoost
   m_EditorClassIdentifier: Assembly-CSharp::PlayerSkillDefinition
-  skillId: mage_mp_boost
+  skillId: arcanist_mp_boost
   displayName: MP Boost
   jobType: 3
   skillType: 0

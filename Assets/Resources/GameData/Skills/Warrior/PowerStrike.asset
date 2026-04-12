@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fa856fa0726af624e8f3c4baaa180a9e, type: 3}
   m_Name: PowerStrike
   m_EditorClassIdentifier: Assembly-CSharp::PlayerSkillDefinition
-  skillId: warrior_power_strike
+  skillId: vanguard_power_strike
   displayName: Power Strike
   jobType: 1
   skillType: 2

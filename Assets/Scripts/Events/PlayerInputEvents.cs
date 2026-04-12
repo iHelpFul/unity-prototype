@@ -51,3 +51,9 @@ public struct InventoryTogglePressedEvent
     public string CharacterId;
 }
 
+public struct ProgressionTogglePressedEvent
+{
+    public PlayerCharacter Player;
+    public string CharacterId;
+}
+

@@ -14,6 +14,9 @@ public class MultiplayerPrototypeSceneAvatarSuppressor : MonoBehaviour
             playerCharacter.SetRuntimeLocalPlayer(false);
 
         SetComponentEnabled<PlayerFacade>(false);
+        SetComponentEnabled<PlayerMovementController>(false);
+        SetComponentEnabled<PlayerCombatController>(false);
+        SetComponentEnabled<PlayerInteractionController>(false);
         SetComponentEnabled<PlayerInputAdapter>(false);
         SetComponentEnabled<PlayerInput>(false);
         SetComponentEnabled<PlayerAppearanceController>(false);

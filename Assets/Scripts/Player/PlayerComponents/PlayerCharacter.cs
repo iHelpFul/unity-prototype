@@ -11,7 +11,7 @@ public class PlayerCharacter : MonoBehaviour
     [SerializeField] private PlayerBaseStats baseStats;
 
     [Header("Combat")]
-    [SerializeField] private int weaponAttack = 15;
+    [SerializeField] private int baseWeaponPower = 15;
     [SerializeField] private float skillMastery = 0.6f;
     [SerializeField] private float timeToStun;
     [SerializeField] private float timeToInv;
@@ -19,28 +19,30 @@ public class PlayerCharacter : MonoBehaviour
 
     [Header("Consumables")]
     [SerializeField] private float manualPickupRange = 1.6f;
+    [SerializeField] private PlayerInteractionController interactionController;
 
-    private bool isStunned;
-    private float stunTimer;
-    private bool isInvulnerable;
-    private float invulTimer;
-    private PlayerRuntimeData runtimeStats;
-    private PlayerHitFlashController playerHitFlash;
-    private bool isDead;
+    [SerializeField] private PlayerRuntimeStateController runtimeStateController;
+
     private bool? runtimeLocalPlayerOverride;
     private string runtimeCharacterId;
 
     public bool IsLocalPlayer => runtimeLocalPlayerOverride ?? isLocalPlayer;
     public string CharacterId => ResolveCharacterId();
-    public bool IsStunned => isStunned;
-    public bool IsDead => isDead;
-    public PlayerJobType CurrentJob => runtimeStats != null ? runtimeStats.CurrentJob : PlayerJobType.Novice;
-    public bool HasPendingJobAdvancement => runtimeStats != null && runtimeStats.HasPendingJobAdvancement;
+    public bool IsStunned => runtimeStateController != null && runtimeStateController.IsStunned;
+    public bool IsDead => runtimeStateController != null && runtimeStateController.IsDead;
+    public PlayerJobType CurrentJob => runtimeStateController != null
+        ? runtimeStateController.CurrentJob
+        : PlayerJobType.Drifter;
+    public int UnspentStatPoints => runtimeStateController != null
+        ? runtimeStateController.UnspentStatPoints
+        : 0;
+    public bool HasPendingJobAdvancement => runtimeStateController != null
+        && runtimeStateController.HasPendingJobAdvancement;
 
     public void SetRuntimeLocalPlayer(bool isRuntimeLocalPlayer)
     {
         runtimeLocalPlayerOverride = isRuntimeLocalPlayer;
-        RefreshRuntimeOwnershipState();
+        runtimeStateController?.RefreshRuntimeOwnershipState();
     }
 
     public void SetRuntimeCharacterId(string resolvedCharacterId)
@@ -51,12 +53,13 @@ public class PlayerCharacter : MonoBehaviour
     public void BindBootstrap(GameBootstrap sessionBootstrap)
     {
         bootstrap = sessionBootstrap;
-        RefreshRuntimeOwnershipState();
+        runtimeStateController?.BindBootstrap(sessionBootstrap);
+        interactionController?.BindBootstrap(sessionBootstrap);
     }
 
     public void RefreshPrototypeSessionState()
     {
-        RefreshSessionBindings();
+        runtimeStateController?.RefreshSessionBindings();
 
         if (IsLocalPlayer)
             bootstrap?.CharacterSession?.PublishSessionState(this);
@@ -64,10 +67,33 @@ public class PlayerCharacter : MonoBehaviour
 
     private void Awake()
     {
-        if (bootstrap != null)
-            BindBootstrap(bootstrap);
+        if (runtimeStateController == null)
+            runtimeStateController = GetComponent<PlayerRuntimeStateController>();
 
-        playerHitFlash = GetComponent<PlayerHitFlashController>();
+        if (runtimeStateController == null)
+            runtimeStateController = gameObject.AddComponent<PlayerRuntimeStateController>();
+
+        runtimeStateController.Initialize(
+            this,
+            baseStats,
+            baseWeaponPower,
+            skillMastery,
+            timeToStun,
+            timeToInv,
+            timeToFlash);
+
+        if (interactionController == null)
+            interactionController = GetComponent<PlayerInteractionController>();
+
+        if (interactionController == null)
+            interactionController = gameObject.AddComponent<PlayerInteractionController>();
+
+        interactionController.Initialize(this, manualPickupRange);
+
+        if (bootstrap != null)
+        {
+            BindBootstrap(bootstrap);
+        }
     }
 
     private void Start()
@@ -75,370 +101,58 @@ public class PlayerCharacter : MonoBehaviour
         if (!IsLocalPlayer)
             return;
 
-        RefreshSessionBindings();
+        runtimeStateController?.RefreshSessionBindings();
         bootstrap?.CharacterSession?.PublishSessionState(this);
-    }
-
-    private void OnEnable()
-    {
-        EventBus.Subscribe<PlayerDamagedEvent>(OnPlayerDamaged);
-        EventBus.Subscribe<InteractPressedEvent>(OnInteractPressed);
-        EventBus.Subscribe<UseConsumablePressedEvent>(OnUseConsumablePressed);
-    }
-
-    private void OnDisable()
-    {
-        EventBus.Unsubscribe<PlayerDamagedEvent>(OnPlayerDamaged);
-        EventBus.Unsubscribe<InteractPressedEvent>(OnInteractPressed);
-        EventBus.Unsubscribe<UseConsumablePressedEvent>(OnUseConsumablePressed);
-    }
-
-    private void Update()
-    {
-        if (isInvulnerable)
-        {
-            invulTimer -= Time.deltaTime;
-
-            if (invulTimer <= 0f)
-                isInvulnerable = false;
-        }
-
-        if (!isStunned)
-            return;
-
-        stunTimer -= Time.deltaTime;
-
-        if (stunTimer <= 0f)
-            isStunned = false;
     }
 
     public PlayerCombatSnapshot GetCombatSnapshot()
     {
-        RefreshSessionBindings();
-        ItemStatModifierData equipmentBonuses = GetEquipmentBonuses();
-
-        int strength = runtimeStats != null
-            ? runtimeStats.Strength
-            : baseStats != null ? baseStats.Strength : 0;
-
-        int dexterity = runtimeStats != null
-            ? runtimeStats.Dexterity
-            : baseStats != null ? baseStats.Dexterity : 0;
-
-        return new PlayerCombatSnapshot
-        {
-            Strength = strength + equipmentBonuses.Strength,
-            Dexterity = dexterity + equipmentBonuses.Dexterity,
-            WeaponAttack = weaponAttack + equipmentBonuses.WeaponAttack,
-            SkillMastery = skillMastery
-        };
+        return runtimeStateController != null
+            ? runtimeStateController.GetCombatSnapshot()
+            : new PlayerCombatSnapshot();
     }
 
     public PlayerBasicAttackProfile GetBasicAttackProfile()
     {
-        RefreshSessionBindings();
-        return PlayerJobCombatProfiles.GetBasicAttackProfile(CurrentJob);
+        return runtimeStateController != null
+            ? runtimeStateController.GetBasicAttackProfile()
+            : PlayerJobCombatProfiles.GetBasicAttackProfile(PlayerJobType.Drifter);
+    }
+
+    public bool TrySpendStatPoints(PlayerProgressionStatType statType, int points)
+    {
+        return runtimeStateController != null
+            && runtimeStateController.TrySpendStatPoints(statType, points);
     }
 
     public void TakeDamage(int amount)
     {
-        RefreshSessionBindings();
-
-        if (runtimeStats == null)
-            return;
-
-        runtimeStats.CurrentHP = Mathf.Max(0, runtimeStats.CurrentHP - amount);
-        PublishHealthChanged();
-        bootstrap?.CharacterSession?.Save();
-
-        if (runtimeStats.CurrentHP == 0)
-            Die();
+        runtimeStateController?.TakeDamage(amount);
     }
 
     public void RestoreHP(int amount)
     {
-        RefreshSessionBindings();
-
-        if (runtimeStats == null || amount <= 0)
-            return;
-
-        int updatedHP = Mathf.Clamp(runtimeStats.CurrentHP + amount, 0, GetEffectiveMaxHP());
-        if (updatedHP == runtimeStats.CurrentHP)
-            return;
-
-        runtimeStats.CurrentHP = updatedHP;
-        PublishHealthChanged();
-        bootstrap?.CharacterSession?.Save();
+        runtimeStateController?.RestoreHP(amount);
     }
 
     public void RestoreMP(int amount)
     {
-        RefreshSessionBindings();
-
-        if (runtimeStats == null || amount <= 0)
-            return;
-
-        int updatedMP = Mathf.Clamp(runtimeStats.CurrentMP + amount, 0, GetEffectiveMaxMP());
-        if (updatedMP == runtimeStats.CurrentMP)
-            return;
-
-        runtimeStats.CurrentMP = updatedMP;
-        PublishManaChanged();
-        bootstrap?.CharacterSession?.Save();
+        runtimeStateController?.RestoreMP(amount);
     }
 
     public bool HasEnoughMP(int amount)
     {
-        RefreshSessionBindings();
-
-        if (runtimeStats == null)
-            return false;
-
-        return runtimeStats.CurrentMP >= Mathf.Max(0, amount);
+        return runtimeStateController != null && runtimeStateController.HasEnoughMP(amount);
     }
 
     public bool TrySpendMP(int amount)
     {
-        RefreshSessionBindings();
-
-        if (runtimeStats == null)
-            return false;
-
-        int manaCost = Mathf.Max(0, amount);
-        if (manaCost == 0)
-            return true;
-
-        if (runtimeStats.CurrentMP < manaCost)
-            return false;
-
-        runtimeStats.CurrentMP -= manaCost;
-        PublishManaChanged();
-        bootstrap?.CharacterSession?.Save();
-        return true;
+        return runtimeStateController != null && runtimeStateController.TrySpendMP(amount);
     }
 
     public void ResetAfterDeath()
     {
-        RefreshSessionBindings();
-
-        if (runtimeStats == null)
-            return;
-
-        runtimeStats.CurrentHP = GetEffectiveMaxHP();
-        PublishHealthChanged();
-        isDead = false;
-        isInvulnerable = false;
-        isStunned = false;
-
-        bootstrap?.CharacterSession?.Save();
-        EventBus.Publish(new PlayerRespawnedEvent
-        {
-            Target = this,
-            CharacterId = CharacterId
-        });
-    }
-
-    private void SyncBaseStatsToRuntime()
-    {
-        if (runtimeStats == null || baseStats == null)
-            return;
-
-        bool didChange = false;
-
-        if (runtimeStats.Strength < baseStats.Strength)
-        {
-            runtimeStats.Strength = baseStats.Strength;
-            didChange = true;
-        }
-
-        if (runtimeStats.Dexterity < baseStats.Dexterity)
-        {
-            runtimeStats.Dexterity = baseStats.Dexterity;
-            didChange = true;
-        }
-
-        if (didChange)
-            bootstrap?.CharacterSession?.Save();
-    }
-
-    private void OnPlayerDamaged(PlayerDamagedEvent e)
-    {
-        RefreshSessionBindings();
-
-        if (!PlayerRuntimeIdentityUtility.MatchesCharacter(this, CharacterId, e.Target, e.CharacterId) || runtimeStats == null)
-            return;
-
-        if (isInvulnerable || isDead)
-            return;
-
-        TakeDamage(e.Damage);
-
-        EventBus.Publish(new PlayerHitEvent
-        {
-            Target = this,
-            CharacterId = CharacterId
-        });
-
-        float direction = Mathf.Sign(transform.position.x - e.HitDirection);
-
-        EventBus.Publish(new PlaySfxEvent
-        {
-            Type = SfxType.PlayerHit,
-            Position = transform.position
-        });
-
-        EventBus.Publish(new PlayVfxEvent
-        {
-            Type = VfxType.PlayerHit,
-            Position = transform.position + Vector3.up * 1f,
-            Rotation = Quaternion.identity
-        });
-
-        EventBus.Publish(new CharacterKnockbackEvent
-        {
-            Target = transform,
-            DirectionX = direction,
-            Force = 1.2f,
-            Duration = 0.15f
-        });
-
-        isStunned = true;
-        stunTimer = timeToStun;
-        isInvulnerable = true;
-        invulTimer = timeToInv;
-        playerHitFlash?.PlayFlash(timeToFlash);
-    }
-
-    private void Die()
-    {
-        if (isDead)
-            return;
-
-        isDead = true;
-
-        EventBus.Publish(new PlayerDiedEvent
-        {
-            Target = this,
-            CharacterId = CharacterId
-        });
-    }
-
-    private void OnInteractPressed(InteractPressedEvent e)
-    {
-        if (!PlayerRuntimeIdentityUtility.MatchesCharacter(this, CharacterId, e.Player, e.CharacterId) || isDead)
-            return;
-
-        WorldLootPickup nearestPickup = FindNearestManualPickup();
-        nearestPickup?.TryCollect(this);
-    }
-
-    private void OnUseConsumablePressed(UseConsumablePressedEvent e)
-    {
-        RefreshSessionBindings();
-
-        if (!PlayerRuntimeIdentityUtility.MatchesCharacter(this, CharacterId, e.Player, e.CharacterId)
-            || isDead
-            || runtimeStats == null
-            || bootstrap == null)
-            return;
-
-        PlayerSessionInventoryApplicationService inventorySession = bootstrap.InventorySession;
-        if (inventorySession == null)
-            return;
-
-        string itemId = ItemDatabase.GetConsumableItemId(e.ConsumableType);
-        if (string.IsNullOrEmpty(itemId))
-            return;
-
-        ItemDefinition definition = ItemDatabase.GetDefinition(itemId);
-        if (definition == null)
-            return;
-
-        int restoreHPAmount = definition.RestoreHP;
-        int restoreMPAmount = definition.RestoreMP;
-
-        bool canRestoreHP = restoreHPAmount > 0 && runtimeStats.CurrentHP < GetEffectiveMaxHP();
-        bool canRestoreMP = restoreMPAmount > 0 && runtimeStats.CurrentMP < GetEffectiveMaxMP();
-
-        if (!canRestoreHP && !canRestoreMP)
-            return;
-
-        if (!inventorySession.TryConsumeConsumable(this, e.ConsumableType))
-            return;
-
-        if (canRestoreHP)
-            RestoreHP(restoreHPAmount);
-
-        if (canRestoreMP)
-            RestoreMP(restoreMPAmount);
-    }
-
-    private void PublishHealthChanged()
-    {
-        EventBus.Publish(new PlayerHealthChangedEvent
-        {
-            Target = this,
-            CharacterId = CharacterId,
-            CurrentHP = runtimeStats.CurrentHP,
-            MaxHP = GetEffectiveMaxHP()
-        });
-    }
-
-    private void PublishManaChanged()
-    {
-        EventBus.Publish(new PlayerManaChangedEvent
-        {
-            Target = this,
-            CharacterId = CharacterId,
-            CurrentMP = runtimeStats.CurrentMP,
-            MaxMP = GetEffectiveMaxMP()
-        });
-    }
-
-    private WorldLootPickup FindNearestManualPickup()
-    {
-        WorldLootPickup[] worldPickups = FindObjectsByType<WorldLootPickup>(
-            FindObjectsInactive.Exclude,
-            FindObjectsSortMode.None);
-
-        WorldLootPickup nearestPickup = null;
-        float bestSqrDistance = manualPickupRange * manualPickupRange;
-
-        foreach (WorldLootPickup pickup in worldPickups)
-        {
-            if (pickup == null || !pickup.CanBePickedUp(this, manualPickupRange))
-                continue;
-
-            float sqrDistance = (pickup.transform.position - transform.position).sqrMagnitude;
-            if (sqrDistance > bestSqrDistance)
-                continue;
-
-            bestSqrDistance = sqrDistance;
-            nearestPickup = pickup;
-        }
-
-        return nearestPickup;
-    }
-
-    private void RefreshRuntimeOwnershipState()
-    {
-        if (!IsLocalPlayer)
-        {
-            runtimeStats = null;
-            return;
-        }
-
-        runtimeStats = bootstrap != null ? bootstrap.CharacterSession?.PlayerData : null;
-        SyncBaseStatsToRuntime();
-    }
-
-    private void RefreshSessionBindings()
-    {
-        if (!IsLocalPlayer)
-            return;
-
-        if (bootstrap != null)
-            runtimeStats = bootstrap.CharacterSession?.PlayerData;
+        runtimeStateController?.ResetAfterDeath();
     }
 
     private string ResolveCharacterId()
@@ -463,29 +177,5 @@ public class PlayerCharacter : MonoBehaviour
 
         return PlayerRuntimeIdentityUtility.NormalizeCharacterId(characterId);
     }
-
-    private ItemStatModifierData GetEquipmentBonuses()
-    {
-        return bootstrap != null && bootstrap.EquipmentSession != null
-            ? bootstrap.EquipmentSession.GetEquipmentStatBonuses()
-            : new ItemStatModifierData();
-    }
-
-    private int GetEffectiveMaxHP()
-    {
-        if (runtimeStats == null)
-            return 0;
-
-        ItemStatModifierData equipmentBonuses = GetEquipmentBonuses();
-        return Mathf.Max(1, runtimeStats.MaxHP + equipmentBonuses.MaxHP);
-    }
-
-    private int GetEffectiveMaxMP()
-    {
-        if (runtimeStats == null)
-            return 0;
-
-        ItemStatModifierData equipmentBonuses = GetEquipmentBonuses();
-        return Mathf.Max(0, runtimeStats.MaxMP + equipmentBonuses.MaxMP);
-    }
 }
+

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Mage
   m_EditorClassIdentifier: Assembly-CSharp::PlayerJobDefinition
   jobType: 3
-  displayName: Mage
+  displayName: Arcanist
   advancementLevelRequirement: 10
   basicAttackProfile: {fileID: 11400000, guid: e82ecd06196a5194b878af0d0e1a4666, type: 2}
   defaultSkills:

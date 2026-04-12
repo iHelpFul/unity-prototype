@@ -20,6 +20,7 @@ public struct PlayerExpChangedEvent
     public string CharacterId;
     public int CurrentExp;
     public int RequiredExp;
+    public int UnspentStatPoints;
 }
 
 public struct PlayerLevelUpEvent
@@ -27,6 +28,8 @@ public struct PlayerLevelUpEvent
     public PlayerCharacter Target;
     public string CharacterId;
     public int NewLevel;
+    public int UnspentStatPoints;
+    public int StatPointsAwarded;
 }
 
 public struct PlayerCurrencyChangedEvent

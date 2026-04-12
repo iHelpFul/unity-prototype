@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fa856fa0726af624e8f3c4baaa180a9e, type: 3}
   m_Name: NimbleBody
   m_EditorClassIdentifier: Assembly-CSharp::PlayerSkillDefinition
-  skillId: thief_nimble_body
+  skillId: shade_nimble_body
   displayName: Nimble Body
   jobType: 2
   skillType: 0

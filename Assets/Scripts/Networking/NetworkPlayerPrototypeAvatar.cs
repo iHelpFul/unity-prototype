@@ -259,24 +259,33 @@ public struct NetworkPlayerPrototypeIdentityState : INetworkSerializable, IEquat
 [Serializable]
 public struct NetworkPlayerPrototypeCombatState : INetworkSerializable, IEquatable<NetworkPlayerPrototypeCombatState>
 {
-    public int Strength;
-    public int Dexterity;
-    public int WeaponAttack;
+    public int Might;
+    public int Precision;
+    public int Arcane;
+    public int Finesse;
+    public int HitRate;
+    public int WeaponPower;
     public float SkillMastery;
     public int ComboCounter;
     public PlayerJobType CurrentJob;
 
     public bool IsPopulated =>
-        Strength > 0
-        || Dexterity > 0
-        || WeaponAttack > 0
+        Might > 0
+        || Precision > 0
+        || Arcane > 0
+        || Finesse > 0
+        || HitRate > 0
+        || WeaponPower > 0
         || SkillMastery > 0f;
 
     public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
     {
-        serializer.SerializeValue(ref Strength);
-        serializer.SerializeValue(ref Dexterity);
-        serializer.SerializeValue(ref WeaponAttack);
+        serializer.SerializeValue(ref Might);
+        serializer.SerializeValue(ref Precision);
+        serializer.SerializeValue(ref Arcane);
+        serializer.SerializeValue(ref Finesse);
+        serializer.SerializeValue(ref HitRate);
+        serializer.SerializeValue(ref WeaponPower);
         serializer.SerializeValue(ref SkillMastery);
         serializer.SerializeValue(ref ComboCounter);
 
@@ -289,9 +298,12 @@ public struct NetworkPlayerPrototypeCombatState : INetworkSerializable, IEquatab
 
     public bool Equals(NetworkPlayerPrototypeCombatState other)
     {
-        return Strength == other.Strength
-            && Dexterity == other.Dexterity
-            && WeaponAttack == other.WeaponAttack
+        return Might == other.Might
+            && Precision == other.Precision
+            && Arcane == other.Arcane
+            && Finesse == other.Finesse
+            && HitRate == other.HitRate
+            && WeaponPower == other.WeaponPower
             && SkillMastery.Equals(other.SkillMastery)
             && ComboCounter == other.ComboCounter
             && CurrentJob == other.CurrentJob;
@@ -304,22 +316,33 @@ public struct NetworkPlayerPrototypeCombatState : INetworkSerializable, IEquatab
 
     public override int GetHashCode()
     {
-        return HashCode.Combine(
-            Strength,
-            Dexterity,
-            WeaponAttack,
+        int coreHash = HashCode.Combine(
+            Might,
+            Precision,
+            Arcane,
+            Finesse,
+            HitRate,
+            WeaponPower);
+
+        int growthHash = HashCode.Combine(
             SkillMastery,
             ComboCounter,
             CurrentJob);
+
+        return HashCode.Combine(coreHash, growthHash);
     }
 
     public PlayerCombatSnapshot ToCombatSnapshot()
     {
         return new PlayerCombatSnapshot
         {
-            Strength = Strength,
-            Dexterity = Dexterity,
-            WeaponAttack = WeaponAttack,
+            CurrentJob = CurrentJob,
+            Might = Might,
+            Precision = Precision,
+            Arcane = Arcane,
+            Finesse = Finesse,
+            HitRate = HitRate,
+            WeaponPower = WeaponPower,
             SkillMastery = SkillMastery
         };
     }
@@ -331,9 +354,12 @@ public struct NetworkPlayerPrototypeCombatState : INetworkSerializable, IEquatab
     {
         return new NetworkPlayerPrototypeCombatState
         {
-            Strength = snapshot.Strength,
-            Dexterity = snapshot.Dexterity,
-            WeaponAttack = snapshot.WeaponAttack,
+            Might = snapshot.Might,
+            Precision = snapshot.Precision,
+            Arcane = snapshot.Arcane,
+            Finesse = snapshot.Finesse,
+            HitRate = snapshot.HitRate,
+            WeaponPower = snapshot.WeaponPower,
             SkillMastery = snapshot.SkillMastery,
             ComboCounter = Mathf.Max(0, comboCounter),
             CurrentJob = currentJob
@@ -350,6 +376,9 @@ public class NetworkPlayerPrototypeAvatar : NetworkBehaviour
 
     [SerializeField] private PlayerCharacter character;
     [SerializeField] private PlayerFacade playerFacade;
+    [SerializeField] private PlayerMovementController movementController;
+    [SerializeField] private PlayerCombatController combatController;
+    [SerializeField] private PlayerInteractionController interactionController;
     [SerializeField] private PlayerInputAdapter inputAdapter;
     [SerializeField] private PlayerInput playerInput;
     [SerializeField] private PlayerAppearanceController appearanceController;
@@ -485,6 +514,15 @@ public class NetworkPlayerPrototypeAvatar : NetworkBehaviour
         if (playerFacade == null)
             playerFacade = GetComponent<PlayerFacade>();
 
+        if (movementController == null)
+            movementController = GetComponent<PlayerMovementController>();
+
+        if (combatController == null)
+            combatController = GetComponent<PlayerCombatController>();
+
+        if (interactionController == null)
+            interactionController = GetComponent<PlayerInteractionController>();
+
         if (inputAdapter == null)
             inputAdapter = GetComponent<PlayerInputAdapter>();
 
@@ -576,6 +614,15 @@ public class NetworkPlayerPrototypeAvatar : NetworkBehaviour
 
         if (playerFacade != null)
             playerFacade.enabled = isEnabled;
+
+        if (movementController != null)
+            movementController.enabled = isEnabled;
+
+        if (combatController != null)
+            combatController.enabled = isEnabled;
+
+        if (interactionController != null)
+            interactionController.enabled = isEnabled;
 
         if (appearanceController != null)
             appearanceController.enabled = isEnabled;

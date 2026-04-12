@@ -7,9 +7,9 @@ public class NpcJobAdvancement : MonoBehaviour
     [SerializeField, Min(1)] private int requiredLevel = 10;
     [SerializeField] private List<PlayerJobType> offeredJobs = new List<PlayerJobType>
     {
-        PlayerJobType.Warrior,
-        PlayerJobType.Thief,
-        PlayerJobType.Mage
+        PlayerJobType.Vanguard,
+        PlayerJobType.Shade,
+        PlayerJobType.Arcanist
     };
 
     public int RequiredLevel => Mathf.Max(1, requiredLevel);
@@ -17,7 +17,7 @@ public class NpcJobAdvancement : MonoBehaviour
 
     public bool OffersJob(PlayerJobType jobType)
     {
-        if (jobType == PlayerJobType.Novice)
+        if (jobType == PlayerJobType.Drifter)
             return false;
 
         for (int index = 0; index < offeredJobs.Count; index++)
@@ -42,7 +42,7 @@ public class NpcJobAdvancement : MonoBehaviour
         for (int index = 0; index < offeredJobs.Count; index++)
         {
             PlayerJobType jobType = offeredJobs[index];
-            if (jobType == PlayerJobType.Novice || !seenJobs.Add(jobType))
+            if (jobType == PlayerJobType.Drifter || !seenJobs.Add(jobType))
                 continue;
 
             normalizedJobs.Add(jobType);
@@ -50,11 +50,12 @@ public class NpcJobAdvancement : MonoBehaviour
 
         if (normalizedJobs.Count == 0)
         {
-            normalizedJobs.Add(PlayerJobType.Warrior);
-            normalizedJobs.Add(PlayerJobType.Thief);
-            normalizedJobs.Add(PlayerJobType.Mage);
+            normalizedJobs.Add(PlayerJobType.Vanguard);
+            normalizedJobs.Add(PlayerJobType.Shade);
+            normalizedJobs.Add(PlayerJobType.Arcanist);
         }
 
         offeredJobs = normalizedJobs;
     }
 }
+

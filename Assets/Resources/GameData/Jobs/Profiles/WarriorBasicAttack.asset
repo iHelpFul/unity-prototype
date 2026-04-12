@@ -19,9 +19,9 @@ MonoBehaviour:
   attackCooldown: 0.4
   maxAttackDuration: 1.2
   attackAnimationSpeed: 1
-  maxTargets: 1
-  basicDamageMultiplier: 1.18
-  maxComboCounter: 10
+  maxTargets: 2
+  basicDamageMultiplier: 1.2
+  maxComboCounter: 20
   comboResetDelay: 4
   comboDamageBonusPerStack: 0.05
   supportsComboCounter: 1

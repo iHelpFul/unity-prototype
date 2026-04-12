@@ -147,6 +147,14 @@ public class MapTransitionService : MonoBehaviour
         PlayerFacade playerFacade = player.GetComponent<PlayerFacade>();
         if (playerFacade != null)
             playerFacade.enabled = enabled;
+
+        PlayerMovementController playerMovementController = player.GetComponent<PlayerMovementController>();
+        if (playerMovementController != null)
+            playerMovementController.enabled = enabled;
+
+        PlayerCombatController playerCombatController = player.GetComponent<PlayerCombatController>();
+        if (playerCombatController != null)
+            playerCombatController.enabled = enabled;
     }
 
     private PlayerCharacter ResolveRequester(PlayerCharacter requester, string characterId)

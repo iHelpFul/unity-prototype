@@ -25,13 +25,13 @@ public class NpcVendorDefinition : ScriptableObject
                 stockedItems.Add(item);
         }
 
-        Sanitize();
+        //Sanitize();
     }
 
-    private void OnValidate()
-    {
-        Sanitize();
-    }
+   // private void OnValidate()
+  //  {
+    //    Sanitize();
+    //}
 
     private void Sanitize()
     {

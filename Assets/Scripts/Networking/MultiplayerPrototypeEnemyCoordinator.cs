@@ -580,10 +580,8 @@ public class MultiplayerPrototypeEnemyCoordinator : MonoBehaviour
 
         PlayerCombatSnapshot snapshot = combatState.ToCombatSnapshot();
         int baseDamage = DamageCalculator.CalculateDamage(
-            snapshot.Strength,
-            snapshot.Dexterity,
-            snapshot.WeaponAttack,
-            snapshot.SkillMastery);
+            snapshot,
+            !string.IsNullOrWhiteSpace(skillId));
 
         if (!string.IsNullOrWhiteSpace(skillId))
         {

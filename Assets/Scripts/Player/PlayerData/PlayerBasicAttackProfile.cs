@@ -10,7 +10,7 @@ public enum PlayerBasicAttackSelectionMode
 [CreateAssetMenu(menuName = "Game Data/Jobs/Basic Attack Profile")]
 public class PlayerBasicAttackProfile : ScriptableObject
 {
-    [SerializeField] private PlayerJobType jobType = PlayerJobType.Novice;
+    [SerializeField] private PlayerJobType jobType = PlayerJobType.Drifter;
     [SerializeField] private int animationVariantCount = 1;
     [SerializeField] private int maxChainCount = 1;
     [SerializeField] private PlayerBasicAttackSelectionMode selectionMode = PlayerBasicAttackSelectionMode.Sequential;
@@ -188,10 +188,10 @@ public static class PlayerJobCombatProfiles
 
     public static bool IsJobAdvancementAvailable(PlayerRuntimeData data)
     {
-        if (data == null || data.CurrentJob != PlayerJobType.Novice)
+        if (data == null || data.CurrentJob != PlayerJobType.Drifter)
             return false;
 
-        PlayerJobDefinition noviceDefinition = GetJobDefinition(PlayerJobType.Novice);
+        PlayerJobDefinition noviceDefinition = GetJobDefinition(PlayerJobType.Drifter);
         int requiredLevel = noviceDefinition != null
             ? Mathf.Max(1, noviceDefinition.AdvancementLevelRequirement)
             : 10;
@@ -234,13 +234,13 @@ public static class PlayerJobCombatProfiles
         if (fallbackDefinitions.TryGetValue(jobType, out PlayerJobDefinition definition))
             return definition;
 
-        return fallbackDefinitions[PlayerJobType.Novice];
+        return fallbackDefinitions[PlayerJobType.Drifter];
     }
 
     private static Dictionary<PlayerJobType, PlayerJobDefinition> CreateFallbackDefinitions()
     {
         PlayerBasicAttackProfile noviceProfile = PlayerBasicAttackProfile.CreateTransient(
-            PlayerJobType.Novice,
+            PlayerJobType.Drifter,
             2,
             2,
             PlayerBasicAttackSelectionMode.Random,
@@ -255,7 +255,7 @@ public static class PlayerJobCombatProfiles
             false);
 
         PlayerBasicAttackProfile warriorProfile = PlayerBasicAttackProfile.CreateTransient(
-            PlayerJobType.Warrior,
+            PlayerJobType.Vanguard,
             5,
             5,
             PlayerBasicAttackSelectionMode.Sequential,
@@ -270,7 +270,7 @@ public static class PlayerJobCombatProfiles
             true);
 
         PlayerBasicAttackProfile thiefProfile = PlayerBasicAttackProfile.CreateTransient(
-            PlayerJobType.Thief,
+            PlayerJobType.Shade,
             2,
             2,
             PlayerBasicAttackSelectionMode.Random,
@@ -285,7 +285,7 @@ public static class PlayerJobCombatProfiles
             false);
 
         PlayerBasicAttackProfile mageProfile = PlayerBasicAttackProfile.CreateTransient(
-            PlayerJobType.Mage,
+            PlayerJobType.Arcanist,
             2,
             2,
             PlayerBasicAttackSelectionMode.Random,
@@ -301,39 +301,39 @@ public static class PlayerJobCombatProfiles
 
         return new Dictionary<PlayerJobType, PlayerJobDefinition>
         {
-            [PlayerJobType.Novice] = PlayerJobDefinition.CreateTransient(
-                PlayerJobType.Novice,
-                "Novice",
+            [PlayerJobType.Drifter] = PlayerJobDefinition.CreateTransient(
+                PlayerJobType.Drifter,
+                "Drifter",
                 10,
                 noviceProfile,
                 new PlayerSkillDefinition[0]),
-            [PlayerJobType.Warrior] = PlayerJobDefinition.CreateTransient(
-                PlayerJobType.Warrior,
-                "Warrior",
+            [PlayerJobType.Vanguard] = PlayerJobDefinition.CreateTransient(
+                PlayerJobType.Vanguard,
+                "Vanguard",
                 10,
                 warriorProfile,
                 ResolveDefaultSkills(
-                    PlayerSkillDatabase.WarriorPowerStrikeId,
-                    PlayerSkillDatabase.WarriorRageId,
-                    PlayerSkillDatabase.WarriorComboMasteryId)),
-            [PlayerJobType.Thief] = PlayerJobDefinition.CreateTransient(
-                PlayerJobType.Thief,
-                "Thief",
+                    PlayerSkillDatabase.VanguardPowerStrikeId,
+                    PlayerSkillDatabase.VanguardRageId,
+                    PlayerSkillDatabase.VanguardComboMasteryId)),
+            [PlayerJobType.Shade] = PlayerJobDefinition.CreateTransient(
+                PlayerJobType.Shade,
+                "Shade",
                 10,
                 thiefProfile,
                 ResolveDefaultSkills(
-                    PlayerSkillDatabase.ThiefLuckySevenId,
-                    PlayerSkillDatabase.ThiefHasteId,
-                    PlayerSkillDatabase.ThiefNimbleBodyId)),
-            [PlayerJobType.Mage] = PlayerJobDefinition.CreateTransient(
-                PlayerJobType.Mage,
-                "Mage",
+                    PlayerSkillDatabase.ShadeLuckySevenId,
+                    PlayerSkillDatabase.ShadeHasteId,
+                    PlayerSkillDatabase.ShadeNimbleBodyId)),
+            [PlayerJobType.Arcanist] = PlayerJobDefinition.CreateTransient(
+                PlayerJobType.Arcanist,
+                "Arcanist",
                 10,
                 mageProfile,
                 ResolveDefaultSkills(
-                    PlayerSkillDatabase.MageMagicClawId,
-                    PlayerSkillDatabase.MageMagicGuardId,
-                    PlayerSkillDatabase.MageMpBoostId))
+                    PlayerSkillDatabase.ArcanistMagicClawId,
+                    PlayerSkillDatabase.ArcanistMagicGuardId,
+                    PlayerSkillDatabase.ArcanistMpBoostId))
         };
     }
 
@@ -351,3 +351,4 @@ public static class PlayerJobCombatProfiles
         return defaultSkills;
     }
 }
+

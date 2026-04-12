@@ -1,4 +1,4 @@
-%YAML 1.1
+﻿%YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
 --- !u!114 &11400000
 MonoBehaviour:
@@ -22,11 +22,12 @@ MonoBehaviour:
   restoreMP: 0
   primaryColor: {r: 1, g: 1, b: 1, a: 1}
   accentColor: {r: 0.9, g: 0.9, b: 0.9, a: 1}
+  worldLootPickupPrefab: {fileID: 8009664572127095786, guid: 288da226059267d4d81a0a51c4b289da, type: 3}
   equipmentSlot: 1
   equipmentStatBonuses:
-    Strength: 0
-    Dexterity: 0
-    WeaponAttack: 0
+    Might: 0
+    Precision: 0
+    WeaponPower: 0
     MaxHP: 0
     MaxMP: 0
   equipmentAppearance:
@@ -44,3 +45,4 @@ MonoBehaviour:
     PrimaryClothingColor: {r: 1, g: 1, b: 1, a: 1}
     ApplySecondaryClothingColor: 0
     SecondaryClothingColor: {r: 1, g: 1, b: 1, a: 1}
+

@@ -132,6 +132,18 @@ public class PlayerInputAdapter : MonoBehaviour
         });
     }
 
+    public void OnProgressionToggle(InputAction.CallbackContext context)
+    {
+        if (!ShouldPublishInput() || !context.performed)
+            return;
+
+        EventBus.Publish(new ProgressionTogglePressedEvent
+        {
+            Player = playerCharacter,
+            CharacterId = ResolveCharacterId()
+        });
+    }
+
     private bool ShouldPublishInput()
     {
         return enabled && playerCharacter != null && playerCharacter.IsLocalPlayer;

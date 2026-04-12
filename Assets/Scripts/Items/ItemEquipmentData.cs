@@ -3,21 +3,28 @@ using UnityEngine;
 [System.Serializable]
 public class ItemStatModifierData
 {
-    public int Strength;
-    public int Dexterity;
-    public int WeaponAttack;
+    public int Might;
+    public int Precision;
+    public int Arcane;
+    public int Finesse;
+
+    public int WeaponPower;
     public int MaxHP;
     public int MaxMP;
+    public int HitRate;
 
     public ItemStatModifierData Clone()
     {
         return new ItemStatModifierData
         {
-            Strength = Strength,
-            Dexterity = Dexterity,
-            WeaponAttack = WeaponAttack,
+            Might = Might,
+            Precision = Precision,
+            Arcane = Arcane,
+            Finesse = Finesse,
+            WeaponPower = WeaponPower,
             MaxHP = MaxHP,
-            MaxMP = MaxMP
+            MaxMP = MaxMP,
+            HitRate = HitRate
         };
     }
 
@@ -26,11 +33,14 @@ public class ItemStatModifierData
         if (other == null)
             return;
 
-        Strength += other.Strength;
-        Dexterity += other.Dexterity;
-        WeaponAttack += other.WeaponAttack;
+        Might += other.Might;
+        Precision += other.Precision;
+        Arcane += other.Arcane;
+        Finesse += other.Finesse;
+        WeaponPower += other.WeaponPower;
         MaxHP += other.MaxHP;
         MaxMP += other.MaxMP;
+        HitRate += other.HitRate;
     }
 }
 

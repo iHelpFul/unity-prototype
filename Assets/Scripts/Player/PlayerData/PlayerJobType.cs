@@ -1,7 +1,7 @@
 public enum PlayerJobType
 {
-    Novice = 0,
-    Warrior = 1,
-    Thief = 2,
-    Mage = 3
+    Drifter = 0,
+    Vanguard = 1,
+    Shade = 2,
+    Arcanist = 3
 }

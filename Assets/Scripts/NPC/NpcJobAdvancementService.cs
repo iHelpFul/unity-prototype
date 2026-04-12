@@ -216,7 +216,7 @@ public class NpcJobAdvancementService : MonoBehaviour
         if (canAdvanceAtAll)
             statusMessage = "Choose your first job.";
         else if (string.IsNullOrWhiteSpace(statusMessage))
-            statusMessage = $"Reach level {activeAdvancement.RequiredLevel} as a Novice first.";
+            statusMessage = $"Reach level {activeAdvancement.RequiredLevel} as a {GameBootstrap.FormatJobName(PlayerJobType.Drifter)} first.";
 
         return new NpcJobAdvancementSnapshot(
             activePlayer,

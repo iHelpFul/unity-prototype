@@ -3,15 +3,15 @@ using UnityEngine;
 
 public static class PlayerSkillDatabase
 {
-    public const string WarriorComboMasteryId = "warrior_combo_mastery";
-    public const string WarriorRageId = "warrior_rage";
-    public const string WarriorPowerStrikeId = "warrior_power_strike";
-    public const string ThiefLuckySevenId = "thief_lucky_seven";
-    public const string ThiefHasteId = "thief_haste";
-    public const string ThiefNimbleBodyId = "thief_nimble_body";
-    public const string MageMagicClawId = "mage_magic_claw";
-    public const string MageMagicGuardId = "mage_magic_guard";
-    public const string MageMpBoostId = "mage_mp_boost";
+    public const string VanguardComboMasteryId = "vanguard_combo_mastery";
+    public const string VanguardRageId = "vanguard_rage";
+    public const string VanguardPowerStrikeId = "vanguard_power_strike";
+    public const string ShadeLuckySevenId = "shade_lucky_seven";
+    public const string ShadeHasteId = "shade_haste";
+    public const string ShadeNimbleBodyId = "shade_nimble_body";
+    public const string ArcanistMagicClawId = "arcanist_magic_claw";
+    public const string ArcanistMagicGuardId = "arcanist_magic_guard";
+    public const string ArcanistMpBoostId = "arcanist_mp_boost";
 
     private const string ResourcePath = "GameData/PlayerSkillDatabase";
 
@@ -100,23 +100,23 @@ public static class PlayerSkillDatabase
         return new[]
         {
             PlayerSkillDefinition.CreateTransient(
-                WarriorComboMasteryId,
+                VanguardComboMasteryId,
                 "Combo Mastery",
-                PlayerJobType.Warrior,
+                PlayerJobType.Vanguard,
                 PlayerSkillType.Passive,
                 20,
                 -1),
             PlayerSkillDefinition.CreateTransient(
-                WarriorRageId,
+                VanguardRageId,
                 "Rage",
-                PlayerJobType.Warrior,
+                PlayerJobType.Vanguard,
                 PlayerSkillType.ActiveBuff,
                 20,
                 2),
             PlayerSkillDefinition.CreateTransient(
-                WarriorPowerStrikeId,
+                VanguardPowerStrikeId,
                 "Power Strike",
-                PlayerJobType.Warrior,
+                PlayerJobType.Vanguard,
                 PlayerSkillType.ActiveAttack,
                 20,
                 1,
@@ -133,9 +133,9 @@ public static class PlayerSkillDatabase
                 newTargetingMode: PlayerSkillTargetingMode.MeleeArea,
                 newMaxTargets: 3),
             PlayerSkillDefinition.CreateTransient(
-                ThiefLuckySevenId,
+                ShadeLuckySevenId,
                 "Lucky Seven",
-                PlayerJobType.Thief,
+                PlayerJobType.Shade,
                 PlayerSkillType.ActiveAttack,
                 20,
                 1,
@@ -160,23 +160,23 @@ public static class PlayerSkillDatabase
                 newProjectileSpawnUpOffset: 1.05f,
                 newProjectileVisualScale: 0.16f),
             PlayerSkillDefinition.CreateTransient(
-                ThiefHasteId,
+                ShadeHasteId,
                 "Haste",
-                PlayerJobType.Thief,
+                PlayerJobType.Shade,
                 PlayerSkillType.ActiveBuff,
                 20,
                 2),
             PlayerSkillDefinition.CreateTransient(
-                ThiefNimbleBodyId,
+                ShadeNimbleBodyId,
                 "Nimble Body",
-                PlayerJobType.Thief,
+                PlayerJobType.Shade,
                 PlayerSkillType.Passive,
                 20,
                 -1),
             PlayerSkillDefinition.CreateTransient(
-                MageMagicClawId,
+                ArcanistMagicClawId,
                 "Magic Claw",
-                PlayerJobType.Mage,
+                PlayerJobType.Arcanist,
                 PlayerSkillType.ActiveAttack,
                 20,
                 1,
@@ -193,19 +193,20 @@ public static class PlayerSkillDatabase
                 newTargetingMode: PlayerSkillTargetingMode.FrontSingleTarget,
                 newMaxTargets: 1),
             PlayerSkillDefinition.CreateTransient(
-                MageMagicGuardId,
+                ArcanistMagicGuardId,
                 "Magic Guard",
-                PlayerJobType.Mage,
+                PlayerJobType.Arcanist,
                 PlayerSkillType.ActiveBuff,
                 20,
                 2),
             PlayerSkillDefinition.CreateTransient(
-                MageMpBoostId,
+                ArcanistMpBoostId,
                 "MP Boost",
-                PlayerJobType.Mage,
+                PlayerJobType.Arcanist,
                 PlayerSkillType.Passive,
                 20,
                 -1)
         };
     }
 }
+

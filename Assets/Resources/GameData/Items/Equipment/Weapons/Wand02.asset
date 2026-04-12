@@ -22,13 +22,17 @@ MonoBehaviour:
   restoreMP: 0
   primaryColor: {r: 1, g: 1, b: 1, a: 1}
   accentColor: {r: 0.9, g: 0.9, b: 0.9, a: 1}
+  worldLootPickupPrefab: {fileID: 8318876319062992255, guid: b29594de83ffb6e428d31949cd6cb185, type: 3}
   equipmentSlot: 2
   equipmentStatBonuses:
-    Strength: 0
-    Dexterity: 0
-    WeaponAttack: 17
+    Might: 0
+    Precision: 0
+    Arcane: 0
+    Finesse: 0
+    WeaponPower: 4
     MaxHP: 0
     MaxMP: 0
+    HitRate: 0
   equipmentAppearance:
     OutfitId: 
     WeaponRightId: Wand02
