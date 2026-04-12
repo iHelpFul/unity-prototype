@@ -10,6 +10,8 @@ public class PlayerFacade : MonoBehaviour
     [SerializeField] private PlayerMotor motor;
     [SerializeField] private Transform visual;
     [SerializeField] private Transform cameraTransform;
+    [SerializeField] private PlayerMovementController movementController;
+    private PlayerTargetingService targetingService;
     [SerializeField] private PlayerAnimationController animationController;
     [SerializeField] private float footstepMinInterval = 0.22f;
     [SerializeField] private PlayerCharacter character;
@@ -40,10 +42,6 @@ public class PlayerFacade : MonoBehaviour
 
     private float lastFootstepTime;
     private bool wasGrounded;
-    private Vector3 cameraForward;
-    private Vector3 cameraRight;
-    private PlayerMovementModel movementModel;
-    private Vector2 moveInput;
     private PlayerCombatModule combatModule;
     private PlayerProgressionModule progression;
     private PendingSkillCast pendingSkillCast;
@@ -66,12 +64,26 @@ public class PlayerFacade : MonoBehaviour
     public float PresentationAttackAnimationSpeed => presentationAttackAnimationSpeed;
     public ushort JumpPresentationSequence => jumpPresentationSequence;
     public ushort LandPresentationSequence => landPresentationSequence;
+    public int CurrentComboCounter => combatModule != null ? combatModule.CurrentComboCounter : 0;
+
+    public void BindBootstrap(GameBootstrap sessionBootstrap)
+    {
+        bootstrap = sessionBootstrap;
+
+        PlayerSessionCharacterApplicationService characterSession = bootstrap != null ? bootstrap.CharacterSession : null;
+        PlayerRuntimeData data = character != null && character.IsLocalPlayer && characterSession != null
+            ? characterSession.PlayerData
+            : null;
+
+        progression = new PlayerProgressionModule(data, character, bootstrap);
+
+        if (combatModule != null && character != null)
+            combatModule.SetBasicAttackProfile(character.GetBasicAttackProfile());
+    }
 
     private void OnEnable()
     {
-        EventBus.Subscribe<MoveInputEvent>(OnMove);
-        EventBus.Subscribe<JumpPressedEvent>(OnJumpPressed);
-        EventBus.Subscribe<JumpReleasedEvent>(OnJumpReleased);
+        // Movement input handling moved to PlayerMovementController
         EventBus.Subscribe<AttackPressedEvent>(OnAttack);
         EventBus.Subscribe<SkillSlotPressedEvent>(OnSkillSlotPressed);
         EventBus.Subscribe<EnemyDiedEvent>(OnEnemyDied);
@@ -79,9 +91,7 @@ public class PlayerFacade : MonoBehaviour
 
     private void OnDisable()
     {
-        EventBus.Unsubscribe<MoveInputEvent>(OnMove);
-        EventBus.Unsubscribe<JumpPressedEvent>(OnJumpPressed);
-        EventBus.Unsubscribe<JumpReleasedEvent>(OnJumpReleased);
+        // Movement input handling moved to PlayerMovementController
         EventBus.Unsubscribe<AttackPressedEvent>(OnAttack);
         EventBus.Unsubscribe<SkillSlotPressedEvent>(OnSkillSlotPressed);
         EventBus.Unsubscribe<EnemyDiedEvent>(OnEnemyDied);
@@ -104,8 +114,6 @@ public class PlayerFacade : MonoBehaviour
 
         if (cameraTransform == null && Camera.main != null)
             cameraTransform = Camera.main.transform;
-
-        movementModel = new PlayerMovementModel();
         combatModule = new PlayerCombatModule();
 
         if (motor == null || character == null || animationController == null)
@@ -115,21 +123,29 @@ public class PlayerFacade : MonoBehaviour
             return;
         }
 
-        ResolveBootstrap();
+        if (bootstrap != null)
+            BindBootstrap(bootstrap);
+        else
+            combatModule.SetBasicAttackProfile(character.GetBasicAttackProfile());
 
-        if (character.IsLocalPlayer && bootstrap == null)
-        {
-            Debug.LogError("PlayerFacade requires an active GameBootstrap for the local player.");
-            enabled = false;
-            return;
-        }
+        if (movementController == null)
+            movementController = GetComponent<PlayerMovementController>();
 
-        PlayerRuntimeData data = character.IsLocalPlayer && bootstrap != null
-            ? bootstrap.PlayerData
-            : null;
+        if (movementController == null)
+            movementController = gameObject.AddComponent<PlayerMovementController>();
 
-        progression = new PlayerProgressionModule(data, character, bootstrap);
-        combatModule.SetBasicAttackProfile(character.GetBasicAttackProfile());
+        movementController.Initialize(motor, visual, cameraTransform, character);
+
+        targetingService = new PlayerTargetingService(
+            transform,
+            visual,
+            enemyLayer,
+            skillFrontDotThreshold,
+            skillAreaForwardOffsetFactor,
+            skillAreaRadiusFactor,
+            skillAreaMinRadius,
+            lockedSkillTargetGraceRange,
+            attackLowerHeightAllowance);
     }
 
     private void Update()
@@ -142,58 +158,28 @@ public class PlayerFacade : MonoBehaviour
 
         combatModule.SetBasicAttackProfile(character.GetBasicAttackProfile());
 
-        UpdateCameraVectors();
-
-        Vector2 finalInput = character.IsStunned ? Vector2.zero : moveInput;
-
-        movementModel.Tick(
-            Time.deltaTime,
-            motor.IsGrounded,
-            finalInput,
-            cameraForward,
-            cameraRight
-        );
-
-        motor.ApplyMovement(movementModel.Velocity);
-
-        if (!character.IsStunned)
-            HandleRotation(Time.deltaTime);
+        // Movement logic delegated to PlayerMovementController
+        if (movementController != null)
+            movementController.Tick(Time.deltaTime);
 
         UpdateVisualsAndCombat();
     }
 
     private void UpdateCameraVectors()
     {
-        if (cameraTransform == null && Camera.main != null)
-            cameraTransform = Camera.main.transform;
-
-        if (cameraTransform == null)
-        {
-            cameraForward = Vector3.forward;
-            cameraRight = Vector3.right;
-            return;
-        }
-
-        cameraForward = cameraTransform.forward;
-        cameraRight = cameraTransform.right;
-
-        cameraForward.y = 0f;
-        cameraRight.y = 0f;
-
-        cameraForward.Normalize();
-        cameraRight.Normalize();
+        // Camera handling moved to PlayerMovementController
     }
 
     private void UpdateVisualsAndCombat()
     {
-        bool isGrounded = motor.IsGrounded;
-        bool jumpedThisFrame = movementModel.JumpedThisFrame;
+        bool isGrounded = movementController != null ? movementController.IsGrounded : motor.IsGrounded;
+        bool jumpedThisFrame = movementController != null ? movementController.JumpedThisFrame : false;
         bool landedThisFrame = !wasGrounded && isGrounded;
         int comboIndex = combatModule.ComboIndex;
         bool isAttacking = combatModule.IsAttacking;
         float attackAnimationSpeed = combatModule.AttackAnimationSpeed;
-        float horizontalSpeed = movementModel.HorizontalSpeed;
-        float verticalVelocity = movementModel.VerticalVelocity;
+        float horizontalSpeed = movementController != null ? movementController.HorizontalSpeed : 0f;
+        float verticalVelocity = movementController != null ? movementController.VerticalVelocity : 0f;
 
         animationController.UpdateAnimation(
             horizontalSpeed,
@@ -224,54 +210,15 @@ public class PlayerFacade : MonoBehaviour
             combatModule.Tick(Time.deltaTime);
     }
 
-    private void OnMove(MoveInputEvent e)
+    // Movement event handlers moved to PlayerMovementController. This method is invoked by the controller
+    // when a jump is pressed so PlayerFacade can handle attack cancellation logic which still lives here.
+    public void HandleJumpPressedFromMovementController()
     {
-        if (!MatchesInputPlayer(e.Player, e.CharacterId))
-            return;
-
-        moveInput = e.Direction;
-    }
-
-    private void HandleRotation(float deltaTime)
-    {
-        Vector3 inputDirection = cameraForward * moveInput.y + cameraRight * moveInput.x;
-        inputDirection.y = 0f;
-
-        if (inputDirection.sqrMagnitude < 0.01f)
-            return;
-
-        Quaternion targetRotation = Quaternion.LookRotation(inputDirection);
-
-        visual.rotation = Quaternion.RotateTowards(
-            visual.rotation,
-            targetRotation,
-            720f * deltaTime
-        );
-    }
-
-    private void OnJumpPressed(JumpPressedEvent e)
-    {
-        if (!MatchesInputPlayer(e.Player, e.CharacterId))
-            return;
-
-        if (character.IsStunned || character.IsDead)
-            return;
-
-        movementModel.PressJump();
-
         if (combatModule.IsAttacking)
         {
             CancelPendingSkillState();
             combatModule.EndAttack();
         }
-    }
-
-    private void OnJumpReleased(JumpReleasedEvent e)
-    {
-        if (!MatchesInputPlayer(e.Player, e.CharacterId))
-            return;
-
-        movementModel.ReleaseJump();
     }
 
     private void OnAttack(AttackPressedEvent e)
@@ -293,8 +240,11 @@ public class PlayerFacade : MonoBehaviour
         if (character.IsDead || character.IsStunned)
             return;
 
-        ResolveBootstrap();
         if (bootstrap == null)
+            return;
+
+        PlayerSessionSkillApplicationService skillSession = bootstrap.SkillSession;
+        if (skillSession == null)
             return;
 
         if (!TryResolveAssignedSkillDefinition(e.SlotIndex, out PlayerSkillDefinition definition))
@@ -318,7 +268,7 @@ public class PlayerFacade : MonoBehaviour
         if (combatModule.IsAttacking)
             return;
 
-        float remainingCooldown = bootstrap.GetRemainingSkillCooldown(definition.SkillId);
+        float remainingCooldown = skillSession.GetRemainingSkillCooldown(definition.SkillId);
         if (remainingCooldown > 0f)
         {
             NotifySystemMessage($"{definition.DisplayName} cooldown {remainingCooldown:0.0}s");
@@ -341,7 +291,7 @@ public class PlayerFacade : MonoBehaviour
             return;
         }
 
-        bootstrap.StartSkillCooldown(definition.SkillId, definition.Cooldown);
+        skillSession.StartSkillCooldown(definition.SkillId, definition.Cooldown);
         CancelPendingSkillState();
         pendingSkillCast = new PendingSkillCast
         {
@@ -351,19 +301,19 @@ public class PlayerFacade : MonoBehaviour
         animationController.PlaySkillAnimation(definition);
     }
 
-    private bool TryHitEnemies(int damage)
+    private bool TryHitEnemies()
     {
         Vector3 origin = visual.position + visual.forward * 1f;
-        List<EnemyHealth> enemies = GetEnemiesInSphere(origin, attackRange);
+        List<EnemyHealth> enemies = targetingService.GetEnemiesInSphere(origin, attackRange);
         int maxTargets = combatModule.MaxBasicTargets;
         int hitsApplied = 0;
 
         foreach (EnemyHealth enemy in enemies)
         {
-            if (!IsWithinAllowedAttackHeight(enemy, origin.y))
+            if (!targetingService.IsWithinAllowedAttackHeight(enemy, origin.y))
                 continue;
 
-            ApplyHitToEnemy(enemy, damage, 0.05f);
+            ApplyHitToEnemy(enemy, 0.05f);
             hitsApplied++;
 
             if (hitsApplied >= maxTargets)
@@ -384,9 +334,7 @@ public class PlayerFacade : MonoBehaviour
             return;
         }
 
-        PlayerCombatSnapshot snapshot = character.GetCombatSnapshot();
-        int damage = combatModule.CalculateBasicDamage(snapshot);
-        bool landedHit = TryHitEnemies(damage);
+        bool landedHit = TryHitEnemies();
 
         if (landedHit)
             combatModule.RegisterSuccessfulBasicHit();
@@ -430,10 +378,13 @@ public class PlayerFacade : MonoBehaviour
 
     public void OnFootSteps()
     {
-        if (!motor.IsGrounded)
+        bool grounded = motor != null ? motor.IsGrounded : (movementController != null && movementController.IsGrounded);
+
+        if (!grounded)
             return;
 
-        if (movementModel.HorizontalSpeed < 0.1f)
+        float hSpeed = movementController != null ? movementController.HorizontalSpeed : 0f;
+        if (hSpeed < 0.1f)
             return;
 
         if (combatModule.IsAttacking)
@@ -486,7 +437,7 @@ public class PlayerFacade : MonoBehaviour
 
     private void ExecuteAreaSkillHit(PlayerSkillDefinition definition)
     {
-        List<EnemyHealth> targets = FindSkillAreaTargets(definition);
+        List<EnemyHealth> targets = targetingService.FindSkillAreaTargets(definition);
         if (targets.Count == 0)
             return;
 
@@ -508,7 +459,7 @@ public class PlayerFacade : MonoBehaviour
 
         CancelQueuedSkillHits(false);
 
-        EnemyHealth lockedTarget = FindFrontSingleTarget(definition);
+        EnemyHealth lockedTarget = targetingService.FindFrontSingleTarget(definition);
         int projectileCount = Mathf.Max(1, definition.ProjectileCount);
 
         SpawnProjectileShot(definition, lockedTarget, 0, projectileCount);
@@ -572,7 +523,7 @@ public class PlayerFacade : MonoBehaviour
 
         if (lockedTarget != null)
         {
-            Vector3 targetDirection = GetEnemyTargetPoint(lockedTarget) - spawnPosition;
+            Vector3 targetDirection = targetingService.GetEnemyTargetPoint(lockedTarget) - spawnPosition;
             if (targetDirection.sqrMagnitude > 0.0001f)
                 direction = targetDirection.normalized;
         }
@@ -583,13 +534,23 @@ public class PlayerFacade : MonoBehaviour
 
     private void ExecuteFrontSingleTargetSkillHit(PendingSkillCast skillCast)
     {
-        EnemyHealth target = ResolveLockedSkillTarget(skillCast.Definition, skillCast.LockedTarget, true);
+        EnemyHealth target = targetingService.ResolveLockedSkillTarget(skillCast.Definition, skillCast.LockedTarget, true);
         if (target == null)
             return;
 
+        if (TryExecuteAuthoritativeSkillSequence(skillCast.Definition, target))
+        {
+            skillCast.LockedTarget = target;
+            return;
+        }
+
         int remainingHits = Mathf.Max(0, skillCast.Definition.HitCount - 1);
         bool commitDeath = remainingHits <= 0;
-        ApplyHitToEnemy(target, CalculateSkillDamage(skillCast.Definition), 0.06f, commitDeath);
+        ApplyHitToEnemy(
+            target,
+            0.06f,
+            commitDeath,
+            skillCast.Definition);
         skillCast.LockedTarget = target;
 
         if (remainingHits <= 0)
@@ -614,15 +575,34 @@ public class PlayerFacade : MonoBehaviour
             if (character == null || character.IsDead || character.IsStunned)
                 break;
 
-            EnemyHealth target = ResolveLockedSkillTarget(definition, initialTarget, false);
+            EnemyHealth target = targetingService.ResolveLockedSkillTarget(definition, initialTarget, false);
             if (target == null)
                 break;
 
             bool commitDeath = hitIndex >= remainingHits - 1;
-            ApplyHitToEnemy(target, CalculateSkillDamage(definition), 0.045f, commitDeath);
+            ApplyHitToEnemy(
+                target,
+                0.045f,
+                commitDeath,
+                definition);
         }
 
         queuedSkillHitsRoutine = null;
+    }
+
+    private bool TryExecuteAuthoritativeSkillSequence(
+        PlayerSkillDefinition definition,
+        EnemyHealth target)
+    {
+        if (!SupportsAuthoritativeSkillSequence(definition) || target == null)
+            return false;
+
+        float direction = Mathf.Sign(target.transform.position.x - transform.position.x);
+        return MultiplayerPrototypeEnemyCoordinator.TryRequestSkillSequence(
+            target,
+            direction,
+            character,
+            definition.SkillId);
     }
 
     private IEnumerator PerformRepeatedAreaSkillHits(PlayerSkillDefinition definition, int remainingHits)
@@ -634,7 +614,7 @@ public class PlayerFacade : MonoBehaviour
             if (character == null || character.IsDead || character.IsStunned)
                 break;
 
-            List<EnemyHealth> targets = FindSkillAreaTargets(definition);
+            List<EnemyHealth> targets = targetingService.FindSkillAreaTargets(definition);
             if (targets.Count == 0)
                 break;
 
@@ -651,10 +631,8 @@ public class PlayerFacade : MonoBehaviour
         float impactDuration = 0.06f,
         bool commitDeath = true)
     {
-        int damage = CalculateSkillDamage(definition);
-
         foreach (EnemyHealth target in targets)
-            ApplyHitToEnemy(target, damage, impactDuration, commitDeath);
+            ApplyHitToEnemy(target, impactDuration, commitDeath, definition);
     }
 
     private int CalculateSkillDamage(PlayerSkillDefinition definition)
@@ -664,178 +642,13 @@ public class PlayerFacade : MonoBehaviour
         return Mathf.Max(1, Mathf.RoundToInt(baseDamage * Mathf.Max(0.1f, definition.DamageMultiplier)));
     }
 
-    private EnemyHealth FindFrontSingleTarget(PlayerSkillDefinition definition)
-    {
-        List<EnemyHealth> candidates = GetEnemiesInSphere(transform.position, definition.Range);
+    
 
-        EnemyHealth bestTarget = null;
-        float bestSqrDistance = float.MaxValue;
-
-        foreach (EnemyHealth candidate in candidates)
-        {
-            Vector3 targetPoint = GetEnemyTargetPoint(candidate);
-
-            if (!IsInFront(targetPoint))
-                continue;
-
-            if (!IsWithinAllowedAttackHeight(candidate, transform.position.y))
-                continue;
-
-            float sqrDistance = (targetPoint - transform.position).sqrMagnitude;
-            if (sqrDistance >= bestSqrDistance)
-                continue;
-
-            bestSqrDistance = sqrDistance;
-            bestTarget = candidate;
-        }
-
-        return bestTarget;
-    }
-
-    private List<EnemyHealth> FindSkillAreaTargets(PlayerSkillDefinition definition)
-    {
-        float searchRadius = GetSkillAreaRadius(definition);
-        Vector3 center = GetSkillAreaCenter(definition, searchRadius);
-
-        List<EnemyHealth> candidates = GetEnemiesInSphere(center, searchRadius);
-        List<EnemyHealth> validTargets = new List<EnemyHealth>();
-
-        foreach (EnemyHealth candidate in candidates)
-        {
-            Vector3 targetPoint = GetEnemyTargetPoint(candidate);
-
-            if (!IsInFront(targetPoint))
-                continue;
-
-            if (!IsWithinAllowedAttackHeight(candidate, center.y))
-                continue;
-
-            validTargets.Add(candidate);
-        }
-
-        validTargets.Sort((left, right) =>
-        {
-            float leftDistance = (left.transform.position - transform.position).sqrMagnitude;
-            float rightDistance = (right.transform.position - transform.position).sqrMagnitude;
-            return leftDistance.CompareTo(rightDistance);
-        });
-
-        int maxTargets = Mathf.Max(1, definition.MaxTargets);
-        if (validTargets.Count > maxTargets)
-            validTargets.RemoveRange(maxTargets, validTargets.Count - maxTargets);
-
-        return validTargets;
-    }
-
-    private EnemyHealth ResolveLockedSkillTarget(
-        PlayerSkillDefinition definition,
-        EnemyHealth lockedTarget,
-        bool allowReacquire)
-    {
-        if (lockedTarget != null && !lockedTarget.IsDead)
-        {
-            Vector3 targetPoint = GetEnemyTargetPoint(lockedTarget);
-
-            if (!allowReacquire)
-                return lockedTarget;
-
-            if (!IsInFront(targetPoint))
-                return allowReacquire ? FindFrontSingleTarget(definition) : null;
-
-            if (!IsWithinAllowedAttackHeight(lockedTarget, transform.position.y))
-                return allowReacquire ? FindFrontSingleTarget(definition) : null;
-
-            float maxDistance = definition.Range + lockedSkillTargetGraceRange;
-            float sqrMaxDistance = maxDistance * maxDistance;
-            float sqrDistance = (targetPoint - transform.position).sqrMagnitude;
-
-            if (sqrDistance <= sqrMaxDistance)
-                return lockedTarget;
-        }
-
-        return allowReacquire ? FindFrontSingleTarget(definition) : null;
-    }
-
-    private List<EnemyHealth> GetEnemiesInSphere(Vector3 center, float radius)
-    {
-        Collider[] hits = Physics.OverlapSphere(center, radius, enemyLayer);
-        List<EnemyHealth> enemies = new List<EnemyHealth>(hits.Length);
-        HashSet<EnemyHealth> seenEnemies = new HashSet<EnemyHealth>();
-
-        foreach (Collider hit in hits)
-        {
-            EnemyHealth enemy = hit.GetComponentInParent<EnemyHealth>();
-            if (enemy == null || enemy.IsDead || !seenEnemies.Add(enemy))
-                continue;
-
-            enemies.Add(enemy);
-        }
-
-        enemies.Sort((left, right) =>
-        {
-            float leftDistance = (left.transform.position - center).sqrMagnitude;
-            float rightDistance = (right.transform.position - center).sqrMagnitude;
-            return leftDistance.CompareTo(rightDistance);
-        });
-
-        return enemies;
-    }
-
-    private float GetSkillAreaRadius(PlayerSkillDefinition definition)
-    {
-        return Mathf.Max(skillAreaMinRadius, definition.Range * skillAreaRadiusFactor);
-    }
-
-    private Vector3 GetSkillAreaCenter(PlayerSkillDefinition definition, float radius)
-    {
-        Transform facingTransform = visual != null ? visual : transform;
-        return facingTransform.position
-            + facingTransform.forward * Mathf.Max(radius * 0.25f, definition.Range * skillAreaForwardOffsetFactor);
-    }
-
-    private Vector3 GetEnemyTargetPoint(EnemyHealth enemy)
-    {
-        if (enemy == null)
-            return transform.position;
-
-        Collider enemyCollider = enemy.GetComponentInChildren<Collider>();
-        if (enemyCollider != null)
-            return enemyCollider.bounds.center;
-
-        return enemy.transform.position + Vector3.up * 0.5f;
-    }
-
-    private float GetEnemyTopY(EnemyHealth enemy)
-    {
-        if (enemy == null)
-            return transform.position.y;
-
-        Collider enemyCollider = enemy.GetComponentInChildren<Collider>();
-        if (enemyCollider != null)
-            return enemyCollider.bounds.max.y;
-
-        return enemy.transform.position.y + 1f;
-    }
-
-    private bool IsInFront(Vector3 targetPosition)
-    {
-        Transform facingTransform = visual != null ? visual : transform;
-        Vector3 directionToTarget = targetPosition - facingTransform.position;
-        directionToTarget.y = 0f;
-
-        if (directionToTarget.sqrMagnitude <= 0.0001f)
-            return true;
-
-        directionToTarget.Normalize();
-        return Vector3.Dot(facingTransform.forward, directionToTarget) >= skillFrontDotThreshold;
-    }
-
-    private bool IsWithinAllowedAttackHeight(EnemyHealth enemy, float referenceY)
-    {
-        return GetEnemyTopY(enemy) + attackLowerHeightAllowance >= referenceY;
-    }
-
-    private void ApplyHitToEnemy(EnemyHealth enemy, int damage, float impactDuration, bool commitDeath = true)
+    private void ApplyHitToEnemy(
+        EnemyHealth enemy,
+        float impactDuration,
+        bool commitDeath = true,
+        PlayerSkillDefinition skillDefinition = null)
     {
         if (enemy == null || enemy.IsDead)
             return;
@@ -846,13 +659,24 @@ public class PlayerFacade : MonoBehaviour
         {
             Duration = impactDuration,
             TimeScale = 0.1f,
-            Damage = damage
+            Damage = 0
         });
 
-        if (MultiplayerPrototypeEnemyCoordinator.TryRequestDamage(enemy, damage, direction, character, commitDeath))
+        if (MultiplayerPrototypeEnemyCoordinator.TryRequestDamage(
+            enemy,
+            direction,
+            character,
+            commitDeath,
+            skillDefinition != null ? skillDefinition.SkillId : string.Empty))
+        {
             return;
+        }
 
-        enemy.TakeDamage(damage, direction, character, commitDeath);
+        enemy.TakeDamage(
+            ResolveLocalFallbackDamage(skillDefinition),
+            direction,
+            character,
+            commitDeath);
     }
 
     private void SpawnSkillProjectile(
@@ -874,13 +698,33 @@ public class PlayerFacade : MonoBehaviour
             character,
             lockedTarget,
             enemyLayer,
-            CalculateSkillDamage(definition),
+            MultiplayerPrototypeRuntime.IsEnabled ? 0 : CalculateSkillDamage(definition),
+            definition.SkillId,
             direction,
             definition.ProjectileSpeed,
             definition.ProjectileRadius,
             definition.ProjectileLifetime,
             definition.ProjectileVisualScale,
             commitDeathOnHit);
+    }
+
+    private int ResolveLocalFallbackDamage(PlayerSkillDefinition skillDefinition)
+    {
+        if (skillDefinition != null)
+            return CalculateSkillDamage(skillDefinition);
+
+        if (combatModule == null || character == null)
+            return 1;
+
+        return Mathf.Max(1, combatModule.CalculateBasicDamage(character.GetCombatSnapshot()));
+    }
+
+    private static bool SupportsAuthoritativeSkillSequence(PlayerSkillDefinition definition)
+    {
+        return MultiplayerPrototypeRuntime.IsEnabled
+            && definition != null
+            && definition.HitCount > 1
+            && definition.TargetingMode == PlayerSkillTargetingMode.FrontSingleTarget;
     }
 
     private void NotifySystemMessage(string message)
@@ -923,11 +767,6 @@ public class PlayerFacade : MonoBehaviour
         progression?.AddExp(e.ExpReward);
     }
 
-    private void ResolveBootstrap()
-    {
-        bootstrap = GameBootstrap.FindReadyBootstrap(bootstrap);
-    }
-
     private bool MatchesInputPlayer(PlayerCharacter player, string characterId)
     {
         return character != null
@@ -940,9 +779,13 @@ public class PlayerFacade : MonoBehaviour
 
     private bool TryResolveAssignedSkillDefinition(int slotIndex, out PlayerSkillDefinition definition)
     {
-        definition = bootstrap != null ? bootstrap.GetAssignedSkillDefinition(slotIndex) : null;
+        PlayerSessionSkillApplicationService skillSession = bootstrap != null ? bootstrap.SkillSession : null;
+        definition = skillSession != null ? skillSession.GetAssignedSkillDefinition(slotIndex) : null;
         if (definition != null)
             return true;
+
+        if (skillSession == null)
+            return false;
 
         IReadOnlyList<PlayerSkillDefinition> defaultSkills =
             PlayerJobCombatProfiles.GetDefaultSkillsForJob(character.CurrentJob);
@@ -959,9 +802,9 @@ public class PlayerFacade : MonoBehaviour
             if (fallbackDefinition.SkillType != PlayerSkillType.ActiveAttack)
                 continue;
 
-            bootstrap.TryUnlockSkill(character, fallbackDefinition.SkillId);
-            bootstrap.TryAssignSkillToSlot(character, fallbackDefinition.SkillId, slotIndex);
-            definition = bootstrap.GetAssignedSkillDefinition(slotIndex);
+            skillSession.TryUnlockSkill(fallbackDefinition.SkillId, 1);
+            skillSession.TryAssignSkillToSlot(fallbackDefinition.SkillId, slotIndex);
+            definition = skillSession.GetAssignedSkillDefinition(slotIndex);
 
             if (definition != null)
             {
@@ -1035,8 +878,14 @@ public class PlayerFacade : MonoBehaviour
 
     private void DrawMeleeSkillGizmo(PlayerSkillDefinition skill)
     {
-        float searchRadius = GetSkillAreaRadius(skill);
-        Vector3 center = GetSkillAreaCenter(skill, searchRadius);
+        float searchRadius = targetingService != null
+            ? targetingService.GetSkillAreaRadius(skill)
+            : Mathf.Max(skillAreaMinRadius, skill.Range * skillAreaRadiusFactor);
+
+        Transform facingTransform = visual != null ? visual : transform;
+        Vector3 center = targetingService != null
+            ? targetingService.GetSkillAreaCenter(skill, searchRadius)
+            : facingTransform.position + facingTransform.forward * Mathf.Max(searchRadius * 0.25f, skill.Range * skillAreaForwardOffsetFactor);
 
         Gizmos.color = meleeSkillGizmoColor;
         Gizmos.DrawLine(visual.position, center);

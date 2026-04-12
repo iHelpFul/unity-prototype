@@ -256,6 +256,91 @@ public struct NetworkPlayerPrototypeIdentityState : INetworkSerializable, IEquat
     }
 }
 
+[Serializable]
+public struct NetworkPlayerPrototypeCombatState : INetworkSerializable, IEquatable<NetworkPlayerPrototypeCombatState>
+{
+    public int Strength;
+    public int Dexterity;
+    public int WeaponAttack;
+    public float SkillMastery;
+    public int ComboCounter;
+    public PlayerJobType CurrentJob;
+
+    public bool IsPopulated =>
+        Strength > 0
+        || Dexterity > 0
+        || WeaponAttack > 0
+        || SkillMastery > 0f;
+
+    public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
+    {
+        serializer.SerializeValue(ref Strength);
+        serializer.SerializeValue(ref Dexterity);
+        serializer.SerializeValue(ref WeaponAttack);
+        serializer.SerializeValue(ref SkillMastery);
+        serializer.SerializeValue(ref ComboCounter);
+
+        int jobValue = (int)CurrentJob;
+        serializer.SerializeValue(ref jobValue);
+
+        if (serializer.IsReader)
+            CurrentJob = (PlayerJobType)jobValue;
+    }
+
+    public bool Equals(NetworkPlayerPrototypeCombatState other)
+    {
+        return Strength == other.Strength
+            && Dexterity == other.Dexterity
+            && WeaponAttack == other.WeaponAttack
+            && SkillMastery.Equals(other.SkillMastery)
+            && ComboCounter == other.ComboCounter
+            && CurrentJob == other.CurrentJob;
+    }
+
+    public override bool Equals(object obj)
+    {
+        return obj is NetworkPlayerPrototypeCombatState other && Equals(other);
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(
+            Strength,
+            Dexterity,
+            WeaponAttack,
+            SkillMastery,
+            ComboCounter,
+            CurrentJob);
+    }
+
+    public PlayerCombatSnapshot ToCombatSnapshot()
+    {
+        return new PlayerCombatSnapshot
+        {
+            Strength = Strength,
+            Dexterity = Dexterity,
+            WeaponAttack = WeaponAttack,
+            SkillMastery = SkillMastery
+        };
+    }
+
+    public static NetworkPlayerPrototypeCombatState FromData(
+        PlayerCombatSnapshot snapshot,
+        PlayerJobType currentJob,
+        int comboCounter)
+    {
+        return new NetworkPlayerPrototypeCombatState
+        {
+            Strength = snapshot.Strength,
+            Dexterity = snapshot.Dexterity,
+            WeaponAttack = snapshot.WeaponAttack,
+            SkillMastery = snapshot.SkillMastery,
+            ComboCounter = Mathf.Max(0, comboCounter),
+            CurrentJob = currentJob
+        };
+    }
+}
+
 [DisallowMultipleComponent]
 [DefaultExecutionOrder(-2100)]
 public class NetworkPlayerPrototypeAvatar : NetworkBehaviour
@@ -298,6 +383,12 @@ public class NetworkPlayerPrototypeAvatar : NetworkBehaviour
             NetworkVariableReadPermission.Everyone,
             NetworkVariableWritePermission.Owner);
 
+    private readonly NetworkVariable<NetworkPlayerPrototypeCombatState> combatState =
+        new NetworkVariable<NetworkPlayerPrototypeCombatState>(
+            default,
+            NetworkVariableReadPermission.Everyone,
+            NetworkVariableWritePermission.Owner);
+
     private void Reset()
     {
         CacheComponents();
@@ -335,6 +426,7 @@ public class NetworkPlayerPrototypeAvatar : NetworkBehaviour
         UpdateOwnerCameraFollowTarget();
         PublishPresentationState();
         PublishIdentityState();
+        PublishCombatState();
         TryApplyIdentityState(identityState.Value, true);
     }
 
@@ -423,12 +515,19 @@ public class NetworkPlayerPrototypeAvatar : NetworkBehaviour
     private void ApplyOwnershipState()
     {
         bool isOwnerInstance = IsOwner;
+        GameBootstrap sessionBootstrap = isOwnerInstance ? GameBootstrap.FindReadyBootstrap() : null;
 
         if (character != null)
         {
             character.SetRuntimeLocalPlayer(isOwnerInstance);
             character.SetRuntimeCharacterId(BuildRuntimeCharacterId());
+
+            if (isOwnerInstance && sessionBootstrap != null)
+                character.BindBootstrap(sessionBootstrap);
         }
+
+        if (isOwnerInstance && playerFacade != null && sessionBootstrap != null)
+            playerFacade.BindBootstrap(sessionBootstrap);
 
         SetOwnerOnlyComponentsEnabled(isOwnerInstance);
 
@@ -525,9 +624,11 @@ public class NetworkPlayerPrototypeAvatar : NetworkBehaviour
     private void PublishIdentityState()
     {
         GameBootstrap bootstrap = GameBootstrap.FindReadyBootstrap();
-        CharacterSaveData activeCharacter = bootstrap != null ? bootstrap.ActiveCharacter : null;
-        CharacterAppearanceData appearance = bootstrap != null
-            ? bootstrap.GetResolvedActiveCharacterAppearance()
+        PlayerSessionCharacterApplicationService characterSession = bootstrap != null ? bootstrap.CharacterSession : null;
+        PlayerSessionEquipmentApplicationService equipmentSession = bootstrap != null ? bootstrap.EquipmentSession : null;
+        CharacterSaveData activeCharacter = characterSession != null ? characterSession.ActiveCharacter : null;
+        CharacterAppearanceData appearance = equipmentSession != null
+            ? equipmentSession.GetResolvedActiveCharacterAppearance()
             : activeCharacter != null ? activeCharacter.Appearance : null;
 
         string nickname = activeCharacter != null && !string.IsNullOrWhiteSpace(activeCharacter.Nickname)
@@ -539,6 +640,39 @@ public class NetworkPlayerPrototypeAvatar : NetworkBehaviour
 
         if (!identityState.Value.Equals(nextState))
             identityState.Value = nextState;
+    }
+
+    private void PublishCombatState()
+    {
+        if (character == null)
+            return;
+
+        PlayerCombatSnapshot snapshot = character.GetCombatSnapshot();
+        int comboCounter = playerFacade != null ? playerFacade.CurrentComboCounter : 0;
+
+        NetworkPlayerPrototypeCombatState nextState =
+            NetworkPlayerPrototypeCombatState.FromData(
+                snapshot,
+                character.CurrentJob,
+                comboCounter);
+
+        if (!combatState.Value.Equals(nextState))
+            combatState.Value = nextState;
+    }
+
+    public bool TryGetAuthoritativeCombatState(out NetworkPlayerPrototypeCombatState resolvedState)
+    {
+        if (IsOwner && character != null)
+        {
+            resolvedState = NetworkPlayerPrototypeCombatState.FromData(
+                character.GetCombatSnapshot(),
+                character.CurrentJob,
+                playerFacade != null ? playerFacade.CurrentComboCounter : 0);
+            return true;
+        }
+
+        resolvedState = combatState.Value;
+        return resolvedState.IsPopulated;
     }
 
     private void ApplyRemotePresentation(NetworkPlayerPrototypePresentationState state, bool snapRotation)

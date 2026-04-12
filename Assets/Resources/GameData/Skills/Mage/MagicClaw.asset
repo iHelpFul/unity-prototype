@@ -18,15 +18,15 @@ MonoBehaviour:
   skillType: 2
   maxLevel: 20
   defaultSlotIndex: 1
-  manaCost: 10
-  cooldown: 0
+  manaCost: 13
+  cooldown: 1.1
   range: 6.5
-  damageMultiplier: 0.92
+  damageMultiplier: 1.5
   hitCount: 2
   hitInterval: 0.14
   animationVariantIndex: 1
   animatorStateName: Combo03_InPlace_SingleSword 0
-  animationSpeed: 0.92
+  animationSpeed: 0.8
   attackDuration: 0.9
   targetingMode: 1
   maxTargets: 1

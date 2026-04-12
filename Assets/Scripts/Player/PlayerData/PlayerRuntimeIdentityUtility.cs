@@ -16,9 +16,9 @@ public static class PlayerRuntimeIdentityUtility
         if (!string.IsNullOrWhiteSpace(playerCharacterId))
             return playerCharacterId;
 
-        GameBootstrap readyBootstrap = GameBootstrap.FindReadyBootstrap(bootstrap);
-        if (readyBootstrap != null && readyBootstrap.ActiveCharacter != null)
-            return NormalizeCharacterId(readyBootstrap.ActiveCharacter.CharacterId);
+        CharacterSaveData activeCharacter = bootstrap != null ? bootstrap.CharacterSession?.ActiveCharacter : null;
+        if (activeCharacter != null)
+            return NormalizeCharacterId(activeCharacter.CharacterId);
 
         return string.Empty;
     }

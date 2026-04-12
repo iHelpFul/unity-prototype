@@ -10265,6 +10265,7 @@ GameObject:
   - component: {fileID: 8995601525355035210}
   - component: {fileID: 2889057336560932318}
   - component: {fileID: 8336295670874108264}
+  - component: {fileID: 5963205978891799882}
   m_Layer: 3
   m_Name: PlayerNetworkPrototype
   m_TagString: Player
@@ -10342,6 +10343,7 @@ MonoBehaviour:
   motor: {fileID: 689579112782390798}
   visual: {fileID: 8762550192443552275}
   cameraTransform: {fileID: 0}
+  movementController: {fileID: 0}
   animationController: {fileID: 2627151599857388162}
   footstepMinInterval: 0.22
   character: {fileID: 2111853801034255378}
@@ -10626,6 +10628,10 @@ MonoBehaviour:
       m_Calls: []
     m_ActionId: 73ddd39b-89e7-4095-a91c-55a9169b3211
     m_ActionName: Player/SkillSlot15
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: 00e7d07e-8cfe-4a41-817f-e17f8b48e64b
+    m_ActionName: 'Player/Inventory[/Keyboard/i]'
   m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: 
   m_DefaultActionMap: Player
@@ -11000,6 +11006,76 @@ MonoBehaviour:
     WeaponRightColorSlot: 0
     PrimaryColorSlot: 0
     SecondaryColorSlot: 0
+  - OptionId: Hair04
+    Root: {fileID: 6910169728814534028}
+    HairColorSlot: 3
+    SkinColorSlot: 0
+    WeaponRightColorSlot: 0
+    PrimaryColorSlot: 0
+    SecondaryColorSlot: 0
+  - OptionId: Hair05
+    Root: {fileID: 4118813422530302161}
+    HairColorSlot: 5
+    SkinColorSlot: 0
+    WeaponRightColorSlot: 0
+    PrimaryColorSlot: 0
+    SecondaryColorSlot: 0
+  - OptionId: Hair06
+    Root: {fileID: 1573890482528069903}
+    HairColorSlot: 6
+    SkinColorSlot: 0
+    WeaponRightColorSlot: 0
+    PrimaryColorSlot: 0
+    SecondaryColorSlot: 0
+  - OptionId: Hair07
+    Root: {fileID: 2633663694654245319}
+    HairColorSlot: 2
+    SkinColorSlot: 0
+    WeaponRightColorSlot: 0
+    PrimaryColorSlot: 0
+    SecondaryColorSlot: 0
+  - OptionId: Hair08
+    Root: {fileID: 3015263069850036037}
+    HairColorSlot: 4
+    SkinColorSlot: 0
+    WeaponRightColorSlot: 0
+    PrimaryColorSlot: 0
+    SecondaryColorSlot: 0
+  - OptionId: Hair09
+    Root: {fileID: 3607643796424186389}
+    HairColorSlot: 5
+    SkinColorSlot: 0
+    WeaponRightColorSlot: 0
+    PrimaryColorSlot: 0
+    SecondaryColorSlot: 0
+  - OptionId: Hair10
+    Root: {fileID: 2921718043288498245}
+    HairColorSlot: 1
+    SkinColorSlot: 0
+    WeaponRightColorSlot: 0
+    PrimaryColorSlot: 0
+    SecondaryColorSlot: 0
+  - OptionId: Hair11
+    Root: {fileID: 4832948795727493062}
+    HairColorSlot: 8
+    SkinColorSlot: 0
+    WeaponRightColorSlot: 0
+    PrimaryColorSlot: 0
+    SecondaryColorSlot: 0
+  - OptionId: Hair12
+    Root: {fileID: 9261262438766266}
+    HairColorSlot: 8
+    SkinColorSlot: 0
+    WeaponRightColorSlot: 0
+    PrimaryColorSlot: 0
+    SecondaryColorSlot: 0
+  - OptionId: Hair13
+    Root: {fileID: 2308627767593097958}
+    HairColorSlot: 8
+    SkinColorSlot: 0
+    WeaponRightColorSlot: 0
+    PrimaryColorSlot: 0
+    SecondaryColorSlot: 0
   eyeOptions:
   - OptionId: Eye01
     Root: {fileID: 6792544282630402448}
@@ -11171,36 +11247,8 @@ MonoBehaviour:
     PrimaryColorSlot: 0
     SecondaryColorSlot: 0
   outfitOptions:
-  - OptionId: Body01
-    Root: {fileID: 8830960751263611770}
-    HairColorSlot: 0
-    SkinColorSlot: 9
-    WeaponRightColorSlot: 0
-    PrimaryColorSlot: 0
-    SecondaryColorSlot: 3
-  - OptionId: Body02
-    Root: {fileID: 1763702016619187403}
-    HairColorSlot: 0
-    SkinColorSlot: 9
-    WeaponRightColorSlot: 0
-    PrimaryColorSlot: 6
-    SecondaryColorSlot: 6
   - OptionId: Body03
     Root: {fileID: 3495094493194780324}
-    HairColorSlot: 0
-    SkinColorSlot: 9
-    WeaponRightColorSlot: 0
-    PrimaryColorSlot: 4
-    SecondaryColorSlot: 7
-  - OptionId: Body04
-    Root: {fileID: 6163311350512124216}
-    HairColorSlot: 0
-    SkinColorSlot: 9
-    WeaponRightColorSlot: 0
-    PrimaryColorSlot: 4
-    SecondaryColorSlot: 7
-  - OptionId: Body05
-    Root: {fileID: 9152518692849004279}
     HairColorSlot: 0
     SkinColorSlot: 9
     WeaponRightColorSlot: 0
@@ -11221,7 +11269,7 @@ MonoBehaviour:
     WeaponRightColorSlot: 8
     PrimaryColorSlot: 0
     SecondaryColorSlot: 0
-  - OptionId: OHS17_Wand
+  - OptionId: Wand02
     Root: {fileID: 8942210906486651638}
     HairColorSlot: 0
     SkinColorSlot: 0
@@ -11260,7 +11308,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 3991243721
+  GlobalObjectIdHash: 3071313867
   InScenePlacedSourceGlobalObjectIdHash: 0
   DeferredDespawnTick: 0
   Ownership: 1
@@ -11341,8 +11389,23 @@ MonoBehaviour:
   characterController: {fileID: 4075993534449524171}
   networkTransform: {fileID: 0}
   animationController: {fileID: 0}
+  nameplate: {fileID: 0}
   visual: {fileID: 0}
   remoteVisualRotationSpeed: 720
+  localCameraFollowSmoothTime: 0.02
+  localCameraSnapDistance: 1.25
+--- !u!114 &5963205978891799882
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3631378362000504220}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e364d4a03056b3242bd564db1d04e5da, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerMovementController
 --- !u!1 &3642777236025289917
 GameObject:
   m_ObjectHideFlags: 0
@@ -15836,7 +15899,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1126583046637786721
 Transform:
   m_ObjectHideFlags: 0

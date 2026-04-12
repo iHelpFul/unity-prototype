@@ -37,10 +37,25 @@ public struct MultiplayerPrototypeEnemyState : IEquatable<MultiplayerPrototypeEn
     }
 }
 
+[Serializable]
+public struct MultiplayerPrototypeEnemyDamageResult
+{
+    public MultiplayerPrototypeEnemyState State;
+    public int DisplayDamage;
+    public int AppliedDamage;
+    public float Direction;
+    public ulong KillerClientId;
+    public uint ActionId;
+    public int HitIndex;
+    public int TotalHits;
+    public bool PlayImpactFeedback;
+}
+
 [DisallowMultipleComponent]
 public class MultiplayerPrototypeEnemyCoordinator : MonoBehaviour
 {
     private const string DamageRequestMessageName = "PrototypeEnemyDamageRequest";
+    private const string SkillSequenceRequestMessageName = "PrototypeEnemySkillSequenceRequest";
     private const string DamageResultMessageName = "PrototypeEnemyDamageResult";
     private const string SnapshotMessageName = "PrototypeEnemySnapshot";
 
@@ -52,6 +67,7 @@ public class MultiplayerPrototypeEnemyCoordinator : MonoBehaviour
     private bool handlersRegistered;
     private float nextPeriodicSnapshotTime;
     private int lastAuthoritySceneHandle = -1;
+    private uint nextSkillSequenceActionId = 1U;
 
     public static MultiplayerPrototypeEnemyCoordinator Instance => instance;
 
@@ -81,10 +97,10 @@ public class MultiplayerPrototypeEnemyCoordinator : MonoBehaviour
 
     public static bool TryRequestDamage(
         EnemyHealth enemy,
-        int damage,
         float direction,
         PlayerCharacter attacker,
-        bool commitDeath)
+        bool commitDeath,
+        string skillId)
     {
         if (!MultiplayerPrototypeRuntime.IsEnabled || enemy == null)
             return false;
@@ -95,10 +111,30 @@ public class MultiplayerPrototypeEnemyCoordinator : MonoBehaviour
 
         return coordinator.RequestDamageInternal(
             enemy,
-            Mathf.Max(1, damage),
             direction,
             attacker,
-            commitDeath);
+            commitDeath,
+            skillId);
+    }
+
+    public static bool TryRequestSkillSequence(
+        EnemyHealth enemy,
+        float direction,
+        PlayerCharacter attacker,
+        string skillId)
+    {
+        if (!MultiplayerPrototypeRuntime.IsEnabled || enemy == null)
+            return false;
+
+        MultiplayerPrototypeEnemyCoordinator coordinator = FindActive();
+        if (coordinator == null || coordinator.networkManager == null || !coordinator.networkManager.IsListening)
+            return false;
+
+        return coordinator.RequestSkillSequenceInternal(
+            enemy,
+            direction,
+            attacker,
+            skillId);
     }
 
     public static void NotifyEnemyRespawned(EnemyHealth enemy)
@@ -203,6 +239,9 @@ public class MultiplayerPrototypeEnemyCoordinator : MonoBehaviour
             DamageRequestMessageName,
             OnDamageRequestMessage);
         networkManager.CustomMessagingManager.RegisterNamedMessageHandler(
+            SkillSequenceRequestMessageName,
+            OnSkillSequenceRequestMessage);
+        networkManager.CustomMessagingManager.RegisterNamedMessageHandler(
             DamageResultMessageName,
             OnDamageResultMessage);
         networkManager.CustomMessagingManager.RegisterNamedMessageHandler(
@@ -218,6 +257,7 @@ public class MultiplayerPrototypeEnemyCoordinator : MonoBehaviour
             return;
 
         networkManager.CustomMessagingManager.UnregisterNamedMessageHandler(DamageRequestMessageName);
+        networkManager.CustomMessagingManager.UnregisterNamedMessageHandler(SkillSequenceRequestMessageName);
         networkManager.CustomMessagingManager.UnregisterNamedMessageHandler(DamageResultMessageName);
         networkManager.CustomMessagingManager.UnregisterNamedMessageHandler(SnapshotMessageName);
         handlersRegistered = false;
@@ -225,21 +265,49 @@ public class MultiplayerPrototypeEnemyCoordinator : MonoBehaviour
 
     private bool RequestDamageInternal(
         EnemyHealth enemy,
-        int damage,
         float direction,
         PlayerCharacter attacker,
-        bool commitDeath)
+        bool commitDeath,
+        string skillId)
     {
         if (!MultiplayerPrototypeSceneEnemyRegistry.TryGetEnemyId(enemy, out ulong enemyId))
-            return false;
+            return true;
 
         if (networkManager.IsServer)
         {
-            ProcessDamage(enemyId, damage, direction, commitDeath, ResolveAttackerClientId(attacker));
+            ProcessDamage(
+                enemyId,
+                direction,
+                commitDeath,
+                ResolveAttackerClientId(attacker),
+                skillId);
             return true;
         }
 
-        SendDamageRequest(enemyId, damage, direction, commitDeath);
+        SendDamageRequest(enemyId, direction, commitDeath, skillId);
+        return true;
+    }
+
+    private bool RequestSkillSequenceInternal(
+        EnemyHealth enemy,
+        float direction,
+        PlayerCharacter attacker,
+        string skillId)
+    {
+        if (!MultiplayerPrototypeSceneEnemyRegistry.TryGetEnemyId(enemy, out ulong enemyId))
+            return true;
+
+        if (networkManager.IsServer)
+        {
+            StartAuthoritativeSkillSequence(
+                enemyId,
+                direction,
+                ResolveAttackerClientId(attacker),
+                skillId);
+            return true;
+        }
+
+        SendSkillSequenceRequest(enemyId, direction, skillId);
         return true;
     }
 
@@ -249,11 +317,32 @@ public class MultiplayerPrototypeEnemyCoordinator : MonoBehaviour
             return;
 
         reader.ReadValueSafe(out ulong enemyId);
-        reader.ReadValueSafe(out int damage);
         reader.ReadValueSafe(out float direction);
         reader.ReadValueSafe(out bool commitDeath);
+        reader.ReadValueSafe(out string skillId);
 
-        ProcessDamage(enemyId, Mathf.Max(1, damage), direction, commitDeath, senderClientId);
+        ProcessDamage(
+            enemyId,
+            direction,
+            commitDeath,
+            senderClientId,
+            skillId);
+    }
+
+    private void OnSkillSequenceRequestMessage(ulong senderClientId, FastBufferReader reader)
+    {
+        if (networkManager == null || !networkManager.IsServer)
+            return;
+
+        reader.ReadValueSafe(out ulong enemyId);
+        reader.ReadValueSafe(out float direction);
+        reader.ReadValueSafe(out string skillId);
+
+        StartAuthoritativeSkillSequence(
+            enemyId,
+            direction,
+            senderClientId,
+            skillId);
     }
 
     private void OnDamageResultMessage(ulong senderClientId, FastBufferReader reader)
@@ -261,25 +350,23 @@ public class MultiplayerPrototypeEnemyCoordinator : MonoBehaviour
         if (networkManager == null || networkManager.IsServer)
             return;
 
-        MultiplayerPrototypeEnemyState state = ReadEnemyState(ref reader);
-        reader.ReadValueSafe(out int appliedDamage);
-        reader.ReadValueSafe(out float direction);
-        reader.ReadValueSafe(out ulong killerClientId);
+        MultiplayerPrototypeEnemyDamageResult result = ReadDamageResult(ref reader);
 
-        if (!MultiplayerPrototypeSceneEnemyRegistry.TryResolveEnemy(state.EnemyId, out EnemyHealth enemy))
+        if (!MultiplayerPrototypeSceneEnemyRegistry.TryResolveEnemy(result.State.EnemyId, out EnemyHealth enemy))
             return;
 
         bool becameDead = enemy.ApplyAuthoritativeState(
-            state.CurrentHp,
-            state.IsDead,
-            state.IsVisible,
-            state.Position,
-            Quaternion.Euler(0f, state.Yaw, 0f),
-            appliedDamage,
-            direction,
-            playDamageFeedback: appliedDamage > 0);
+            result.State.CurrentHp,
+            result.State.IsDead,
+            result.State.IsVisible,
+            result.State.Position,
+            Quaternion.Euler(0f, result.State.Yaw, 0f),
+            result.DisplayDamage,
+            result.Direction,
+            playDamageNumber: result.DisplayDamage > 0,
+            playImpactFeedback: result.PlayImpactFeedback);
 
-        if (becameDead && killerClientId == networkManager.LocalClientId)
+        if (becameDead && result.KillerClientId == networkManager.LocalClientId)
             PublishLocalKillCredit(enemy);
     }
 
@@ -303,54 +390,103 @@ public class MultiplayerPrototypeEnemyCoordinator : MonoBehaviour
                 Quaternion.Euler(0f, state.Yaw, 0f),
                 0,
                 0f,
-                playDamageFeedback: false);
+                playDamageNumber: false,
+                playImpactFeedback: false);
         }
     }
 
-    private void ProcessDamage(
+    private bool ProcessDamage(
         ulong enemyId,
-        int damage,
         float direction,
         bool commitDeath,
-        ulong attackerClientId)
+        ulong attackerClientId,
+        string skillId,
+        uint actionId = 0U,
+        int hitIndex = 0,
+        int totalHits = 1,
+        bool allowDeadTargetSequenceResult = false,
+        bool playImpactFeedback = true)
     {
         if (networkManager == null || !networkManager.IsServer)
-            return;
+            return false;
 
         if (!MultiplayerPrototypeSceneEnemyRegistry.TryResolveEnemy(enemyId, out EnemyHealth enemy))
-            return;
+            return false;
 
-        if (enemy == null || enemy.IsDead)
-            return;
+        if (enemy == null)
+            return false;
+
+        bool targetAlreadyDead = enemy.IsDead;
+        if (targetAlreadyDead && !allowDeadTargetSequenceResult)
+            return false;
+
+        if (enemy.Stats == null)
+        {
+            Debug.LogWarning(
+                $"[MultiplayerPrototypeEnemyCoordinator] Rejected damage intent for enemy 0x{enemyId:X8} from client {attackerClientId}: enemy stats are missing.");
+            return false;
+        }
 
         int previousHp = enemy.CurrentHP;
         PlayerCharacter attacker = ResolveAttacker(attackerClientId);
-        enemy.TakeDamage(damage, direction, attacker, commitDeath);
+        if (!TryResolveAuthoritativeDamage(
+            attackerClientId,
+            skillId,
+            out int resolvedDamage,
+            out string rejectionReason))
+        {
+            Debug.LogWarning(
+                $"[MultiplayerPrototypeEnemyCoordinator] Rejected damage intent for enemy 0x{enemyId:X8} from client {attackerClientId}: {rejectionReason}");
+            return false;
+        }
 
-        int appliedDamage = Mathf.Max(0, previousHp - enemy.CurrentHP);
-        BroadcastDamageResult(enemy, enemyId, appliedDamage, direction, attackerClientId);
+        int displayDamage = ResolveDisplayDamage(enemy, resolvedDamage);
+        if (!targetAlreadyDead)
+        {
+            enemy.TakeDamage(
+                resolvedDamage,
+                direction,
+                attacker,
+                commitDeath,
+                publishDamageFeedback: false);
+        }
+
+        int appliedDamage = targetAlreadyDead
+            ? 0
+            : Mathf.Max(0, previousHp - enemy.CurrentHP);
+
+        MultiplayerPrototypeEnemyDamageResult result = BuildDamageResult(
+            enemy,
+            enemyId,
+            displayDamage,
+            appliedDamage,
+            direction,
+            attackerClientId,
+            actionId,
+            hitIndex,
+            totalHits,
+            playImpactFeedback && appliedDamage > 0);
+
+        BroadcastDamageResult(result);
+
+        if (networkManager.IsClient && result.DisplayDamage > 0)
+            enemy.PlayAuthoritativeDamageFeedback(result.DisplayDamage, direction, result.PlayImpactFeedback);
+
+        return true;
     }
 
-    private void BroadcastDamageResult(
-        EnemyHealth enemy,
-        ulong enemyId,
-        int appliedDamage,
-        float direction,
-        ulong killerClientId)
+    private void BroadcastDamageResult(MultiplayerPrototypeEnemyDamageResult result)
     {
-        if (enemy == null || networkManager == null)
+        if (networkManager == null)
             return;
 
         IReadOnlyList<ulong> remoteClientIds = GetRemoteClientIds();
         if (remoteClientIds.Count == 0)
             return;
 
-        using (FastBufferWriter writer = new FastBufferWriter(128, Allocator.Temp))
+        using (FastBufferWriter writer = new FastBufferWriter(160, Allocator.Temp))
         {
-            WriteEnemyState(writer, BuildState(enemy, enemyId));
-            writer.WriteValueSafe(appliedDamage);
-            writer.WriteValueSafe(direction);
-            writer.WriteValueSafe(killerClientId);
+            WriteDamageResult(writer, result);
 
             networkManager.CustomMessagingManager.SendNamedMessage(
                 DamageResultMessageName,
@@ -372,21 +508,173 @@ public class MultiplayerPrototypeEnemyCoordinator : MonoBehaviour
         SendSnapshotMessage(remoteClientIds, states);
     }
 
-    private void SendDamageRequest(ulong enemyId, int damage, float direction, bool commitDeath)
+    private void SendDamageRequest(
+        ulong enemyId,
+        float direction,
+        bool commitDeath,
+        string skillId)
     {
         if (networkManager == null || networkManager.IsServer)
             return;
 
-        using (FastBufferWriter writer = new FastBufferWriter(32, Allocator.Temp))
+        string normalizedSkillId = string.IsNullOrWhiteSpace(skillId) ? string.Empty : skillId;
+        int requiredSize =
+            FastBufferWriter.GetWriteSize(enemyId)
+            + FastBufferWriter.GetWriteSize(direction)
+            + FastBufferWriter.GetWriteSize(commitDeath)
+            + FastBufferWriter.GetWriteSize(normalizedSkillId);
+
+        using (FastBufferWriter writer = new FastBufferWriter(Mathf.Max(32, requiredSize), Allocator.Temp))
         {
             writer.WriteValueSafe(enemyId);
-            writer.WriteValueSafe(damage);
             writer.WriteValueSafe(direction);
             writer.WriteValueSafe(commitDeath);
+            writer.WriteValueSafe(normalizedSkillId);
             networkManager.CustomMessagingManager.SendNamedMessage(
                 DamageRequestMessageName,
                 NetworkManager.ServerClientId,
                 writer);
+        }
+    }
+
+    private void SendSkillSequenceRequest(
+        ulong enemyId,
+        float direction,
+        string skillId)
+    {
+        if (networkManager == null || networkManager.IsServer)
+            return;
+
+        string normalizedSkillId = string.IsNullOrWhiteSpace(skillId) ? string.Empty : skillId;
+        int requiredSize =
+            FastBufferWriter.GetWriteSize(enemyId)
+            + FastBufferWriter.GetWriteSize(direction)
+            + FastBufferWriter.GetWriteSize(normalizedSkillId);
+
+        using (FastBufferWriter writer = new FastBufferWriter(Mathf.Max(32, requiredSize), Allocator.Temp))
+        {
+            writer.WriteValueSafe(enemyId);
+            writer.WriteValueSafe(direction);
+            writer.WriteValueSafe(normalizedSkillId);
+            networkManager.CustomMessagingManager.SendNamedMessage(
+                SkillSequenceRequestMessageName,
+                NetworkManager.ServerClientId,
+                writer);
+        }
+    }
+
+    private bool TryResolveAuthoritativeDamage(
+        ulong attackerClientId,
+        string skillId,
+        out int resolvedDamage,
+        out string rejectionReason)
+    {
+        resolvedDamage = 0;
+        rejectionReason = string.Empty;
+
+        if (!TryResolveAttackerCombatState(attackerClientId, out NetworkPlayerPrototypeCombatState combatState))
+        {
+            rejectionReason = "missing authoritative combat state.";
+            return false;
+        }
+
+        PlayerCombatSnapshot snapshot = combatState.ToCombatSnapshot();
+        int baseDamage = DamageCalculator.CalculateDamage(
+            snapshot.Strength,
+            snapshot.Dexterity,
+            snapshot.WeaponAttack,
+            snapshot.SkillMastery);
+
+        if (!string.IsNullOrWhiteSpace(skillId))
+        {
+            PlayerSkillDefinition definition = PlayerSkillDatabase.GetDefinition(skillId);
+            if (definition == null)
+            {
+                rejectionReason = $"unknown skill '{skillId}'.";
+                return false;
+            }
+
+            resolvedDamage = Mathf.Max(1, Mathf.RoundToInt(baseDamage * Mathf.Max(0.1f, definition.DamageMultiplier)));
+            return true;
+        }
+
+        PlayerBasicAttackProfile profile = PlayerJobCombatProfiles.GetBasicAttackProfile(combatState.CurrentJob);
+        float comboMultiplier = 1f;
+
+        if (profile != null && profile.SupportsComboCounter && combatState.ComboCounter > 0)
+            comboMultiplier += combatState.ComboCounter * profile.ComboDamageBonusPerStack;
+
+        float basicMultiplier = profile != null ? profile.BasicDamageMultiplier : 1f;
+        resolvedDamage = Mathf.Max(1, Mathf.RoundToInt(baseDamage * basicMultiplier * comboMultiplier));
+        return true;
+    }
+
+    private static int ResolveDisplayDamage(EnemyHealth enemy, int resolvedDamage)
+    {
+        if (enemy == null || enemy.Stats == null)
+            return Mathf.Max(1, resolvedDamage);
+
+        return Mathf.Max(1, resolvedDamage - enemy.Stats.Defense);
+    }
+
+    private void StartAuthoritativeSkillSequence(
+        ulong enemyId,
+        float direction,
+        ulong attackerClientId,
+        string skillId)
+    {
+        if (networkManager == null || !networkManager.IsServer)
+            return;
+
+        PlayerSkillDefinition definition = PlayerSkillDatabase.GetDefinition(skillId);
+        if (!IsSupportedAuthoritativeSkillSequence(definition))
+        {
+            Debug.LogWarning(
+                $"[MultiplayerPrototypeEnemyCoordinator] Rejected skill sequence intent for enemy 0x{enemyId:X8} from client {attackerClientId}: unsupported multi-hit skill '{skillId}'.");
+            return;
+        }
+
+        uint actionId = ResolveNextSkillSequenceActionId();
+        StartCoroutine(RunAuthoritativeSkillSequence(
+            actionId,
+            enemyId,
+            direction,
+            attackerClientId,
+            definition));
+    }
+
+    private System.Collections.IEnumerator RunAuthoritativeSkillSequence(
+        uint actionId,
+        ulong enemyId,
+        float direction,
+        ulong attackerClientId,
+        PlayerSkillDefinition definition)
+    {
+        int totalHits = Mathf.Max(1, definition.HitCount);
+        float hitInterval = Mathf.Max(0.01f, definition.HitInterval);
+
+        for (int hitIndex = 0; hitIndex < totalHits; hitIndex++)
+        {
+            if (hitIndex > 0)
+                yield return new WaitForSeconds(hitInterval);
+
+            if (networkManager == null || !networkManager.IsServer || !networkManager.IsListening)
+                yield break;
+
+            bool producedResult = ProcessDamage(
+                enemyId,
+                direction,
+                commitDeath: true,
+                attackerClientId: attackerClientId,
+                skillId: definition.SkillId,
+                actionId: actionId,
+                hitIndex: hitIndex,
+                totalHits: totalHits,
+                allowDeadTargetSequenceResult: hitIndex > 0,
+                playImpactFeedback: hitIndex == 0);
+
+            if (!producedResult)
+                yield break;
         }
     }
 
@@ -484,6 +772,32 @@ public class MultiplayerPrototypeEnemyCoordinator : MonoBehaviour
         };
     }
 
+    private MultiplayerPrototypeEnemyDamageResult BuildDamageResult(
+        EnemyHealth enemy,
+        ulong enemyId,
+        int displayDamage,
+        int appliedDamage,
+        float direction,
+        ulong killerClientId,
+        uint actionId,
+        int hitIndex,
+        int totalHits,
+        bool playImpactFeedback)
+    {
+        return new MultiplayerPrototypeEnemyDamageResult
+        {
+            State = BuildState(enemy, enemyId),
+            DisplayDamage = displayDamage,
+            AppliedDamage = appliedDamage,
+            Direction = direction,
+            KillerClientId = killerClientId,
+            ActionId = actionId,
+            HitIndex = hitIndex,
+            TotalHits = totalHits,
+            PlayImpactFeedback = playImpactFeedback
+        };
+    }
+
     private PlayerCharacter ResolveAttacker(ulong clientId)
     {
         if (networkManager == null
@@ -494,6 +808,25 @@ public class MultiplayerPrototypeEnemyCoordinator : MonoBehaviour
         }
 
         return networkClient.PlayerObject.GetComponent<PlayerCharacter>();
+    }
+
+    private bool TryResolveAttackerCombatState(
+        ulong clientId,
+        out NetworkPlayerPrototypeCombatState combatState)
+    {
+        combatState = default;
+
+        if (networkManager == null
+            || !networkManager.ConnectedClients.TryGetValue(clientId, out NetworkClient networkClient)
+            || networkClient.PlayerObject == null)
+        {
+            return false;
+        }
+
+        NetworkPlayerPrototypeAvatar avatar =
+            networkClient.PlayerObject.GetComponent<NetworkPlayerPrototypeAvatar>();
+
+        return avatar != null && avatar.TryGetAuthoritativeCombatState(out combatState);
     }
 
     private ulong ResolveAttackerClientId(PlayerCharacter attacker)
@@ -575,6 +908,50 @@ public class MultiplayerPrototypeEnemyCoordinator : MonoBehaviour
         return state;
     }
 
+    private static void WriteDamageResult(FastBufferWriter writer, MultiplayerPrototypeEnemyDamageResult result)
+    {
+        WriteEnemyState(writer, result.State);
+        writer.WriteValueSafe(result.DisplayDamage);
+        writer.WriteValueSafe(result.AppliedDamage);
+        writer.WriteValueSafe(result.Direction);
+        writer.WriteValueSafe(result.KillerClientId);
+        writer.WriteValueSafe(result.ActionId);
+        writer.WriteValueSafe(result.HitIndex);
+        writer.WriteValueSafe(result.TotalHits);
+        writer.WriteValueSafe(result.PlayImpactFeedback);
+    }
+
+    private static MultiplayerPrototypeEnemyDamageResult ReadDamageResult(ref FastBufferReader reader)
+    {
+        MultiplayerPrototypeEnemyDamageResult result = default;
+        result.State = ReadEnemyState(ref reader);
+        reader.ReadValueSafe(out result.DisplayDamage);
+        reader.ReadValueSafe(out result.AppliedDamage);
+        reader.ReadValueSafe(out result.Direction);
+        reader.ReadValueSafe(out result.KillerClientId);
+        reader.ReadValueSafe(out result.ActionId);
+        reader.ReadValueSafe(out result.HitIndex);
+        reader.ReadValueSafe(out result.TotalHits);
+        reader.ReadValueSafe(out result.PlayImpactFeedback);
+        return result;
+    }
+
+    private uint ResolveNextSkillSequenceActionId()
+    {
+        uint actionId = nextSkillSequenceActionId;
+        nextSkillSequenceActionId = nextSkillSequenceActionId == uint.MaxValue
+            ? 1U
+            : nextSkillSequenceActionId + 1U;
+        return actionId;
+    }
+
+    private static bool IsSupportedAuthoritativeSkillSequence(PlayerSkillDefinition definition)
+    {
+        return definition != null
+            && definition.TargetingMode == PlayerSkillTargetingMode.FrontSingleTarget
+            && definition.HitCount > 1;
+    }
+
     private static string GetEnemyDisplayName(EnemyType enemyType)
     {
         string rawName = enemyType.ToString();
@@ -597,12 +974,6 @@ public class MultiplayerPrototypeEnemyCoordinator : MonoBehaviour
 
 internal static class MultiplayerPrototypeSceneEnemyRegistry
 {
-    private sealed class EnemySortEntry
-    {
-        public EnemyHealth Enemy;
-        public string SortKey;
-    }
-
     private static readonly Dictionary<ulong, EnemyHealth> enemiesById = new Dictionary<ulong, EnemyHealth>();
     private static readonly List<EnemyHealth> orderedEnemies = new List<EnemyHealth>();
     private static readonly Dictionary<EnemyHealth, ulong> enemyIds = new Dictionary<EnemyHealth, ulong>();
@@ -614,6 +985,7 @@ internal static class MultiplayerPrototypeSceneEnemyRegistry
         cachedSceneHandle = -1;
         enemiesById.Clear();
         orderedEnemies.Clear();
+        enemyIds.Clear();
     }
 
     public static bool TryGetEnemyId(EnemyHealth enemy, out ulong enemyId)
@@ -659,74 +1031,30 @@ internal static class MultiplayerPrototypeSceneEnemyRegistry
         orderedEnemies.Clear();
         enemyIds.Clear();
 
-        EnemyHealth[] sceneEnemies = UnityEngine.Object.FindObjectsByType<EnemyHealth>(
-            FindObjectsInactive.Include,
-            FindObjectsSortMode.None);
+        List<SceneEntityEnemyRegistration> registrations = new List<SceneEntityEnemyRegistration>();
+        List<string> validationErrors = new List<string>();
+        int totalSceneEnemies = SceneEntityIdValidationUtility.CollectEnemyRegistrations(
+            scene,
+            registrations,
+            validationErrors);
 
-        List<EnemySortEntry> sortEntries = new List<EnemySortEntry>();
-
-        for (int index = 0; index < sceneEnemies.Length; index++)
+        for (int index = 0; index < registrations.Count; index++)
         {
-            EnemyHealth enemy = sceneEnemies[index];
-            if (enemy == null || enemy.gameObject.scene.handle != scene.handle)
-                continue;
-
-            sortEntries.Add(new EnemySortEntry
-            {
-                Enemy = enemy,
-                SortKey = BuildStableSortKey(enemy)
-            });
+            SceneEntityEnemyRegistration registration = registrations[index];
+            enemiesById[registration.RuntimeId] = registration.Enemy;
+            orderedEnemies.Add(registration.Enemy);
+            enemyIds[registration.Enemy] = registration.RuntimeId;
         }
 
-        sortEntries.Sort((left, right) => string.CompareOrdinal(left.SortKey, right.SortKey));
-
-        for (int index = 0; index < sortEntries.Count; index++)
+        if (validationErrors.Count > 0)
         {
-            EnemyHealth enemy = sortEntries[index].Enemy;
-            ulong enemyId = (ulong)(index + 1);
-            enemiesById[enemyId] = enemy;
-            orderedEnemies.Add(enemy);
-            enemyIds[enemy] = enemyId;
+            for (int index = 0; index < validationErrors.Count; index++)
+                Debug.LogError(validationErrors[index]);
+
+            Debug.LogError(
+                $"[MultiplayerPrototypeEnemyCoordinator] SceneEntityId validation failed for '{scene.name}'. Registered {registrations.Count}/{totalSceneEnemies} enemies. Errors: {validationErrors.Count}. Use Tools > Multiplayer Prototype > Scene Entity IDs > Validate Enemy IDs.");
         }
 
         cachedSceneHandle = scene.handle;
-    }
-
-    private static string BuildStableSortKey(EnemyHealth enemy)
-    {
-        if (enemy == null)
-            return string.Empty;
-
-        Transform target = enemy.transform;
-        Vector3 anchorPosition = enemy.HasSpawnIdentity ? enemy.SpawnPosition : target.position;
-
-        StringBuilder builder = new StringBuilder(192);
-        builder.Append(target.gameObject.scene.path);
-        AppendHierarchySegment(builder, target);
-        builder.Append('|');
-        builder.Append(enemy.Stats != null ? enemy.Stats.EnemyType.ToString() : "Unknown");
-        builder.Append('|');
-        AppendRounded(builder, anchorPosition.x);
-        builder.Append('|');
-        AppendRounded(builder, anchorPosition.y);
-        builder.Append('|');
-        AppendRounded(builder, anchorPosition.z);
-        return builder.ToString();
-    }
-
-    private static void AppendHierarchySegment(StringBuilder builder, Transform target)
-    {
-        if (target.parent != null)
-            AppendHierarchySegment(builder, target.parent);
-
-        builder.Append('/');
-        builder.Append(target.name);
-        builder.Append('#');
-        builder.Append(target.GetSiblingIndex());
-    }
-
-    private static void AppendRounded(StringBuilder builder, float value)
-    {
-        builder.Append(Mathf.RoundToInt(value * 100f));
     }
 }

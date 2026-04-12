@@ -101,16 +101,18 @@ public class NpcVendorService : MonoBehaviour
 
         int totalCost = definition.BuyPrice * amount;
         ResolveBootstrap();
+        PlayerSessionCurrencyApplicationService currencySession = bootstrap != null ? bootstrap.CurrencySession : null;
+        PlayerSessionInventoryApplicationService inventorySession = bootstrap != null ? bootstrap.InventorySession : null;
 
-        if (bootstrap == null || !bootstrap.TrySpendMesos(activePlayer, totalCost))
+        if (currencySession == null || inventorySession == null || !currencySession.TrySpendMesos(activePlayer, totalCost))
         {
             PublishTransactionResult(itemId, amount, 0, NpcShopTransactionKind.Buy, false, "You do not have enough Mesos.");
             return;
         }
 
-        if (!bootstrap.AddInventoryItem(activePlayer, itemId, amount))
+        if (!inventorySession.AddInventoryItem(activePlayer, itemId, amount))
         {
-            bootstrap.AddMesos(activePlayer, totalCost);
+            currencySession.AddMesos(activePlayer, totalCost);
             PublishTransactionResult(itemId, amount, 0, NpcShopTransactionKind.Buy, false, "The purchase could not be completed.");
             return;
         }
@@ -141,21 +143,23 @@ public class NpcVendorService : MonoBehaviour
         }
 
         ResolveBootstrap();
+        PlayerSessionCurrencyApplicationService currencySession = bootstrap != null ? bootstrap.CurrencySession : null;
+        PlayerSessionInventoryApplicationService inventorySession = bootstrap != null ? bootstrap.InventorySession : null;
 
-        if (bootstrap == null || !bootstrap.HasInventoryItem(itemId, amount))
+        if (currencySession == null || inventorySession == null || !inventorySession.HasInventoryItem(itemId, amount))
         {
             PublishTransactionResult(itemId, amount, 0, NpcShopTransactionKind.Sell, false, "You do not have enough of that item.");
             return;
         }
 
-        if (!bootstrap.TryRemoveInventoryItem(activePlayer, itemId, amount))
+        if (!inventorySession.TryRemoveInventoryItem(activePlayer, itemId, amount))
         {
             PublishTransactionResult(itemId, amount, 0, NpcShopTransactionKind.Sell, false, "The sale could not be completed.");
             return;
         }
 
         int totalPayout = definition.SellPrice * amount;
-        bootstrap.AddMesos(activePlayer, totalPayout);
+        currencySession.AddMesos(activePlayer, totalPayout);
 
         PublishTransactionResult(itemId, amount, totalPayout, NpcShopTransactionKind.Sell, true, "Sale completed.");
         PublishShopStateChanged();
@@ -259,6 +263,11 @@ public class NpcVendorService : MonoBehaviour
         if (bootstrap == null)
             return null;
 
+        PlayerSessionInventoryApplicationService inventorySession = bootstrap.InventorySession;
+        PlayerSessionCurrencyApplicationService currencySession = bootstrap.CurrencySession;
+        if (inventorySession == null || currencySession == null)
+            return null;
+
         List<NpcShopBuyEntry> buyEntries = new List<NpcShopBuyEntry>();
         foreach (string itemId in activeVendor.StockedItemIds)
         {
@@ -273,13 +282,13 @@ public class NpcVendorService : MonoBehaviour
                 definition.DisplayName,
                 definition.Category,
                 definition.BuyPrice,
-                bootstrap.GetInventoryCount(itemId)));
+                inventorySession.GetInventoryCount(itemId)));
         }
 
         List<NpcShopSellEntry> sellEntries = new List<NpcShopSellEntry>();
         if (activeVendor.BuysPlayerItems)
         {
-            IReadOnlyList<InventoryEntry> inventoryEntries = bootstrap.GetInventoryEntries();
+            IReadOnlyList<InventoryEntry> inventoryEntries = inventorySession.GetInventoryEntries();
             foreach (InventoryEntry entry in inventoryEntries)
             {
                 if (entry == null || entry.Count <= 0)
@@ -305,7 +314,7 @@ public class NpcVendorService : MonoBehaviour
             activeCharacterId,
             activeNpc.NpcId,
             activeNpc.DisplayName,
-            bootstrap.PlayerData != null ? bootstrap.PlayerData.Mesos : 0,
+            currencySession.CurrentMesos,
             activeVendor.BuysPlayerItems,
             buyEntries,
             sellEntries);

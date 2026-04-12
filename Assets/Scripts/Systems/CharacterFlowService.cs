@@ -68,13 +68,14 @@ public class CharacterFlowService : MonoBehaviour
     private void OnSlotSelectRequested(CharacterSlotSelectRequestEvent e)
     {
         ResolveBootstrap();
-        if (bootstrap == null)
+        PlayerSessionCharacterApplicationService characterSession = bootstrap != null ? bootstrap.CharacterSession : null;
+        if (characterSession == null)
         {
             PublishResult(CharacterFlowAction.Select, false, "Character session is not ready.", e.SlotIndex);
             return;
         }
 
-        CharacterSaveData character = bootstrap.GetCharacterAtSlot(e.SlotIndex);
+        CharacterSaveData character = characterSession.GetCharacterAtSlot(e.SlotIndex);
         if (character == null)
         {
             PublishResult(CharacterFlowAction.Select, false, "That slot is empty.", e.SlotIndex);
@@ -82,7 +83,7 @@ public class CharacterFlowService : MonoBehaviour
             return;
         }
 
-        bool didSelect = bootstrap.TrySelectCharacter(character.CharacterId);
+        bool didSelect = characterSession.TrySelectCharacter(character.CharacterId);
         PublishResult(
             CharacterFlowAction.Select,
             didSelect,
@@ -95,7 +96,8 @@ public class CharacterFlowService : MonoBehaviour
     private void OnCharacterCreateRequested(CharacterCreateRequestEvent e)
     {
         ResolveBootstrap();
-        if (bootstrap == null)
+        PlayerSessionCharacterApplicationService characterSession = bootstrap != null ? bootstrap.CharacterSession : null;
+        if (characterSession == null)
         {
             PublishResult(CharacterFlowAction.Create, false, "Character session is not ready.", e.SlotIndex);
             return;
@@ -111,16 +113,16 @@ public class CharacterFlowService : MonoBehaviour
         }
 
         string normalizedNickname = e.Nickname.Trim();
-        if (!bootstrap.TryCreateCharacter(e.SlotIndex, normalizedNickname, appearance))
+        if (!characterSession.TryCreateCharacter(e.SlotIndex, normalizedNickname, appearance))
         {
             PublishResult(CharacterFlowAction.Create, false, "The character could not be created.", e.SlotIndex);
             PublishSelectionState();
             return;
         }
 
-        CharacterSaveData createdCharacter = bootstrap.GetCharacterAtSlot(e.SlotIndex);
+        CharacterSaveData createdCharacter = characterSession.GetCharacterAtSlot(e.SlotIndex);
         if (createdCharacter != null)
-            bootstrap.TrySelectCharacter(createdCharacter.CharacterId);
+            characterSession.TrySelectCharacter(createdCharacter.CharacterId);
 
         PublishResult(
             CharacterFlowAction.Create,
@@ -140,15 +142,16 @@ public class CharacterFlowService : MonoBehaviour
         }
 
         ResolveBootstrap();
-        if (bootstrap == null || bootstrap.ActiveCharacter == null || bootstrap.PlayerData == null)
+        PlayerSessionCharacterApplicationService characterSession = bootstrap != null ? bootstrap.CharacterSession : null;
+        if (characterSession == null || characterSession.ActiveCharacter == null || characterSession.PlayerData == null)
         {
             PublishResult(CharacterFlowAction.EnterWorld, false, "Select a character first.");
             PublishSelectionState();
             return;
         }
 
-        string targetMapId = MapRegistry.NormalizeMapId(bootstrap.PlayerData.CurrentMapId);
-        string targetSpawnId = SceneSpawnPoint.NormalizeSpawnId(bootstrap.PlayerData.LastSpawnId);
+        string targetMapId = MapRegistry.NormalizeMapId(characterSession.PlayerData.CurrentMapId);
+        string targetSpawnId = SceneSpawnPoint.NormalizeSpawnId(characterSession.PlayerData.LastSpawnId);
         if (string.IsNullOrWhiteSpace(targetMapId))
         {
             PublishResult(CharacterFlowAction.EnterWorld, false, "That character has no starting map.");
@@ -180,7 +183,7 @@ public class CharacterFlowService : MonoBehaviour
         AsyncOperation loadOperation = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Single);
         if (loadOperation == null)
         {
-            bootstrap?.ClearPendingMapTransition();
+            bootstrap?.MapSession?.ClearPendingMapTransition();
             activeEnterWorldRoutine = null;
             PublishResult(CharacterFlowAction.EnterWorld, false, "The world could not be loaded.");
             PublishSelectionState();
@@ -218,10 +221,11 @@ public class CharacterFlowService : MonoBehaviour
 
     private CharacterSelectionSnapshot BuildSnapshot()
     {
-        if (bootstrap == null || bootstrap.AccountData == null)
+        PlayerSessionCharacterApplicationService characterSession = bootstrap != null ? bootstrap.CharacterSession : null;
+        if (characterSession == null || characterSession.AccountData == null)
             return null;
 
-        IReadOnlyList<CharacterSlotData> slots = bootstrap.GetCharacterSlots();
+        IReadOnlyList<CharacterSlotData> slots = characterSession.GetCharacterSlots();
         List<CharacterSlotSnapshot> slotSnapshots = new List<CharacterSlotSnapshot>();
         int selectedSlotIndex = -1;
 
@@ -231,10 +235,10 @@ public class CharacterFlowService : MonoBehaviour
             if (slot == null)
                 continue;
 
-            CharacterSaveData character = bootstrap.GetCharacterAtSlot(slot.SlotIndex);
+            CharacterSaveData character = characterSession.GetCharacterAtSlot(slot.SlotIndex);
             bool isSelected = character != null
-                && bootstrap.ActiveCharacter != null
-                && character.CharacterId == bootstrap.ActiveCharacter.CharacterId;
+                && characterSession.ActiveCharacter != null
+                && character.CharacterId == characterSession.ActiveCharacter.CharacterId;
 
             if (isSelected)
                 selectedSlotIndex = slot.SlotIndex;
@@ -260,11 +264,11 @@ public class CharacterFlowService : MonoBehaviour
         }
 
         return new CharacterSelectionSnapshot(
-            bootstrap.AccountData.Username,
-            bootstrap.AccountData.MaxCharacterSlots,
-            bootstrap.ActiveCharacter != null ? bootstrap.ActiveCharacter.CharacterId : string.Empty,
+            characterSession.AccountData.Username,
+            characterSession.AccountData.MaxCharacterSlots,
+            characterSession.ActiveCharacter != null ? characterSession.ActiveCharacter.CharacterId : string.Empty,
             selectedSlotIndex,
-            bootstrap.ActiveCharacter != null && bootstrap.PlayerData != null,
+            characterSession.ActiveCharacter != null && characterSession.PlayerData != null,
             IsEnteringWorld,
             CharacterAppearanceCatalogDatabase.GetCatalog(),
             slotSnapshots);
@@ -274,7 +278,14 @@ public class CharacterFlowService : MonoBehaviour
     {
         message = string.Empty;
 
-        IReadOnlyList<CharacterSlotData> slots = bootstrap.GetCharacterSlots();
+        PlayerSessionCharacterApplicationService characterSession = bootstrap != null ? bootstrap.CharacterSession : null;
+        if (characterSession == null)
+        {
+            message = "Character session is not ready.";
+            return false;
+        }
+
+        IReadOnlyList<CharacterSlotData> slots = characterSession.GetCharacterSlots();
         CharacterSlotData targetSlot = null;
 
         for (int index = 0; index < slots.Count; index++)
@@ -314,7 +325,7 @@ public class CharacterFlowService : MonoBehaviour
 
         for (int index = 0; index < slots.Count; index++)
         {
-            CharacterSaveData character = bootstrap.GetCharacterAtSlot(slots[index].SlotIndex);
+            CharacterSaveData character = characterSession.GetCharacterAtSlot(slots[index].SlotIndex);
             if (character == null || string.IsNullOrWhiteSpace(character.Nickname))
                 continue;
 

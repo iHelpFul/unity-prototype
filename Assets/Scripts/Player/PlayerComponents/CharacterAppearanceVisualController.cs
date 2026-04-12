@@ -222,8 +222,8 @@ public class CharacterAppearanceVisualController : MonoBehaviour
         if (string.Equals(left, right, System.StringComparison.OrdinalIgnoreCase))
             return true;
 
-        if (ExtractTrailingNumber(left, out int leftNumber) && ExtractTrailingNumber(right, out int rightNumber))
-            return leftNumber == rightNumber;
+        //if (ExtractTrailingNumber(left, out int leftNumber) && ExtractTrailingNumber(right, out int rightNumber))
+           // return leftNumber == rightNumber;
 
         return false;
     }

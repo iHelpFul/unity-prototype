@@ -9,6 +9,7 @@ public class PlayerSkillProjectile : MonoBehaviour
     private EnemyHealth lockedTarget;
     private LayerMask enemyLayer;
     private int damage;
+    private string skillId;
     private float speed;
     private float radius;
     private float lifetime;
@@ -24,6 +25,7 @@ public class PlayerSkillProjectile : MonoBehaviour
         EnemyHealth lockedEnemy,
         LayerMask targetEnemyLayer,
         int hitDamage,
+        string sourceSkillId,
         Vector3 travelDirection,
         float travelSpeed,
         float hitRadius,
@@ -34,7 +36,8 @@ public class PlayerSkillProjectile : MonoBehaviour
         owner = ownerCharacter;
         lockedTarget = lockedEnemy;
         enemyLayer = targetEnemyLayer;
-        damage = Mathf.Max(1, hitDamage);
+        damage = Mathf.Max(0, hitDamage);
+        skillId = string.IsNullOrWhiteSpace(sourceSkillId) ? string.Empty : sourceSkillId.Trim();
         direction = travelDirection.sqrMagnitude > 0.0001f
             ? travelDirection.normalized
             : Vector3.forward;
@@ -187,13 +190,45 @@ public class PlayerSkillProjectile : MonoBehaviour
         {
             Duration = DefaultImpactDuration,
             TimeScale = 0.1f,
-            Damage = damage
+            Damage = 0
         });
 
-        if (MultiplayerPrototypeEnemyCoordinator.TryRequestDamage(enemy, damage, directionX, owner, commitDeathOnHit))
+        if (MultiplayerPrototypeEnemyCoordinator.TryRequestDamage(
+            enemy,
+            directionX,
+            owner,
+            commitDeathOnHit,
+            skillId))
+        {
             return;
+        }
 
-        enemy.TakeDamage(damage, directionX, owner, commitDeathOnHit);
+        enemy.TakeDamage(ResolveLocalFallbackDamage(), directionX, owner, commitDeathOnHit);
+    }
+
+    private int ResolveLocalFallbackDamage()
+    {
+        if (damage > 0)
+            return damage;
+
+        if (owner == null)
+            return 1;
+
+        PlayerCombatSnapshot snapshot = owner.GetCombatSnapshot();
+        int baseDamage = DamageCalculator.CalculateDamage(
+            snapshot.Strength,
+            snapshot.Dexterity,
+            snapshot.WeaponAttack,
+            snapshot.SkillMastery);
+
+        if (!string.IsNullOrWhiteSpace(skillId))
+        {
+            PlayerSkillDefinition definition = PlayerSkillDatabase.GetDefinition(skillId);
+            if (definition != null)
+                return Mathf.Max(1, Mathf.RoundToInt(baseDamage * Mathf.Max(0.1f, definition.DamageMultiplier)));
+        }
+
+        return Mathf.Max(1, baseDamage);
     }
 
     private void EnsureVisuals(float visualScale)
@@ -221,7 +256,7 @@ public class PlayerSkillProjectile : MonoBehaviour
         GameObject visual = GameObject.CreatePrimitive(PrimitiveType.Sphere);
         visual.name = "Visual";
         visual.transform.SetParent(transform, false);
-        visual.transform.localScale = new Vector3(visualScale * 0.85f, visualScale * 0.85f, visualScale * 1.35f);
+        visual.transform.localScale = new Vector3(visualScale * 0.85f, visualScale * 2.5f, visualScale * 0.85f);
 
         Collider visualCollider = visual.GetComponent<Collider>();
         if (visualCollider != null)

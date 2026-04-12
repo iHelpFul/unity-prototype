@@ -104,7 +104,7 @@ public class MapTransitionService : MonoBehaviour
         if (loadOperation == null)
         {
             Debug.LogWarning($"MapTransitionService failed to start loading scene '{sceneName}'.");
-            bootstrap?.ClearPendingMapTransition();
+            bootstrap?.MapSession?.ClearPendingMapTransition();
             SetPlayerInteractive(requester, true);
             ResetTransitionState();
             yield break;

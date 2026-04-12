@@ -9,7 +9,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: 9c5045d77ab117845b97876abe9e44f8, type: 3}
   m_Name: AppearanceCatalog
   m_EditorClassIdentifier: Assembly-CSharp::CharacterAppearanceCatalogAsset
   headOptions:
@@ -135,39 +135,15 @@ MonoBehaviour:
   - Id: Mouth12
     DisplayName: Mouth12
   outfitOptions:
-  - Id: Body01
-    DisplayName: Body 01
-  - Id: Body02
-    DisplayName: Body 02
   - Id: Body03
-    DisplayName: Body 03
+    DisplayName: Regular Outfit
   weaponRightOptions:
-  - Id: None
-    DisplayName: None
   - Id: OHS01_Stick
-    DisplayName: OHS01 Stick
+    DisplayName: Stick
   - Id: OHS02_Niddle
-    DisplayName: OHS02 Niddle
-  - Id: OHS03_Sword
-    DisplayName: OHS03 Sword
-  - Id: OHS04_Sword
-    DisplayName: OHS04 Sword
-  - Id: OHS05_Sword
-    DisplayName: OHS05 Sword
-  - Id: OHS06_Sword
-    DisplayName: OHS06 Sword
-  - Id: OHS07_Sword
-    DisplayName: OHS07 Sword
-  - Id: OHS08_Sword
-    DisplayName: OHS08 Sword
-  - Id: OHS09_Sword
-    DisplayName: OHS09 Sword
-  - Id: OHS10_Axe
-    DisplayName: OHS10 Axe
-  - Id: OHS11_Hammer
-    DisplayName: OHS11 Hammer
-  - Id: OHS12_Sword
-    DisplayName: OHS12 Sword
+    DisplayName: Niddle
+  - Id: Wand02
+    DisplayName: WoodWick
   hatOptions:
   - Id: None
     DisplayName: None
@@ -263,3 +239,5 @@ MonoBehaviour:
   - {r: 0.18, g: 0.82, b: 0.86, a: 1}
   - {r: 0.44, g: 0.74, b: 0.38, a: 1}
   - {r: 0.12, g: 0.12, b: 0.14, a: 1}
+  - {r: 0.8269842, g: 0.5445995, b: 0.8415094, a: 1}
+  - {r: 0.63740116, g: 0.7973635, b: 0.98490566, a: 1}

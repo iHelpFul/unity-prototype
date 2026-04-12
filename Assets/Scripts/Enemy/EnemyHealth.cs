@@ -67,7 +67,12 @@ public class EnemyHealth : MonoBehaviour
         spawnDirector?.Unregister(this);
     }
 
-    public void TakeDamage(int amount, float direction, PlayerCharacter attacker = null, bool commitDeath = true)
+    public void TakeDamage(
+        int amount,
+        float direction,
+        PlayerCharacter attacker = null,
+        bool commitDeath = true,
+        bool publishDamageFeedback = true)
     {
         if (isDead || stats == null)
             return;
@@ -77,7 +82,13 @@ public class EnemyHealth : MonoBehaviour
 
         int finalDamage = Mathf.Max(1, amount - stats.Defense);
         currentHP -= finalDamage;
-        PlayDamageFeedback(finalDamage, direction, allowHitAnimation: false);
+
+        if (publishDamageFeedback)
+            PlayDamageFeedback(
+                finalDamage,
+                direction,
+                playImpactFeedback: true,
+                allowHitAnimation: false);
 
         if (commitDeath)
         {
@@ -90,6 +101,15 @@ public class EnemyHealth : MonoBehaviour
         {
             animationController?.PlayHit();
         }
+    }
+
+    public void PlayAuthoritativeDamageFeedback(int finalDamage, float direction, bool playImpactFeedback = true)
+    {
+        PlayDamageFeedback(
+            finalDamage,
+            direction,
+            playImpactFeedback,
+            allowHitAnimation: false);
     }
 
     private void Die()
@@ -170,9 +190,10 @@ public class EnemyHealth : MonoBehaviour
         bool authoritativeVisible,
         Vector3 authoritativePosition,
         Quaternion authoritativeRotation,
-        int appliedDamage,
+        int displayDamage,
         float direction,
-        bool playDamageFeedback)
+        bool playDamageNumber,
+        bool playImpactFeedback)
     {
         bool wasDead = isDead;
         Vector3 previousPosition = transform.position;
@@ -185,19 +206,34 @@ public class EnemyHealth : MonoBehaviour
             {
                 ApplyTransformFromAuthority(authoritativePosition, authoritativeRotation);
 
-                if (playDamageFeedback && appliedDamage > 0)
-                    PlayDamageFeedback(appliedDamage, direction, allowHitAnimation: false);
+                if (playDamageNumber && displayDamage > 0)
+                {
+                    PlayDamageFeedback(
+                        displayDamage,
+                        direction,
+                        playImpactFeedback,
+                        allowHitAnimation: false);
+                }
 
                 EnterDeadState(
                     scheduleRespawn: false,
                     dropLoot: false,
                     publishDeathEvent: false,
                     publishKillNotification: false,
-                    publishDeathVfx: playDamageFeedback);
+                    publishDeathVfx: playDamageNumber || playImpactFeedback);
             }
             else
             {
                 ApplyTransformFromAuthority(authoritativePosition, authoritativeRotation);
+
+                if (playDamageNumber && displayDamage > 0)
+                {
+                    PlayDamageFeedback(
+                        displayDamage,
+                        direction,
+                        playImpactFeedback: false,
+                        allowHitAnimation: false);
+                }
             }
 
             if (isVisible != authoritativeVisible)
@@ -227,8 +263,14 @@ public class EnemyHealth : MonoBehaviour
         if (isVisible != authoritativeVisible)
             SetVisible(authoritativeVisible);
 
-        if (playDamageFeedback && appliedDamage > 0)
-            PlayDamageFeedback(appliedDamage, direction, allowHitAnimation: true);
+        if (playDamageNumber && displayDamage > 0)
+        {
+            PlayDamageFeedback(
+                displayDamage,
+                direction,
+                playImpactFeedback,
+                allowHitAnimation: playImpactFeedback);
+        }
 
         if (MultiplayerPrototypeRuntime.IsEnabled
             && (enemyAI == null || !enemyAI.enabled)
@@ -242,12 +284,16 @@ public class EnemyHealth : MonoBehaviour
         return false;
     }
 
-    private void PlayDamageFeedback(int finalDamage, float direction, bool allowHitAnimation)
+    private void PlayDamageFeedback(
+        int finalDamage,
+        float direction,
+        bool playImpactFeedback,
+        bool allowHitAnimation)
     {
         if (finalDamage <= 0)
             return;
 
-        if (currentHP > 0)
+        if (playImpactFeedback && currentHP > 0)
         {
             EventBus.Publish(new CharacterKnockbackEvent
             {
@@ -264,20 +310,23 @@ public class EnemyHealth : MonoBehaviour
             Damage = finalDamage
         });
 
-        EventBus.Publish(new PlaySfxEvent
+        if (playImpactFeedback)
         {
-            Type = SfxType.SwordHit,
-            Position = transform.position
-        });
+            EventBus.Publish(new PlaySfxEvent
+            {
+                Type = SfxType.SwordHit,
+                Position = transform.position
+            });
 
-        EventBus.Publish(new PlayVfxEvent
-        {
-            Type = VfxType.EnemyHit,
-            Position = transform.position + Vector3.up * 1f,
-            Rotation = Quaternion.identity
-        });
+            EventBus.Publish(new PlayVfxEvent
+            {
+                Type = VfxType.EnemyHit,
+                Position = transform.position + Vector3.up * 1f,
+                Rotation = Quaternion.identity
+            });
+        }
 
-        if (allowHitAnimation && currentHP > 0)
+        if (playImpactFeedback && allowHitAnimation && currentHP > 0)
             animationController?.PlayHit();
     }
 

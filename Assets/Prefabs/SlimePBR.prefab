@@ -64,7 +64,7 @@ Transform:
   - {fileID: 1372002572039464478}
   - {fileID: 6756459048175598405}
   m_Father: {fileID: 6346781238831318614}
-  m_LocalEulerAnglesHint: {x: -3.169438e-15, y: 1.9801575e-14, z: -17.605015}
+  m_LocalEulerAnglesHint: {x: -4.810567e-15, y: 1.9459084e-14, z: -9.232791}
 --- !u!1 &2164896336856024403
 GameObject:
   m_ObjectHideFlags: 0
@@ -228,7 +228,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 6756459048175598405}
-  m_LocalEulerAnglesHint: {x: 79.03938, y: 90, z: 0}
+  m_LocalEulerAnglesHint: {x: 74.3953, y: -90, z: 180}
 --- !u!1 &2950512582507908795
 GameObject:
   m_ObjectHideFlags: 0
@@ -259,7 +259,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 6756459048175598405}
-  m_LocalEulerAnglesHint: {x: 79.03938, y: 90, z: 0}
+  m_LocalEulerAnglesHint: {x: 48.471066, y: 90, z: 0}
 --- !u!1 &3849207116422395179
 GameObject:
   m_ObjectHideFlags: 0
@@ -290,7 +290,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 6346781238831318614}
-  m_LocalEulerAnglesHint: {x: 3.576334, y: -90, z: 0}
+  m_LocalEulerAnglesHint: {x: 3.5763352, y: -90, z: 0}
 --- !u!1 &5874554076021524244
 GameObject:
   m_ObjectHideFlags: 0
@@ -324,7 +324,7 @@ Transform:
   - {fileID: 9216809151166543535}
   - {fileID: 3419754152548343687}
   m_Father: {fileID: 5310970661048154870}
-  m_LocalEulerAnglesHint: {x: -6.2096417e-15, y: 1.3807713e-15, z: -25.967804}
+  m_LocalEulerAnglesHint: {x: -3.1617036e-15, y: 3.7654341e-16, z: -18.950869}
 --- !u!1 &7078097343085812037
 GameObject:
   m_ObjectHideFlags: 0
@@ -400,8 +400,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyHealth
   stats:
     enemyType: 0
-    MaxHP: 60
-    Defense: 6
+    definition: {fileID: 0}
+    preferDefinitionValues: 1
+    maxHP: 60
+    defense: 6
     expReward: 12
     contactDamage: 12
     animatedAttackDamage: 35
@@ -412,7 +414,8 @@ MonoBehaviour:
     redPotionDropChance: 0
     bluePotionDropCount: 0
     bluePotionDropChance: 0
-    commonEtcItemId: 
+    legacyCommonEtcItemId: 
+    commonEtcItem: {fileID: 0}
     commonEtcDropCount: 0
     commonEtcDropChance: 0
     corpseDuration: 0.05
@@ -436,13 +439,13 @@ CharacterController:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Height: 1.25
-  m_Radius: 0.6
+  m_Height: 1
+  m_Radius: 0.5
   m_SlopeLimit: 5
   m_StepOffset: 0
   m_SkinWidth: 0.08
   m_MinMoveDistance: 0.001
-  m_Center: {x: 0, y: 0.5, z: 0}
+  m_Center: {x: 0, y: 0.45, z: 0}
 --- !u!114 &6518631695103335200
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -458,25 +461,25 @@ MonoBehaviour:
   moveSpeed: 0.8
   leftBoundary: {fileID: 0}
   rightBoundary: {fileID: 0}
-  patrolHalfWidth: 2.5
+  patrolHalfWidth: 5
   patrolEdgePadding: 0.1
   minPatrolPauseDuration: 0.75
   maxPatrolPauseDuration: 1.1
   minPatrolMoveDuration: 1.3
-  maxPatrolMoveDuration: 5
+  maxPatrolMoveDuration: 6
   attackType: 1
   detectionRange: 2.5
   loseAggroDelay: 2.25
-  chaseBoundsPadding: 1.2
-  attackRangeForward: 0.7
-  attackRangeUpward: 0.75
-  attackHitboxForwardOffset: 0.5
-  attackHitboxWidth: 0.6
+  chaseBoundsPadding: 0
+  attackRangeForward: 1.2
+  attackRangeUpward: 0.8
+  attackHitboxForwardOffset: 1
+  attackHitboxWidth: 0.35
   attackHitboxHeight: 0.75
   attackCooldown: 1.5
-  attackRecoveryDuration: 0.18
-  attackHitFallbackDelay: 0.28
-  attackAnimationTimeout: 1.05
+  attackRecoveryDuration: 0.25
+  attackHitFallbackDelay: 0.12
+  attackAnimationTimeout: 0.3
   animationController: {fileID: -7395471561747317667}
   gravity: -20
 --- !u!114 &-7395471561747317667
@@ -541,7 +544,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 7712100668740750514}
-  m_LocalEulerAnglesHint: {x: 21.181347, y: -90, z: 0}
+  m_LocalEulerAnglesHint: {x: 38.233322, y: -90, z: 0}
 --- !u!1 &8454773962279222771
 GameObject:
   m_ObjectHideFlags: 0
@@ -572,7 +575,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 6346781238831318614}
-  m_LocalEulerAnglesHint: {x: 3.576334, y: -90, z: 0}
+  m_LocalEulerAnglesHint: {x: 3.5763352, y: -90, z: 0}
 --- !u!1 &8820978804083175405
 GameObject:
   m_ObjectHideFlags: 0
@@ -606,4 +609,4 @@ Transform:
   - {fileID: 3469780310032449354}
   - {fileID: 7236255649684595012}
   m_Father: {fileID: 7712100668740750514}
-  m_LocalEulerAnglesHint: {x: -2.2082522e-15, y: -180, z: 57.858025}
+  m_LocalEulerAnglesHint: {x: -7.861797e-16, y: -180, z: 50.7351}

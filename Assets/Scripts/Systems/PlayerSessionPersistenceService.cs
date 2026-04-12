@@ -230,14 +230,7 @@ public class PlayerSessionPersistenceService
         runtimeData.EquippedItems ??= new List<EquippedItemEntry>();
         runtimeData.UnlockedSkills ??= new List<PlayerSkillEntry>();
 
-        if (!Enum.IsDefined(typeof(PlayerJobType), runtimeData.CurrentJob))
-            runtimeData.CurrentJob = PlayerJobType.Novice;
-
-        if (runtimeData.Level <= 0)
-            runtimeData.Level = 1;
-
-        if (runtimeData.RequiredExp <= 0)
-            runtimeData.RequiredExp = GetRequiredExpForLevel(runtimeData.Level);
+        PlayerProgressionRules.Normalize(runtimeData);
 
         if (string.IsNullOrWhiteSpace(runtimeData.CurrentMapId))
             runtimeData.CurrentMapId = startMapId ?? string.Empty;
@@ -315,11 +308,4 @@ public class PlayerSessionPersistenceService
         return null;
     }
 
-    private int GetRequiredExpForLevel(int level)
-    {
-        if (level <= 1)
-            return 50;
-
-        return 50 + ((level - 1) * 25);
-    }
 }

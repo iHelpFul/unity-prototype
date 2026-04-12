@@ -19,22 +19,22 @@ MonoBehaviour:
   maxLevel: 20
   defaultSlotIndex: 1
   manaCost: 6
-  cooldown: 0
-  range: 6.25
+  cooldown: 0.85
+  range: 5
   damageMultiplier: 1.02
   hitCount: 1
-  hitInterval: 0.08
+  hitInterval: 0.1
   animationVariantIndex: 2
   animatorStateName: Combo02_InPlace_SingleSword 0
-  animationSpeed: 0.96
+  animationSpeed: 0.5
   attackDuration: 0.82
   targetingMode: 2
   maxTargets: 1
   projectileCount: 2
   projectileSpeed: 15
-  projectileRadius: 0.18
-  projectileLifetime: 0.65
-  projectileSpreadAngle: 7
+  projectileRadius: 1.2
+  projectileLifetime: 0.31
+  projectileSpreadAngle: 15
   projectileSpawnForwardOffset: 0.95
   projectileSpawnUpOffset: 1.05
   projectileVisualScale: 0.16

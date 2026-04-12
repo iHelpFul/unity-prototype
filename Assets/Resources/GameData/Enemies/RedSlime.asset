@@ -13,13 +13,13 @@ MonoBehaviour:
   m_Name: RedSlime
   m_EditorClassIdentifier: Assembly-CSharp::EnemyDefinition
   enemyType: 0
-  maxHP: 30
-  defense: 1
-  expReward: 8
+  maxHP: 45
+  defense: 5
+  expReward: 1000
   contactDamage: 4
-  animatedAttackDamage: 8
-  minMesoDrop: 4
-  maxMesoDrop: 10
+  animatedAttackDamage: 35
+  minMesoDrop: 30000
+  maxMesoDrop: 500000
   mesoDropChance: 0.8
   redPotionDropCount: 1
   redPotionDropChance: 0.25

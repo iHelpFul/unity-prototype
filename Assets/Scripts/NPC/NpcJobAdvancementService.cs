@@ -88,13 +88,14 @@ public class NpcJobAdvancementService : MonoBehaviour
         }
 
         ResolveBootstrap();
-        if (bootstrap == null)
+        PlayerSessionJobApplicationService jobSession = bootstrap != null ? bootstrap.JobSession : null;
+        if (jobSession == null)
         {
             PublishResult(e.TargetJob, false, "Player session is not ready.");
             return;
         }
 
-        if (!bootstrap.TryAdvanceToJob(activePlayer, e.TargetJob, activeAdvancement.RequiredLevel, out string resultMessage))
+        if (!jobSession.TryAdvanceToJob(activePlayer, e.TargetJob, activeAdvancement.RequiredLevel, out string resultMessage))
         {
             PublishResult(e.TargetJob, false, resultMessage);
             PublishAdvancementStateChanged();
@@ -180,7 +181,8 @@ public class NpcJobAdvancementService : MonoBehaviour
             return null;
 
         ResolveBootstrap();
-        if (bootstrap == null || bootstrap.PlayerData == null)
+        PlayerSessionJobApplicationService jobSession = bootstrap != null ? bootstrap.JobSession : null;
+        if (jobSession == null || !jobSession.HasActivePlayerData)
             return null;
 
         List<NpcJobAdvancementOption> options = new List<NpcJobAdvancementOption>();
@@ -189,8 +191,7 @@ public class NpcJobAdvancementService : MonoBehaviour
 
         foreach (PlayerJobType jobType in activeAdvancement.OfferedJobs)
         {
-            bool isAvailable = bootstrap.CanAdvanceToJob(
-                activePlayer,
+            bool isAvailable = jobSession.CanAdvanceToJob(
                 jobType,
                 activeAdvancement.RequiredLevel,
                 out string optionMessage);

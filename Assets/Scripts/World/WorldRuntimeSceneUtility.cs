@@ -67,7 +67,7 @@ public static class WorldRuntimeSceneUtility
         string targetMapId,
         string targetSpawnId)
     {
-        bootstrap?.SetPendingMapTransition(targetMapId, targetSpawnId);
+        bootstrap?.MapSession?.SetPendingMapTransition(targetMapId, targetSpawnId);
         string characterId = PlayerRuntimeIdentityUtility.ResolveCharacterId(bootstrap, requester);
 
         EventBus.Publish(new MapTransitionStartedEvent
@@ -104,6 +104,8 @@ public static class WorldRuntimeSceneUtility
         string characterId = PlayerRuntimeIdentityUtility.ResolveCharacterId(bootstrap, player);
         if (player != null)
         {
+            BindLocalPlayerSession(bootstrap, player);
+
             if (!TryPlacePlayerAtSpawn(player, targetSpawnId) && logWarnings)
             {
                 Debug.LogWarning(
@@ -115,8 +117,8 @@ public static class WorldRuntimeSceneUtility
             Debug.LogWarning($"{warningContext} could not find a local PlayerCharacter in the loaded scene.");
         }
 
-        bootstrap?.CompleteMapTransition(targetMapId, targetSpawnId);
-        bootstrap?.PublishSessionState(player);
+        bootstrap?.MapSession?.CompleteMapTransition(targetMapId, targetSpawnId);
+        bootstrap?.CharacterSession?.PublishSessionState(player);
 
         EventBus.Publish(new MapTransitionCompletedEvent
         {
@@ -128,5 +130,17 @@ public static class WorldRuntimeSceneUtility
         });
 
         return player;
+    }
+
+    public static void BindLocalPlayerSession(GameBootstrap bootstrap, PlayerCharacter player)
+    {
+        if (bootstrap == null || player == null || !player.IsLocalPlayer)
+            return;
+
+        player.BindBootstrap(bootstrap);
+
+        PlayerFacade facade = player.GetComponent<PlayerFacade>();
+        if (facade != null)
+            facade.BindBootstrap(bootstrap);
     }
 }

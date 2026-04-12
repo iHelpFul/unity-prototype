@@ -61,8 +61,9 @@ public class PlayerAppearanceController : MonoBehaviour
         }
 
         bootstrap = GameBootstrap.FindReadyBootstrap(bootstrap);
-        CharacterAppearanceData appearance = bootstrap != null
-            ? bootstrap.GetResolvedActiveCharacterAppearance()
+        PlayerSessionEquipmentApplicationService equipmentSession = bootstrap != null ? bootstrap.EquipmentSession : null;
+        CharacterAppearanceData appearance = equipmentSession != null
+            ? equipmentSession.GetResolvedActiveCharacterAppearance()
             : null;
 
         if (appearance != null)

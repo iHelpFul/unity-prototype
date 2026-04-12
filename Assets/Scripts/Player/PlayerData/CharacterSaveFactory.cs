@@ -23,12 +23,12 @@ public static class CharacterSaveFactory
 
     public static PlayerRuntimeData CreateDefaultRuntimeData(string startMapId, string startSpawnId)
     {
-        return new PlayerRuntimeData
+        PlayerRuntimeData runtimeData = new PlayerRuntimeData
         {
             CurrentJob = PlayerJobType.Novice,
             Level = 1,
             CurrentExp = 0,
-            RequiredExp = GetRequiredExpForLevel(1),
+            RequiredExp = 0,
             Strength = 0,
             Dexterity = 0,
             MaxHP = 100,
@@ -47,13 +47,8 @@ public static class CharacterSaveFactory
             EquippedItems = new List<EquippedItemEntry>(),
             UnlockedSkills = new List<PlayerSkillEntry>()
         };
-    }
 
-    private static int GetRequiredExpForLevel(int level)
-    {
-        if (level <= 1)
-            return 50;
-
-        return 50 + ((level - 1) * 25);
+        PlayerProgressionRules.RefreshDerivedState(runtimeData);
+        return runtimeData;
     }
 }

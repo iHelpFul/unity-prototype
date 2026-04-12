@@ -90,10 +90,17 @@ public class PlayerInventoryPanelController : MonoBehaviour
     {
         ResolveRuntimeContext();
 
-        if (!isVisible || bootstrap == null || trackedPlayer == null || string.IsNullOrWhiteSpace(selectedEntryId))
+        PlayerSessionInventoryApplicationService inventorySession = bootstrap != null ? bootstrap.InventorySession : null;
+        PlayerSessionEquipmentApplicationService equipmentSession = bootstrap != null ? bootstrap.EquipmentSession : null;
+
+        if (!isVisible
+            || inventorySession == null
+            || equipmentSession == null
+            || trackedPlayer == null
+            || string.IsNullOrWhiteSpace(selectedEntryId))
             return;
 
-        InventoryEntry entry = bootstrap.GetInventoryEntry(selectedEntryId);
+        InventoryEntry entry = inventorySession.GetInventoryEntry(selectedEntryId);
         if (entry == null || !ItemDatabase.TryGetDefinition(entry.ItemId, out ItemDefinition definition))
         {
             SetStatus("That item is no longer available.");
@@ -105,14 +112,14 @@ public class PlayerInventoryPanelController : MonoBehaviour
         {
             if (IsEntryEquipped(entry.EntryId))
             {
-                if (!bootstrap.TryUnequipItem(trackedPlayer, definition.EquipmentSlot))
+                if (!equipmentSession.TryUnequipItem(trackedPlayer, definition.EquipmentSlot))
                     SetStatus("That item could not be unequipped.");
                 else
                     SetStatus($"{definition.DisplayName} unequipped.");
             }
             else
             {
-                if (!bootstrap.TryEquipInventoryEntry(trackedPlayer, entry.EntryId))
+                if (!equipmentSession.TryEquipInventoryEntry(trackedPlayer, entry.EntryId))
                     SetStatus("That item could not be equipped.");
                 else
                     SetStatus($"{definition.DisplayName} equipped.");
@@ -124,7 +131,7 @@ public class PlayerInventoryPanelController : MonoBehaviour
 
         if (definition.Category == ItemCategory.Consumable)
         {
-            if (!bootstrap.TryUseInventoryEntry(trackedPlayer, entry.EntryId))
+            if (!inventorySession.TryUseInventoryEntry(trackedPlayer, entry.EntryId))
                 SetStatus("That consumable could not be used right now.");
             else
                 SetStatus($"{definition.DisplayName} used.");
@@ -206,7 +213,8 @@ public class PlayerInventoryPanelController : MonoBehaviour
         ResolveRuntimeContext();
         SetVisibleInternal(isVisible);
 
-        if (bootstrap == null || bootstrap.PlayerData == null)
+        PlayerSessionCharacterApplicationService characterSession = bootstrap != null ? bootstrap.CharacterSession : null;
+        if (characterSession == null || characterSession.PlayerData == null)
         {
             ClearInventoryList();
             RefreshEquipmentSlots();
@@ -222,13 +230,16 @@ public class PlayerInventoryPanelController : MonoBehaviour
 
     private void RefreshSummary()
     {
-        if (mesosText != null)
-            mesosText.text = $"Mesos: {bootstrap.PlayerData.Mesos}";
+        PlayerSessionEquipmentApplicationService equipmentSession = bootstrap != null ? bootstrap.EquipmentSession : null;
+        PlayerSessionCurrencyApplicationService currencySession = bootstrap != null ? bootstrap.CurrencySession : null;
 
-        if (statsText == null)
+        if (mesosText != null)
+            mesosText.text = $"Mesos: {(currencySession != null ? currencySession.CurrentMesos : 0)}";
+
+        if (statsText == null || equipmentSession == null)
             return;
 
-        ItemStatModifierData bonuses = bootstrap.GetEquipmentStatBonuses();
+        ItemStatModifierData bonuses = equipmentSession.GetEquipmentStatBonuses();
         StringBuilder builder = new StringBuilder();
         builder.Append("STR +").Append(bonuses.Strength);
         builder.Append("  |  DEX +").Append(bonuses.Dexterity);
@@ -240,7 +251,10 @@ public class PlayerInventoryPanelController : MonoBehaviour
 
     private void RefreshInventoryList()
     {
-        IReadOnlyList<InventoryEntry> entries = bootstrap.GetInventoryEntries();
+        PlayerSessionInventoryApplicationService inventorySession = bootstrap != null ? bootstrap.InventorySession : null;
+        IReadOnlyList<InventoryEntry> entries = inventorySession != null
+            ? inventorySession.GetInventoryEntries()
+            : null;
         EnsureSelectedEntry(entries);
         ClearInventoryList();
 
@@ -268,6 +282,7 @@ public class PlayerInventoryPanelController : MonoBehaviour
 
     private void RefreshEquipmentSlots()
     {
+        PlayerSessionEquipmentApplicationService equipmentSession = bootstrap != null ? bootstrap.EquipmentSession : null;
         if (equipmentSlots == null)
             return;
 
@@ -277,7 +292,7 @@ public class PlayerInventoryPanelController : MonoBehaviour
             if (view == null || view.Controller == null)
                 continue;
 
-            InventoryEntry equippedEntry = bootstrap != null ? bootstrap.GetEquippedEntry(view.Slot) : null;
+            InventoryEntry equippedEntry = equipmentSession != null ? equipmentSession.GetEquippedEntry(view.Slot) : null;
             ItemDefinition definition = equippedEntry != null ? ItemDatabase.GetDefinition(equippedEntry.ItemId) : null;
             view.Controller.Bind(view.Slot, view.DisplayName, equippedEntry, definition, OnEquipmentSlotClicked);
         }
@@ -285,7 +300,8 @@ public class PlayerInventoryPanelController : MonoBehaviour
 
     private void RefreshSelection()
     {
-        InventoryEntry entry = bootstrap != null ? bootstrap.GetInventoryEntry(selectedEntryId) : null;
+        PlayerSessionInventoryApplicationService inventorySession = bootstrap != null ? bootstrap.InventorySession : null;
+        InventoryEntry entry = inventorySession != null ? inventorySession.GetInventoryEntry(selectedEntryId) : null;
         ItemDefinition definition = entry != null ? ItemDatabase.GetDefinition(entry.ItemId) : null;
 
         if (selectedNameText != null)
@@ -369,10 +385,11 @@ public class PlayerInventoryPanelController : MonoBehaviour
     private void OnEquipmentSlotClicked(EquipmentSlotType slot)
     {
         ResolveRuntimeContext();
-        if (bootstrap == null || trackedPlayer == null)
+        PlayerSessionEquipmentApplicationService equipmentSession = bootstrap != null ? bootstrap.EquipmentSession : null;
+        if (equipmentSession == null || trackedPlayer == null)
             return;
 
-        if (!bootstrap.TryUnequipItem(trackedPlayer, slot))
+        if (!equipmentSession.TryUnequipItem(trackedPlayer, slot))
             SetStatus("That slot could not be unequipped.");
         else
             SetStatus($"{slot} unequipped.");
@@ -410,10 +427,13 @@ public class PlayerInventoryPanelController : MonoBehaviour
 
     private bool IsEntryEquipped(string entryId)
     {
+        PlayerSessionEquipmentApplicationService equipmentSession = bootstrap != null ? bootstrap.EquipmentSession : null;
         if (bootstrap == null || string.IsNullOrWhiteSpace(entryId))
             return false;
 
-        IReadOnlyList<EquippedItemEntry> equippedItems = bootstrap.GetEquippedItems();
+        IReadOnlyList<EquippedItemEntry> equippedItems = equipmentSession != null
+            ? equipmentSession.GetEquippedItems()
+            : null;
         if (equippedItems == null)
             return false;
 

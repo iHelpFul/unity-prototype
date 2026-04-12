@@ -5134,8 +5134,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8910aa20be8793d4cae65075df956968, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameBootstrap
-  defaultCharacterStartMapId: Map_01
-  defaultCharacterStartSpawnId: default
+  defaultCharacterStartMapId: Map_00
+  defaultCharacterStartSpawnId: from_left
 --- !u!4 &878859256
 Transform:
   m_ObjectHideFlags: 0
@@ -10483,6 +10483,14 @@ PrefabInstance:
     m_TransformParent: {fileID: 0}
     m_Modifications:
     - target: {fileID: 788695554066599553, guid: 49ac62053a0da594c90f1f0fdc30bf34, type: 3}
+      propertyPath: hairOptions.Array.size
+      value: 13
+      objectReference: {fileID: 0}
+    - target: {fileID: 788695554066599553, guid: 49ac62053a0da594c90f1f0fdc30bf34, type: 3}
+      propertyPath: outfitOptions.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 788695554066599553, guid: 49ac62053a0da594c90f1f0fdc30bf34, type: 3}
       propertyPath: eyeOptions.Array.data[0].Root
       value: 
       objectReference: {fileID: 5905173643154609631}
@@ -10543,6 +10551,34 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 7882383267625060774}
     - target: {fileID: 788695554066599553, guid: 49ac62053a0da594c90f1f0fdc30bf34, type: 3}
+      propertyPath: hairOptions.Array.data[3].Root
+      value: 
+      objectReference: {fileID: 9154920741479683066}
+    - target: {fileID: 788695554066599553, guid: 49ac62053a0da594c90f1f0fdc30bf34, type: 3}
+      propertyPath: hairOptions.Array.data[4].Root
+      value: 
+      objectReference: {fileID: 5519030483924877942}
+    - target: {fileID: 788695554066599553, guid: 49ac62053a0da594c90f1f0fdc30bf34, type: 3}
+      propertyPath: hairOptions.Array.data[5].Root
+      value: 
+      objectReference: {fileID: 6952053370226924927}
+    - target: {fileID: 788695554066599553, guid: 49ac62053a0da594c90f1f0fdc30bf34, type: 3}
+      propertyPath: hairOptions.Array.data[6].Root
+      value: 
+      objectReference: {fileID: 1240192027625179511}
+    - target: {fileID: 788695554066599553, guid: 49ac62053a0da594c90f1f0fdc30bf34, type: 3}
+      propertyPath: hairOptions.Array.data[7].Root
+      value: 
+      objectReference: {fileID: 7667675705581214630}
+    - target: {fileID: 788695554066599553, guid: 49ac62053a0da594c90f1f0fdc30bf34, type: 3}
+      propertyPath: hairOptions.Array.data[8].Root
+      value: 
+      objectReference: {fileID: 7327747395187199258}
+    - target: {fileID: 788695554066599553, guid: 49ac62053a0da594c90f1f0fdc30bf34, type: 3}
+      propertyPath: hairOptions.Array.data[9].Root
+      value: 
+      objectReference: {fileID: 1108603805833072459}
+    - target: {fileID: 788695554066599553, guid: 49ac62053a0da594c90f1f0fdc30bf34, type: 3}
       propertyPath: headOptions.Array.data[0].Root
       value: 
       objectReference: {fileID: 1138966227238091591}
@@ -10582,6 +10618,18 @@ PrefabInstance:
       propertyPath: headOptions.Array.data[9].Root
       value: 
       objectReference: {fileID: 7860800500380924882}
+    - target: {fileID: 788695554066599553, guid: 49ac62053a0da594c90f1f0fdc30bf34, type: 3}
+      propertyPath: hairOptions.Array.data[10].Root
+      value: 
+      objectReference: {fileID: 4322830558390271420}
+    - target: {fileID: 788695554066599553, guid: 49ac62053a0da594c90f1f0fdc30bf34, type: 3}
+      propertyPath: hairOptions.Array.data[11].Root
+      value: 
+      objectReference: {fileID: 5597800933748250182}
+    - target: {fileID: 788695554066599553, guid: 49ac62053a0da594c90f1f0fdc30bf34, type: 3}
+      propertyPath: hairOptions.Array.data[12].Root
+      value: 
+      objectReference: {fileID: 2553479704722935683}
     - target: {fileID: 788695554066599553, guid: 49ac62053a0da594c90f1f0fdc30bf34, type: 3}
       propertyPath: headOptions.Array.data[10].Root
       value: 
@@ -10637,7 +10685,7 @@ PrefabInstance:
     - target: {fileID: 788695554066599553, guid: 49ac62053a0da594c90f1f0fdc30bf34, type: 3}
       propertyPath: outfitOptions.Array.data[0].Root
       value: 
-      objectReference: {fileID: 1615072423898717806}
+      objectReference: {fileID: 2671921281448150773}
     - target: {fileID: 788695554066599553, guid: 49ac62053a0da594c90f1f0fdc30bf34, type: 3}
       propertyPath: outfitOptions.Array.data[1].Root
       value: 
@@ -10655,6 +10703,50 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 5040952898137457504}
     - target: {fileID: 788695554066599553, guid: 49ac62053a0da594c90f1f0fdc30bf34, type: 3}
+      propertyPath: hairOptions.Array.data[3].OptionId
+      value: Hair04
+      objectReference: {fileID: 0}
+    - target: {fileID: 788695554066599553, guid: 49ac62053a0da594c90f1f0fdc30bf34, type: 3}
+      propertyPath: hairOptions.Array.data[4].OptionId
+      value: Hair05
+      objectReference: {fileID: 0}
+    - target: {fileID: 788695554066599553, guid: 49ac62053a0da594c90f1f0fdc30bf34, type: 3}
+      propertyPath: hairOptions.Array.data[5].OptionId
+      value: Hair06
+      objectReference: {fileID: 0}
+    - target: {fileID: 788695554066599553, guid: 49ac62053a0da594c90f1f0fdc30bf34, type: 3}
+      propertyPath: hairOptions.Array.data[6].OptionId
+      value: Hair07
+      objectReference: {fileID: 0}
+    - target: {fileID: 788695554066599553, guid: 49ac62053a0da594c90f1f0fdc30bf34, type: 3}
+      propertyPath: hairOptions.Array.data[7].OptionId
+      value: Hair08
+      objectReference: {fileID: 0}
+    - target: {fileID: 788695554066599553, guid: 49ac62053a0da594c90f1f0fdc30bf34, type: 3}
+      propertyPath: hairOptions.Array.data[8].OptionId
+      value: Hair09
+      objectReference: {fileID: 0}
+    - target: {fileID: 788695554066599553, guid: 49ac62053a0da594c90f1f0fdc30bf34, type: 3}
+      propertyPath: hairOptions.Array.data[9].OptionId
+      value: Hair10
+      objectReference: {fileID: 0}
+    - target: {fileID: 788695554066599553, guid: 49ac62053a0da594c90f1f0fdc30bf34, type: 3}
+      propertyPath: hairOptions.Array.data[10].OptionId
+      value: Hair11
+      objectReference: {fileID: 0}
+    - target: {fileID: 788695554066599553, guid: 49ac62053a0da594c90f1f0fdc30bf34, type: 3}
+      propertyPath: hairOptions.Array.data[11].OptionId
+      value: Hair12
+      objectReference: {fileID: 0}
+    - target: {fileID: 788695554066599553, guid: 49ac62053a0da594c90f1f0fdc30bf34, type: 3}
+      propertyPath: hairOptions.Array.data[12].OptionId
+      value: Hair13
+      objectReference: {fileID: 0}
+    - target: {fileID: 788695554066599553, guid: 49ac62053a0da594c90f1f0fdc30bf34, type: 3}
+      propertyPath: outfitOptions.Array.data[0].OptionId
+      value: Body03
+      objectReference: {fileID: 0}
+    - target: {fileID: 788695554066599553, guid: 49ac62053a0da594c90f1f0fdc30bf34, type: 3}
       propertyPath: weaponRightOptions.Array.data[0].Root
       value: 
       objectReference: {fileID: 5201672795079457209}
@@ -10666,6 +10758,62 @@ PrefabInstance:
       propertyPath: weaponRightOptions.Array.data[2].Root
       value: 
       objectReference: {fileID: 6545418186732767555}
+    - target: {fileID: 788695554066599553, guid: 49ac62053a0da594c90f1f0fdc30bf34, type: 3}
+      propertyPath: hairOptions.Array.data[3].HairColorSlot
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 788695554066599553, guid: 49ac62053a0da594c90f1f0fdc30bf34, type: 3}
+      propertyPath: hairOptions.Array.data[4].HairColorSlot
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 788695554066599553, guid: 49ac62053a0da594c90f1f0fdc30bf34, type: 3}
+      propertyPath: hairOptions.Array.data[5].HairColorSlot
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 788695554066599553, guid: 49ac62053a0da594c90f1f0fdc30bf34, type: 3}
+      propertyPath: hairOptions.Array.data[6].HairColorSlot
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 788695554066599553, guid: 49ac62053a0da594c90f1f0fdc30bf34, type: 3}
+      propertyPath: hairOptions.Array.data[7].HairColorSlot
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 788695554066599553, guid: 49ac62053a0da594c90f1f0fdc30bf34, type: 3}
+      propertyPath: hairOptions.Array.data[8].HairColorSlot
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 788695554066599553, guid: 49ac62053a0da594c90f1f0fdc30bf34, type: 3}
+      propertyPath: hairOptions.Array.data[9].HairColorSlot
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 788695554066599553, guid: 49ac62053a0da594c90f1f0fdc30bf34, type: 3}
+      propertyPath: hairOptions.Array.data[10].HairColorSlot
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 788695554066599553, guid: 49ac62053a0da594c90f1f0fdc30bf34, type: 3}
+      propertyPath: hairOptions.Array.data[11].HairColorSlot
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 788695554066599553, guid: 49ac62053a0da594c90f1f0fdc30bf34, type: 3}
+      propertyPath: hairOptions.Array.data[12].HairColorSlot
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 788695554066599553, guid: 49ac62053a0da594c90f1f0fdc30bf34, type: 3}
+      propertyPath: weaponRightOptions.Array.data[1].OptionId
+      value: OHS02_Niddle
+      objectReference: {fileID: 0}
+    - target: {fileID: 788695554066599553, guid: 49ac62053a0da594c90f1f0fdc30bf34, type: 3}
+      propertyPath: weaponRightOptions.Array.data[2].OptionId
+      value: Wand02
+      objectReference: {fileID: 0}
+    - target: {fileID: 788695554066599553, guid: 49ac62053a0da594c90f1f0fdc30bf34, type: 3}
+      propertyPath: outfitOptions.Array.data[0].PrimaryColorSlot
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 788695554066599553, guid: 49ac62053a0da594c90f1f0fdc30bf34, type: 3}
+      propertyPath: outfitOptions.Array.data[0].SecondaryColorSlot
+      value: 7
+      objectReference: {fileID: 0}
     - target: {fileID: 4118400871414156198, guid: 49ac62053a0da594c90f1f0fdc30bf34, type: 3}
       propertyPath: modelRoot
       value: 
@@ -25488,7 +25636,7 @@ GameObject:
   - component: {fileID: 7363935218407431260}
   - component: {fileID: 4743701464637581462}
   m_Layer: 0
-  m_Name: OHS17_Wand
+  m_Name: Wand02
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

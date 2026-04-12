@@ -1,10 +1,15 @@
+using UnityEngine;
+
 public class PlayerProgressionModule
 {
     private readonly PlayerRuntimeData data;
     private readonly PlayerCharacter owner;
     private readonly GameBootstrap bootstrap;
 
-    public PlayerProgressionModule(PlayerRuntimeData runtimeData, PlayerCharacter ownerCharacter, GameBootstrap sessionBootstrap)
+    public PlayerProgressionModule(
+        PlayerRuntimeData runtimeData,
+        PlayerCharacter ownerCharacter,
+        GameBootstrap sessionBootstrap)
     {
         data = runtimeData;
         owner = ownerCharacter;
@@ -15,6 +20,8 @@ public class PlayerProgressionModule
     {
         if (data == null || amount <= 0)
             return;
+
+        PlayerProgressionRules.RefreshDerivedState(data);
 
         string characterId = owner != null
             ? owner.CharacterId
@@ -39,16 +46,15 @@ public class PlayerProgressionModule
         });
 
         if (didLevelUp)
-            bootstrap?.PublishJobState(owner);
+            bootstrap?.JobSession?.PublishJobState(owner);
 
-        bootstrap?.SavePlayer();
+        bootstrap?.CharacterSession?.Save();
     }
 
     private void LevelUp()
     {
         data.Level++;
-        data.RequiredExp = CalculateRequiredExp(data.Level);
-        data.HasPendingJobAdvancement = PlayerJobCombatProfiles.IsJobAdvancementAvailable(data);
+        PlayerProgressionRules.RefreshDerivedState(data);
 
         ApplyLevelGrowth();
 
@@ -72,7 +78,9 @@ public class PlayerProgressionModule
 
         if (bootstrap != null)
         {
-            ItemStatModifierData equipmentBonuses = bootstrap.GetEquipmentStatBonuses();
+            ItemStatModifierData equipmentBonuses = bootstrap.EquipmentSession != null
+                ? bootstrap.EquipmentSession.GetEquipmentStatBonuses()
+                : new ItemStatModifierData();
             data.CurrentHP = data.MaxHP + equipmentBonuses.MaxHP;
             data.CurrentMP = data.MaxMP + equipmentBonuses.MaxMP;
         }
@@ -84,7 +92,7 @@ public class PlayerProgressionModule
 
         if (bootstrap != null && owner != null)
         {
-            bootstrap.PublishSessionState(owner);
+            bootstrap.CharacterSession?.PublishSessionState(owner);
             return;
         }
 
@@ -107,13 +115,5 @@ public class PlayerProgressionModule
             CurrentMP = data.CurrentMP,
             MaxMP = data.MaxMP
         });
-    }
-
-    private int CalculateRequiredExp(int level)
-    {
-        if (level <= 1)
-            return 50;
-
-        return 50 + ((level - 1) * 25);
     }
 }

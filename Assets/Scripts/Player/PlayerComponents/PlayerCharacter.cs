@@ -48,27 +48,25 @@ public class PlayerCharacter : MonoBehaviour
         runtimeCharacterId = PlayerRuntimeIdentityUtility.NormalizeCharacterId(resolvedCharacterId);
     }
 
+    public void BindBootstrap(GameBootstrap sessionBootstrap)
+    {
+        bootstrap = sessionBootstrap;
+        RefreshRuntimeOwnershipState();
+    }
+
     public void RefreshPrototypeSessionState()
     {
         RefreshSessionBindings();
 
         if (IsLocalPlayer)
-            bootstrap?.PublishSessionState(this);
+            bootstrap?.CharacterSession?.PublishSessionState(this);
     }
 
     private void Awake()
     {
-        ResolveBootstrap();
+        if (bootstrap != null)
+            BindBootstrap(bootstrap);
 
-        if (IsLocalPlayer && bootstrap == null)
-        {
-            Debug.LogError("PlayerCharacter requires an active GameBootstrap for the local player.");
-            enabled = false;
-            return;
-        }
-
-        runtimeStats = IsLocalPlayer && bootstrap != null ? bootstrap.PlayerData : null;
-        SyncBaseStatsToRuntime();
         playerHitFlash = GetComponent<PlayerHitFlashController>();
     }
 
@@ -78,7 +76,7 @@ public class PlayerCharacter : MonoBehaviour
             return;
 
         RefreshSessionBindings();
-        bootstrap?.PublishSessionState(this);
+        bootstrap?.CharacterSession?.PublishSessionState(this);
     }
 
     private void OnEnable()
@@ -151,7 +149,7 @@ public class PlayerCharacter : MonoBehaviour
 
         runtimeStats.CurrentHP = Mathf.Max(0, runtimeStats.CurrentHP - amount);
         PublishHealthChanged();
-        bootstrap?.SavePlayer();
+        bootstrap?.CharacterSession?.Save();
 
         if (runtimeStats.CurrentHP == 0)
             Die();
@@ -170,7 +168,7 @@ public class PlayerCharacter : MonoBehaviour
 
         runtimeStats.CurrentHP = updatedHP;
         PublishHealthChanged();
-        bootstrap?.SavePlayer();
+        bootstrap?.CharacterSession?.Save();
     }
 
     public void RestoreMP(int amount)
@@ -186,7 +184,7 @@ public class PlayerCharacter : MonoBehaviour
 
         runtimeStats.CurrentMP = updatedMP;
         PublishManaChanged();
-        bootstrap?.SavePlayer();
+        bootstrap?.CharacterSession?.Save();
     }
 
     public bool HasEnoughMP(int amount)
@@ -215,7 +213,7 @@ public class PlayerCharacter : MonoBehaviour
 
         runtimeStats.CurrentMP -= manaCost;
         PublishManaChanged();
-        bootstrap?.SavePlayer();
+        bootstrap?.CharacterSession?.Save();
         return true;
     }
 
@@ -232,7 +230,7 @@ public class PlayerCharacter : MonoBehaviour
         isInvulnerable = false;
         isStunned = false;
 
-        bootstrap?.SavePlayer();
+        bootstrap?.CharacterSession?.Save();
         EventBus.Publish(new PlayerRespawnedEvent
         {
             Target = this,
@@ -260,7 +258,7 @@ public class PlayerCharacter : MonoBehaviour
         }
 
         if (didChange)
-            bootstrap?.SavePlayer();
+            bootstrap?.CharacterSession?.Save();
     }
 
     private void OnPlayerDamaged(PlayerDamagedEvent e)
@@ -344,6 +342,10 @@ public class PlayerCharacter : MonoBehaviour
             || bootstrap == null)
             return;
 
+        PlayerSessionInventoryApplicationService inventorySession = bootstrap.InventorySession;
+        if (inventorySession == null)
+            return;
+
         string itemId = ItemDatabase.GetConsumableItemId(e.ConsumableType);
         if (string.IsNullOrEmpty(itemId))
             return;
@@ -361,7 +363,7 @@ public class PlayerCharacter : MonoBehaviour
         if (!canRestoreHP && !canRestoreMP)
             return;
 
-        if (!bootstrap.TryConsumeConsumable(this, e.ConsumableType))
+        if (!inventorySession.TryConsumeConsumable(this, e.ConsumableType))
             return;
 
         if (canRestoreHP)
@@ -418,11 +420,6 @@ public class PlayerCharacter : MonoBehaviour
         return nearestPickup;
     }
 
-    private void ResolveBootstrap()
-    {
-        bootstrap = GameBootstrap.FindReadyBootstrap(bootstrap);
-    }
-
     private void RefreshRuntimeOwnershipState()
     {
         if (!IsLocalPlayer)
@@ -431,8 +428,7 @@ public class PlayerCharacter : MonoBehaviour
             return;
         }
 
-        ResolveBootstrap();
-        runtimeStats = bootstrap != null ? bootstrap.PlayerData : null;
+        runtimeStats = bootstrap != null ? bootstrap.CharacterSession?.PlayerData : null;
         SyncBaseStatsToRuntime();
     }
 
@@ -441,20 +437,18 @@ public class PlayerCharacter : MonoBehaviour
         if (!IsLocalPlayer)
             return;
 
-        ResolveBootstrap();
-
         if (bootstrap != null)
-            runtimeStats = bootstrap.PlayerData;
+            runtimeStats = bootstrap.CharacterSession?.PlayerData;
     }
 
     private string ResolveCharacterId()
     {
         if (IsLocalPlayer)
         {
-            ResolveBootstrap();
-            if (bootstrap != null && bootstrap.ActiveCharacter != null)
+            CharacterSaveData activeCharacter = bootstrap != null ? bootstrap.CharacterSession?.ActiveCharacter : null;
+            if (activeCharacter != null)
             {
-                characterId = PlayerRuntimeIdentityUtility.NormalizeCharacterId(bootstrap.ActiveCharacter.CharacterId);
+                characterId = PlayerRuntimeIdentityUtility.NormalizeCharacterId(activeCharacter.CharacterId);
                 runtimeCharacterId = characterId;
                 return characterId;
             }
@@ -472,7 +466,9 @@ public class PlayerCharacter : MonoBehaviour
 
     private ItemStatModifierData GetEquipmentBonuses()
     {
-        return bootstrap != null ? bootstrap.GetEquipmentStatBonuses() : new ItemStatModifierData();
+        return bootstrap != null && bootstrap.EquipmentSession != null
+            ? bootstrap.EquipmentSession.GetEquipmentStatBonuses()
+            : new ItemStatModifierData();
     }
 
     private int GetEffectiveMaxHP()

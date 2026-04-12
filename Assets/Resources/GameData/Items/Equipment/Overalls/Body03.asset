@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Body03
   m_EditorClassIdentifier: Assembly-CSharp::ItemDefinition
   itemId: eq_overall_body03
-  displayName: Body 03 Overall
+  displayName: Regular Outfit Overall
   category: 1
   maxStack: 1
   buyPrice: 0
@@ -24,9 +24,9 @@ MonoBehaviour:
   accentColor: {r: 0.9, g: 0.9, b: 0.9, a: 1}
   equipmentSlot: 1
   equipmentStatBonuses:
-    Strength: 3
-    Dexterity: 3
-    WeaponAttack: 2
+    Strength: 2
+    Dexterity: 2
+    WeaponAttack: 0
     MaxHP: 0
     MaxMP: 0
   equipmentAppearance:

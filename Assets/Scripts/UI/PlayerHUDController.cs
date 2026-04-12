@@ -73,20 +73,30 @@ public class PlayerHUDController : MonoBehaviour
         ResolveTrackedPlayer();
         ResolveBootstrap();
 
-        if (bootstrap == null || bootstrap.PlayerData == null || trackedPlayer == null)
+        PlayerSessionCharacterApplicationService characterSession = bootstrap != null ? bootstrap.CharacterSession : null;
+        PlayerSessionEquipmentApplicationService equipmentSession = bootstrap != null ? bootstrap.EquipmentSession : null;
+        PlayerSessionInventoryApplicationService inventorySession = bootstrap != null ? bootstrap.InventorySession : null;
+        PlayerSessionCurrencyApplicationService currencySession = bootstrap != null ? bootstrap.CurrencySession : null;
+
+        if (characterSession == null
+            || equipmentSession == null
+            || inventorySession == null
+            || currencySession == null
+            || trackedPlayer == null
+            || characterSession.PlayerData == null)
             return;
 
-        PlayerRuntimeData data = bootstrap.PlayerData;
-        ItemStatModifierData equipmentBonuses = bootstrap.GetEquipmentStatBonuses();
+        PlayerRuntimeData data = characterSession.PlayerData;
+        ItemStatModifierData equipmentBonuses = equipmentSession.GetEquipmentStatBonuses();
         int effectiveMaxHP = Mathf.Max(1, data.MaxHP + equipmentBonuses.MaxHP);
         int effectiveMaxMP = Mathf.Max(0, data.MaxMP + equipmentBonuses.MaxMP);
         float hpPercent = effectiveMaxHP > 0 ? (float)data.CurrentHP / effectiveMaxHP : 0f;
         float mpPercent = effectiveMaxMP > 0 ? (float)data.CurrentMP / effectiveMaxMP : 0f;
         float expPercent = data.RequiredExp > 0 ? (float)data.CurrentExp / data.RequiredExp : 0f;
         currentLevel = data.Level;
-        currentMesos = data.Mesos;
-        currentRedPotions = bootstrap.GetInventoryCount(ItemDatabase.RedPotionId);
-        currentBluePotions = bootstrap.GetInventoryCount(ItemDatabase.BluePotionId);
+        currentMesos = currencySession.CurrentMesos;
+        currentRedPotions = inventorySession.GetInventoryCount(ItemDatabase.RedPotionId);
+        currentBluePotions = inventorySession.GetInventoryCount(ItemDatabase.BluePotionId);
 
         hpSlider.value = hpPercent;
         hpFill.color = EvaluateColor(hpPercent, BarType.HP);

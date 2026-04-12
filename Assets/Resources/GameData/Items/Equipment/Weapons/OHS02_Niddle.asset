@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: OHS02_Niddle
   m_EditorClassIdentifier: Assembly-CSharp::ItemDefinition
   itemId: eq_weapon_right_ohs02_niddle
-  displayName: OHS02 Niddle
+  displayName: Niddle
   category: 1
   maxStack: 1
   buyPrice: 0
@@ -26,7 +26,7 @@ MonoBehaviour:
   equipmentStatBonuses:
     Strength: 0
     Dexterity: 0
-    WeaponAttack: 0
+    WeaponAttack: 17
     MaxHP: 0
     MaxMP: 0
   equipmentAppearance:

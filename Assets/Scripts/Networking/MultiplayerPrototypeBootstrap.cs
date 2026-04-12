@@ -519,13 +519,14 @@ public class MultiplayerPrototypeBootstrap : MonoBehaviour
     private void DrawCharacterSelectionGui()
     {
         GameBootstrap bootstrap = GameBootstrap.FindReadyBootstrap();
-        if (bootstrap == null)
+        PlayerSessionCharacterApplicationService characterSession = bootstrap != null ? bootstrap.CharacterSession : null;
+        if (characterSession == null)
         {
             GUILayout.Label("Character: session not ready.");
             return;
         }
 
-        CharacterSaveData activeCharacter = bootstrap.ActiveCharacter;
+        CharacterSaveData activeCharacter = characterSession.ActiveCharacter;
         if (activeCharacter == null)
         {
             GUILayout.Label("Character: no active character.");
@@ -551,14 +552,15 @@ public class MultiplayerPrototypeBootstrap : MonoBehaviour
     private void CyclePrototypeCharacter(int direction)
     {
         GameBootstrap bootstrap = GameBootstrap.FindReadyBootstrap();
-        if (bootstrap == null)
+        PlayerSessionCharacterApplicationService characterSession = bootstrap != null ? bootstrap.CharacterSession : null;
+        if (characterSession == null)
         {
             statusMessage = "Character session is not ready.";
             return;
         }
 
         List<CharacterSaveData> availableCharacters = new List<CharacterSaveData>();
-        IReadOnlyList<CharacterSlotData> slots = bootstrap.GetCharacterSlots();
+        IReadOnlyList<CharacterSlotData> slots = characterSession.GetCharacterSlots();
 
         for (int index = 0; index < slots.Count; index++)
         {
@@ -566,7 +568,7 @@ public class MultiplayerPrototypeBootstrap : MonoBehaviour
             if (slot == null)
                 continue;
 
-            CharacterSaveData character = bootstrap.GetCharacterAtSlot(slot.SlotIndex);
+            CharacterSaveData character = characterSession.GetCharacterAtSlot(slot.SlotIndex);
             if (character != null)
                 availableCharacters.Add(character);
         }
@@ -581,10 +583,10 @@ public class MultiplayerPrototypeBootstrap : MonoBehaviour
         for (int index = 0; index < availableCharacters.Count; index++)
         {
             CharacterSaveData candidate = availableCharacters[index];
-            if (candidate == null || bootstrap.ActiveCharacter == null)
+            if (candidate == null || characterSession.ActiveCharacter == null)
                 continue;
 
-            if (string.Equals(candidate.CharacterId, bootstrap.ActiveCharacter.CharacterId, StringComparison.Ordinal))
+            if (string.Equals(candidate.CharacterId, characterSession.ActiveCharacter.CharacterId, StringComparison.Ordinal))
             {
                 currentIndex = index;
                 break;
@@ -602,7 +604,7 @@ public class MultiplayerPrototypeBootstrap : MonoBehaviour
             return;
         }
 
-        if (bootstrap.TrySelectCharacter(nextCharacter.CharacterId))
+        if (characterSession.TrySelectCharacter(nextCharacter.CharacterId))
             statusMessage = $"Selected {nextCharacter.Nickname} for this prototype session.";
         else
             statusMessage = $"Could not select {nextCharacter.Nickname}.";

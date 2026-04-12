@@ -160,17 +160,22 @@ public class WorldLootPickup : MonoBehaviour
         if (bootstrap == null)
             return false;
 
+        PlayerSessionCurrencyApplicationService currencySession = bootstrap.CurrencySession;
+        PlayerSessionInventoryApplicationService inventorySession = bootstrap.InventorySession;
+        if (currencySession == null || inventorySession == null)
+            return false;
+
         isCollected = true;
 
         switch (lootType)
         {
             case WorldLootType.Mesos:
-                bootstrap.AddMesos(targetCollector, lootAmount);
+                currencySession.AddMesos(targetCollector, lootAmount);
                 PublishNotification(targetCollector, GameplayNotificationCategory.Mesos, $"Mesos +{lootAmount}");
                 break;
 
             case WorldLootType.Item:
-                if (!bootstrap.AddInventoryItem(targetCollector, itemId, lootAmount))
+                if (!inventorySession.AddInventoryItem(targetCollector, itemId, lootAmount))
                 {
                     isCollected = false;
                     return false;

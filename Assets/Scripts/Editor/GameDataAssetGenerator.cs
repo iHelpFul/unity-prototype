@@ -30,17 +30,22 @@ public static class GameDataAssetGenerator
 
         IReadOnlyList<CharacterAppearanceOption> overallAppearanceOptions = new[]
         {
-            new CharacterAppearanceOption { Id = "Body01", DisplayName = "Body 01" },
-            new CharacterAppearanceOption { Id = "Body02", DisplayName = "Body 02" },
-            new CharacterAppearanceOption { Id = "Body03", DisplayName = "Body 03" }
+            new CharacterAppearanceOption { Id = "Body03", DisplayName = "Regular Outfit" },
         };
 
-        IReadOnlyList<CharacterAppearanceOption> weaponAppearanceOptions = BuildAppearanceOptions(
-            "Assets/RPGTinyHeroWavePBR/Prefab/Weapons",
-            "OHS",
-            true,
-            12,
-            extraPrefixes: new[] { "Wand" });
+        IReadOnlyList<CharacterAppearanceOption> weaponAppearanceOptions = new[]
+        {
+            new CharacterAppearanceOption { Id = "OHS01_Stick", DisplayName = "Stick" },
+            new CharacterAppearanceOption { Id = "OHS02_Niddle", DisplayName = "Niddle" },
+            new CharacterAppearanceOption { Id = "Wand02", DisplayName = "WoodWick" }
+        };
+
+        //IReadOnlyList<CharacterAppearanceOption> weaponAppearanceOptions = BuildAppearanceOptions(
+           // "Assets/RPGTinyHeroWavePBR/Prefab/Weapons",
+          //  "OHS",
+          //  true,
+         //   35,
+           // extraPrefixes: new[] { "Wand" });
 
         ItemDefinition redPotion = EnsureItem(
             $"{GameDataRoot}/Items/RedPotion.asset",
