@@ -13,6 +13,11 @@ public class NpcJobAdvancementService : MonoBehaviour
 
     public bool IsAdvancementOpen => activeNpc != null && activeAdvancement != null && activePlayer != null;
 
+    public void BindBootstrap(GameBootstrap sessionBootstrap)
+    {
+        bootstrap = sessionBootstrap;
+    }
+
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void EnsureRuntimeInstance()
     {
@@ -36,7 +41,9 @@ public class NpcJobAdvancementService : MonoBehaviour
         }
 
         DontDestroyOnLoad(gameObject);
-        ResolveBootstrap();
+
+        if (bootstrap != null)
+            BindBootstrap(bootstrap);
     }
 
     private void OnEnable()
@@ -87,7 +94,6 @@ public class NpcJobAdvancementService : MonoBehaviour
             return;
         }
 
-        ResolveBootstrap();
         PlayerSessionJobApplicationService jobSession = bootstrap != null ? bootstrap.JobSession : null;
         if (jobSession == null)
         {
@@ -180,7 +186,6 @@ public class NpcJobAdvancementService : MonoBehaviour
         if (!IsAdvancementOpen)
             return null;
 
-        ResolveBootstrap();
         PlayerSessionJobApplicationService jobSession = bootstrap != null ? bootstrap.JobSession : null;
         if (jobSession == null || !jobSession.HasActivePlayerData)
             return null;
@@ -272,11 +277,6 @@ public class NpcJobAdvancementService : MonoBehaviour
     private bool IsSameActiveWindow(PlayerCharacter requester, string characterId, NpcInteractable npc)
     {
         return IsAdvancementOpen && MatchesActivePlayer(requester, characterId) && npc == activeNpc;
-    }
-
-    private void ResolveBootstrap()
-    {
-        bootstrap = GameBootstrap.FindReadyBootstrap(bootstrap);
     }
 
     private void ResetActiveState()

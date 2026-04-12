@@ -38,10 +38,18 @@ public class PlayerHUDController : MonoBehaviour
     private int currentRedPotions;
     private int currentBluePotions;
 
+    public void BindRuntimeContext(GameBootstrap sessionBootstrap, PlayerCharacter player)
+    {
+        bootstrap = sessionBootstrap;
+
+        if (player != null && player.IsLocalPlayer)
+            trackedPlayer = player;
+
+        RefreshFromRuntimeData();
+    }
+
     private void Start()
     {
-        ResolveTrackedPlayer();
-        ResolveBootstrap();
         RefreshFromRuntimeData();
     }
 
@@ -70,9 +78,6 @@ public class PlayerHUDController : MonoBehaviour
 
     private void RefreshFromRuntimeData()
     {
-        ResolveTrackedPlayer();
-        ResolveBootstrap();
-
         PlayerSessionCharacterApplicationService characterSession = bootstrap != null ? bootstrap.CharacterSession : null;
         PlayerSessionEquipmentApplicationService equipmentSession = bootstrap != null ? bootstrap.EquipmentSession : null;
         PlayerSessionInventoryApplicationService inventorySession = bootstrap != null ? bootstrap.InventorySession : null;
@@ -193,15 +198,9 @@ public class PlayerHUDController : MonoBehaviour
 
     private void OnMapTransitionCompleted(MapTransitionCompletedEvent e)
     {
-        ResolveBootstrap();
-
         if (e.Player != null && e.Player.IsLocalPlayer)
             trackedPlayer = e.Player;
-        else if (!PlayerRuntimeIdentityUtility.MatchesTrackedCharacter(
-                     bootstrap,
-                     trackedPlayer,
-                     e.Player,
-                     e.CharacterId))
+        else if (!IsTrackedPlayer(e.Player, e.CharacterId))
             return;
 
         RefreshFromRuntimeData();
@@ -314,26 +313,11 @@ public class PlayerHUDController : MonoBehaviour
         MP
     }
 
-    private void ResolveTrackedPlayer()
-    {
-        if (trackedPlayer != null && trackedPlayer.IsLocalPlayer && trackedPlayer.gameObject.scene.IsValid())
-            return;
-
-        trackedPlayer = WorldRuntimeSceneUtility.FindLocalPlayer(FindObjectsInactive.Include);
-    }
-
-    private void ResolveBootstrap()
-    {
-        bootstrap = GameBootstrap.FindReadyBootstrap(bootstrap);
-    }
-
     private bool IsTrackedPlayer(PlayerCharacter target, string characterId)
     {
-        ResolveBootstrap();
-        ResolveTrackedPlayer();
-        return PlayerRuntimeIdentityUtility.MatchesTrackedCharacter(
-            bootstrap,
+        return PlayerRuntimeIdentityUtility.MatchesCharacter(
             trackedPlayer,
+            trackedPlayer != null ? trackedPlayer.CharacterId : string.Empty,
             target,
             characterId);
     }

@@ -13,6 +13,11 @@ public class NpcVendorService : MonoBehaviour
 
     public bool IsShopOpen => activeNpc != null && activeVendor != null && activePlayer != null;
 
+    public void BindBootstrap(GameBootstrap sessionBootstrap)
+    {
+        bootstrap = sessionBootstrap;
+    }
+
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void EnsureRuntimeInstance()
     {
@@ -36,7 +41,9 @@ public class NpcVendorService : MonoBehaviour
         }
 
         DontDestroyOnLoad(gameObject);
-        ResolveBootstrap();
+
+        if (bootstrap != null)
+            BindBootstrap(bootstrap);
     }
 
     private void OnEnable()
@@ -100,7 +107,6 @@ public class NpcVendorService : MonoBehaviour
         }
 
         int totalCost = definition.BuyPrice * amount;
-        ResolveBootstrap();
         PlayerSessionCurrencyApplicationService currencySession = bootstrap != null ? bootstrap.CurrencySession : null;
         PlayerSessionInventoryApplicationService inventorySession = bootstrap != null ? bootstrap.InventorySession : null;
 
@@ -142,7 +148,6 @@ public class NpcVendorService : MonoBehaviour
             return;
         }
 
-        ResolveBootstrap();
         PlayerSessionCurrencyApplicationService currencySession = bootstrap != null ? bootstrap.CurrencySession : null;
         PlayerSessionInventoryApplicationService inventorySession = bootstrap != null ? bootstrap.InventorySession : null;
 
@@ -259,7 +264,6 @@ public class NpcVendorService : MonoBehaviour
         if (!IsShopOpen)
             return null;
 
-        ResolveBootstrap();
         if (bootstrap == null)
             return null;
 
@@ -340,11 +344,6 @@ public class NpcVendorService : MonoBehaviour
     private bool IsSameActiveShop(PlayerCharacter requester, string characterId, NpcInteractable npc)
     {
         return IsShopOpen && MatchesActivePlayer(requester, characterId) && npc == activeNpc;
-    }
-
-    private void ResolveBootstrap()
-    {
-        bootstrap = GameBootstrap.FindReadyBootstrap(bootstrap);
     }
 
     private void ResetActiveShop()

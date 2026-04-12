@@ -104,7 +104,7 @@ public static class WorldRuntimeSceneUtility
         string characterId = PlayerRuntimeIdentityUtility.ResolveCharacterId(bootstrap, player);
         if (player != null)
         {
-            BindLocalPlayerSession(bootstrap, player);
+            BindSceneRuntimeContext(bootstrap, player, includeInactive);
 
             if (!TryPlacePlayerAtSpawn(player, targetSpawnId) && logWarnings)
             {
@@ -132,6 +132,24 @@ public static class WorldRuntimeSceneUtility
         return player;
     }
 
+    public static void BindSceneRuntimeContext(
+        GameBootstrap bootstrap,
+        PlayerCharacter player,
+        FindObjectsInactive includeInactive)
+    {
+        if (bootstrap == null)
+            return;
+
+        PlayerCharacter localPlayer = player;
+        if (localPlayer == null || !localPlayer.IsLocalPlayer)
+            localPlayer = FindLocalPlayer(includeInactive);
+
+        if (localPlayer != null && localPlayer.IsLocalPlayer)
+            BindLocalPlayerSession(bootstrap, localPlayer);
+
+        BindSceneHudControllers(bootstrap, localPlayer, includeInactive);
+    }
+
     public static void BindLocalPlayerSession(GameBootstrap bootstrap, PlayerCharacter player)
     {
         if (bootstrap == null || player == null || !player.IsLocalPlayer)
@@ -142,5 +160,52 @@ public static class WorldRuntimeSceneUtility
         PlayerFacade facade = player.GetComponent<PlayerFacade>();
         if (facade != null)
             facade.BindBootstrap(bootstrap);
+
+        PlayerAppearanceController appearanceController = player.GetComponent<PlayerAppearanceController>();
+        if (appearanceController != null)
+            appearanceController.BindBootstrap(bootstrap);
+
+        NetworkPlayerPrototypeAvatar networkAvatar = player.GetComponent<NetworkPlayerPrototypeAvatar>();
+        if (networkAvatar != null)
+            networkAvatar.BindBootstrap(bootstrap);
+    }
+
+    private static void BindSceneHudControllers(
+        GameBootstrap bootstrap,
+        PlayerCharacter player,
+        FindObjectsInactive includeInactive)
+    {
+        PlayerHUDController[] hudControllers = Object.FindObjectsByType<PlayerHUDController>(
+            includeInactive,
+            FindObjectsSortMode.None);
+
+        for (int index = 0; index < hudControllers.Length; index++)
+        {
+            PlayerHUDController hudController = hudControllers[index];
+            if (hudController != null)
+                hudController.BindRuntimeContext(bootstrap, player);
+        }
+
+        PlayerInventoryPanelController[] inventoryPanels = Object.FindObjectsByType<PlayerInventoryPanelController>(
+            includeInactive,
+            FindObjectsSortMode.None);
+
+        for (int index = 0; index < inventoryPanels.Length; index++)
+        {
+            PlayerInventoryPanelController inventoryPanel = inventoryPanels[index];
+            if (inventoryPanel != null)
+                inventoryPanel.BindRuntimeContext(bootstrap, player);
+        }
+
+        GameplayNotificationFeedController[] notificationFeeds = Object.FindObjectsByType<GameplayNotificationFeedController>(
+            includeInactive,
+            FindObjectsSortMode.None);
+
+        for (int index = 0; index < notificationFeeds.Length; index++)
+        {
+            GameplayNotificationFeedController notificationFeed = notificationFeeds[index];
+            if (notificationFeed != null)
+                notificationFeed.BindTrackedPlayer(player);
+        }
     }
 }

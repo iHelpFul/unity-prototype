@@ -362,6 +362,7 @@ public class NetworkPlayerPrototypeAvatar : NetworkBehaviour
     [SerializeField] private float remoteVisualRotationSpeed = 720f;
     [SerializeField] private float localCameraFollowSmoothTime = 0.02f;
     [SerializeField] private float localCameraSnapDistance = 1.25f;
+    [SerializeField] private GameBootstrap sessionBootstrap;
 
     private bool wasOwner;
     private ushort lastAppliedJumpSequence;
@@ -388,6 +389,11 @@ public class NetworkPlayerPrototypeAvatar : NetworkBehaviour
             default,
             NetworkVariableReadPermission.Everyone,
             NetworkVariableWritePermission.Owner);
+
+    public void BindBootstrap(GameBootstrap bootstrap)
+    {
+        sessionBootstrap = bootstrap;
+    }
 
     private void Reset()
     {
@@ -515,7 +521,8 @@ public class NetworkPlayerPrototypeAvatar : NetworkBehaviour
     private void ApplyOwnershipState()
     {
         bool isOwnerInstance = IsOwner;
-        GameBootstrap sessionBootstrap = isOwnerInstance ? GameBootstrap.FindReadyBootstrap() : null;
+        if (isOwnerInstance && sessionBootstrap == null)
+            sessionBootstrap = GameBootstrap.FindReadyBootstrap();
 
         if (character != null)
         {
@@ -528,6 +535,9 @@ public class NetworkPlayerPrototypeAvatar : NetworkBehaviour
 
         if (isOwnerInstance && playerFacade != null && sessionBootstrap != null)
             playerFacade.BindBootstrap(sessionBootstrap);
+
+        if (isOwnerInstance && appearanceController != null && sessionBootstrap != null)
+            appearanceController.BindBootstrap(sessionBootstrap);
 
         SetOwnerOnlyComponentsEnabled(isOwnerInstance);
 
@@ -623,9 +633,8 @@ public class NetworkPlayerPrototypeAvatar : NetworkBehaviour
 
     private void PublishIdentityState()
     {
-        GameBootstrap bootstrap = GameBootstrap.FindReadyBootstrap();
-        PlayerSessionCharacterApplicationService characterSession = bootstrap != null ? bootstrap.CharacterSession : null;
-        PlayerSessionEquipmentApplicationService equipmentSession = bootstrap != null ? bootstrap.EquipmentSession : null;
+        PlayerSessionCharacterApplicationService characterSession = sessionBootstrap != null ? sessionBootstrap.CharacterSession : null;
+        PlayerSessionEquipmentApplicationService equipmentSession = sessionBootstrap != null ? sessionBootstrap.EquipmentSession : null;
         CharacterSaveData activeCharacter = characterSession != null ? characterSession.ActiveCharacter : null;
         CharacterAppearanceData appearance = equipmentSession != null
             ? equipmentSession.GetResolvedActiveCharacterAppearance()

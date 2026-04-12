@@ -13,6 +13,11 @@ public class CharacterFlowService : MonoBehaviour
 
     public bool IsEnteringWorld => activeEnterWorldRoutine != null;
 
+    public void BindBootstrap(GameBootstrap sessionBootstrap)
+    {
+        bootstrap = sessionBootstrap;
+    }
+
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void EnsureRuntimeInstance()
     {
@@ -36,7 +41,9 @@ public class CharacterFlowService : MonoBehaviour
         }
 
         DontDestroyOnLoad(gameObject);
-        ResolveBootstrap();
+
+        if (bootstrap != null)
+            BindBootstrap(bootstrap);
     }
 
     private void Start()
@@ -67,7 +74,6 @@ public class CharacterFlowService : MonoBehaviour
 
     private void OnSlotSelectRequested(CharacterSlotSelectRequestEvent e)
     {
-        ResolveBootstrap();
         PlayerSessionCharacterApplicationService characterSession = bootstrap != null ? bootstrap.CharacterSession : null;
         if (characterSession == null)
         {
@@ -95,7 +101,6 @@ public class CharacterFlowService : MonoBehaviour
 
     private void OnCharacterCreateRequested(CharacterCreateRequestEvent e)
     {
-        ResolveBootstrap();
         PlayerSessionCharacterApplicationService characterSession = bootstrap != null ? bootstrap.CharacterSession : null;
         if (characterSession == null)
         {
@@ -141,7 +146,6 @@ public class CharacterFlowService : MonoBehaviour
             return;
         }
 
-        ResolveBootstrap();
         PlayerSessionCharacterApplicationService characterSession = bootstrap != null ? bootstrap.CharacterSession : null;
         if (characterSession == null || characterSession.ActiveCharacter == null || characterSession.PlayerData == null)
         {
@@ -172,7 +176,6 @@ public class CharacterFlowService : MonoBehaviour
 
     private IEnumerator EnterWorldRoutine(string sceneName, string targetMapId, string targetSpawnId)
     {
-        ResolveBootstrap();
         WorldRuntimeSceneUtility.BeginSceneTransition(
             bootstrap,
             null,
@@ -192,7 +195,6 @@ public class CharacterFlowService : MonoBehaviour
 
         yield return WorldRuntimeSceneUtility.WaitForSceneLoadAndSettle(loadOperation, postLoadSettleTime);
 
-        ResolveBootstrap();
         WorldRuntimeSceneUtility.CompleteSceneTransition(
             bootstrap,
             sceneName,
@@ -208,7 +210,6 @@ public class CharacterFlowService : MonoBehaviour
 
     private void PublishSelectionState()
     {
-        ResolveBootstrap();
         CharacterSelectionSnapshot snapshot = BuildSnapshot();
         if (snapshot == null)
             return;
@@ -337,11 +338,6 @@ public class CharacterFlowService : MonoBehaviour
         }
 
         return true;
-    }
-
-    private void ResolveBootstrap()
-    {
-        bootstrap = GameBootstrap.FindReadyBootstrap(bootstrap);
     }
 
     private bool ShouldDestroyDuplicate()

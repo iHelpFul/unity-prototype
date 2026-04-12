@@ -5,7 +5,6 @@ public class GameplayNotificationFeedController : MonoBehaviour
 {
     [SerializeField] private RectTransform entriesRoot;
     [SerializeField] private GameplayNotificationEntryView entryTemplate;
-    [SerializeField] private GameBootstrap bootstrap;
     [SerializeField] private PlayerCharacter trackedPlayer;
     [SerializeField] private int maxVisibleEntries = 8;
     [SerializeField] private float entrySpacing = 42f;
@@ -46,17 +45,24 @@ public class GameplayNotificationFeedController : MonoBehaviour
             RebuildLayout(true);
     }
 
+    public void BindTrackedPlayer(PlayerCharacter player)
+    {
+        if (player == null || !player.IsLocalPlayer)
+            return;
+
+        trackedPlayer = player;
+        CleanupMissingEntries();
+    }
+
     private void OnNotificationReceived(GameplayNotificationEvent e)
     {
         if (string.IsNullOrWhiteSpace(e.Message))
             return;
 
-        ResolveRuntimeContext();
-        if (!PlayerRuntimeIdentityUtility.MatchesTrackedCharacter(
-                bootstrap,
-                trackedPlayer,
-                e.Target,
-                e.CharacterId))
+        if (trackedPlayer == null && e.Target != null && e.Target.IsLocalPlayer)
+            BindTrackedPlayer(e.Target);
+
+        if (!MatchesTrackedPlayer(e.Target, e.CharacterId))
             return;
 
         if (entriesRoot == null || entryTemplate == null)
@@ -75,15 +81,13 @@ public class GameplayNotificationFeedController : MonoBehaviour
 
     private void OnMapTransitionCompleted(MapTransitionCompletedEvent e)
     {
-        ResolveRuntimeContext();
-
         if (e.Player != null && e.Player.IsLocalPlayer)
-            trackedPlayer = e.Player;
-        else if (!PlayerRuntimeIdentityUtility.MatchesTrackedCharacter(
-                     bootstrap,
-                     trackedPlayer,
-                     e.Player,
-                     e.CharacterId))
+        {
+            BindTrackedPlayer(e.Player);
+            return;
+        }
+
+        if (!MatchesTrackedPlayer(e.Player, e.CharacterId))
             return;
 
         CleanupMissingEntries();
@@ -143,13 +147,12 @@ public class GameplayNotificationFeedController : MonoBehaviour
         }
     }
 
-    private void ResolveRuntimeContext()
+    private bool MatchesTrackedPlayer(PlayerCharacter player, string characterId)
     {
-        bootstrap = GameBootstrap.FindReadyBootstrap(bootstrap);
-
-        if (trackedPlayer != null && trackedPlayer.IsLocalPlayer && trackedPlayer.gameObject.scene.IsValid())
-            return;
-
-        trackedPlayer = WorldRuntimeSceneUtility.FindLocalPlayer(FindObjectsInactive.Include);
+        return PlayerRuntimeIdentityUtility.MatchesCharacter(
+            trackedPlayer,
+            trackedPlayer != null ? trackedPlayer.CharacterId : string.Empty,
+            player,
+            characterId);
     }
 }

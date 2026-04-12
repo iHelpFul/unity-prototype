@@ -50,6 +50,15 @@ public class GameBootstrap : MonoBehaviour
         SavePlayer();
     }
 
+    private void Start()
+    {
+        BindPersistentRuntimeServices();
+        WorldRuntimeSceneUtility.BindSceneRuntimeContext(
+            this,
+            null,
+            FindObjectsInactive.Include);
+    }
+
     private void OnApplicationPause(bool pauseStatus)
     {
         if (pauseStatus)
@@ -217,6 +226,49 @@ public class GameBootstrap : MonoBehaviour
             mapStateService,
             () => CharacterSession != null ? CharacterSession.PlayerData : null,
             SavePlayer);
+    }
+
+    private void BindPersistentRuntimeServices()
+    {
+        CharacterFlowService[] characterFlowServices = FindObjectsByType<CharacterFlowService>(
+            FindObjectsInactive.Include,
+            FindObjectsSortMode.None);
+        for (int index = 0; index < characterFlowServices.Length; index++)
+        {
+            CharacterFlowService service = characterFlowServices[index];
+            if (service != null)
+                service.BindBootstrap(this);
+        }
+
+        MapTransitionService[] mapTransitionServices = FindObjectsByType<MapTransitionService>(
+            FindObjectsInactive.Include,
+            FindObjectsSortMode.None);
+        for (int index = 0; index < mapTransitionServices.Length; index++)
+        {
+            MapTransitionService service = mapTransitionServices[index];
+            if (service != null)
+                service.BindBootstrap(this);
+        }
+
+        NpcVendorService[] vendorServices = FindObjectsByType<NpcVendorService>(
+            FindObjectsInactive.Include,
+            FindObjectsSortMode.None);
+        for (int index = 0; index < vendorServices.Length; index++)
+        {
+            NpcVendorService service = vendorServices[index];
+            if (service != null)
+                service.BindBootstrap(this);
+        }
+
+        NpcJobAdvancementService[] advancementServices = FindObjectsByType<NpcJobAdvancementService>(
+            FindObjectsInactive.Include,
+            FindObjectsSortMode.None);
+        for (int index = 0; index < advancementServices.Length; index++)
+        {
+            NpcJobAdvancementService service = advancementServices[index];
+            if (service != null)
+                service.BindBootstrap(this);
+        }
     }
 
     public static string FormatJobName(PlayerJobType jobType)

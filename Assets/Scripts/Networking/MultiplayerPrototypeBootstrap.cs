@@ -34,6 +34,7 @@ public class MultiplayerPrototypeBootstrap : MonoBehaviour
     private string statusMessage = "Choose Host or Client to enter the prototype.";
     private bool callbacksRegistered;
     private bool sceneCallbacksRegistered;
+    private GameBootstrap sessionBootstrap;
 
     private void Awake()
     {
@@ -155,11 +156,15 @@ public class MultiplayerPrototypeBootstrap : MonoBehaviour
 
     private void EnsureSessionBootstrap()
     {
-        if (GameBootstrap.FindReadyBootstrap() != null)
+        if (sessionBootstrap != null)
+            return;
+
+        sessionBootstrap = GameBootstrap.FindReadyBootstrap();
+        if (sessionBootstrap != null)
             return;
 
         GameObject bootstrapObject = new GameObject("[GameBootstrap]");
-        bootstrapObject.AddComponent<GameBootstrap>();
+        sessionBootstrap = bootstrapObject.AddComponent<GameBootstrap>();
     }
 
     private void EnsureNetworkManager()
@@ -518,8 +523,7 @@ public class MultiplayerPrototypeBootstrap : MonoBehaviour
 
     private void DrawCharacterSelectionGui()
     {
-        GameBootstrap bootstrap = GameBootstrap.FindReadyBootstrap();
-        PlayerSessionCharacterApplicationService characterSession = bootstrap != null ? bootstrap.CharacterSession : null;
+        PlayerSessionCharacterApplicationService characterSession = sessionBootstrap != null ? sessionBootstrap.CharacterSession : null;
         if (characterSession == null)
         {
             GUILayout.Label("Character: session not ready.");
@@ -551,8 +555,7 @@ public class MultiplayerPrototypeBootstrap : MonoBehaviour
 
     private void CyclePrototypeCharacter(int direction)
     {
-        GameBootstrap bootstrap = GameBootstrap.FindReadyBootstrap();
-        PlayerSessionCharacterApplicationService characterSession = bootstrap != null ? bootstrap.CharacterSession : null;
+        PlayerSessionCharacterApplicationService characterSession = sessionBootstrap != null ? sessionBootstrap.CharacterSession : null;
         if (characterSession == null)
         {
             statusMessage = "Character session is not ready.";

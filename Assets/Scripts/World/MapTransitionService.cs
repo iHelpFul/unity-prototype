@@ -13,6 +13,11 @@ public class MapTransitionService : MonoBehaviour
 
     public bool IsTransitioning { get; private set; }
 
+    public void BindBootstrap(GameBootstrap sessionBootstrap)
+    {
+        bootstrap = sessionBootstrap;
+    }
+
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void EnsureRuntimeInstance()
     {
@@ -36,7 +41,9 @@ public class MapTransitionService : MonoBehaviour
         }
 
         DontDestroyOnLoad(gameObject);
-        ResolveBootstrap();
+
+        if (bootstrap != null)
+            BindBootstrap(bootstrap);
     }
 
     private void OnEnable()
@@ -91,7 +98,6 @@ public class MapTransitionService : MonoBehaviour
     {
         IsTransitioning = true;
 
-        ResolveBootstrap();
         WorldRuntimeSceneUtility.BeginSceneTransition(
             bootstrap,
             requester,
@@ -112,7 +118,6 @@ public class MapTransitionService : MonoBehaviour
 
         yield return WorldRuntimeSceneUtility.WaitForSceneLoadAndSettle(loadOperation, postLoadSettleTime);
 
-        ResolveBootstrap();
         PlayerCharacter player = WorldRuntimeSceneUtility.CompleteSceneTransition(
             bootstrap,
             sceneName,
@@ -142,11 +147,6 @@ public class MapTransitionService : MonoBehaviour
         PlayerFacade playerFacade = player.GetComponent<PlayerFacade>();
         if (playerFacade != null)
             playerFacade.enabled = enabled;
-    }
-
-    private void ResolveBootstrap()
-    {
-        bootstrap = GameBootstrap.FindReadyBootstrap(bootstrap);
     }
 
     private PlayerCharacter ResolveRequester(PlayerCharacter requester, string characterId)

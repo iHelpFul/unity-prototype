@@ -3,8 +3,24 @@ using UnityEngine;
 public class PlayerAppearanceController : MonoBehaviour
 {
     [SerializeField] private CharacterAppearanceVisualController visuals;
+    [SerializeField] private PlayerCharacter character;
     [SerializeField] private GameBootstrap bootstrap;
     private CharacterAppearanceData runtimeAppearanceOverride;
+
+    public void BindBootstrap(GameBootstrap sessionBootstrap)
+    {
+        bootstrap = sessionBootstrap;
+        ApplyActiveCharacterAppearance();
+    }
+
+    private void Awake()
+    {
+        if (character == null)
+            character = GetComponent<PlayerCharacter>();
+
+        if (bootstrap != null)
+            BindBootstrap(bootstrap);
+    }
 
     private void Start()
     {
@@ -41,10 +57,9 @@ public class PlayerAppearanceController : MonoBehaviour
 
     private bool IsRelevantLocalEvent(PlayerCharacter player, string characterId)
     {
-        bootstrap = GameBootstrap.FindReadyBootstrap(bootstrap);
-        return PlayerRuntimeIdentityUtility.MatchesTrackedCharacter(
-            bootstrap,
-            null,
+        return PlayerRuntimeIdentityUtility.MatchesCharacter(
+            character,
+            character != null ? character.CharacterId : string.Empty,
             player,
             characterId);
     }
@@ -60,7 +75,6 @@ public class PlayerAppearanceController : MonoBehaviour
             return;
         }
 
-        bootstrap = GameBootstrap.FindReadyBootstrap(bootstrap);
         PlayerSessionEquipmentApplicationService equipmentSession = bootstrap != null ? bootstrap.EquipmentSession : null;
         CharacterAppearanceData appearance = equipmentSession != null
             ? equipmentSession.GetResolvedActiveCharacterAppearance()

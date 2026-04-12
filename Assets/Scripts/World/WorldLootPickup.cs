@@ -27,11 +27,16 @@ public class WorldLootPickup : MonoBehaviour
     private bool isInitialized;
     private bool hasVisual;
 
+    public void BindBootstrap(GameBootstrap sessionBootstrap)
+    {
+        bootstrap = sessionBootstrap;
+    }
+
     public bool RequiresManualPickup => lootType != WorldLootType.Mesos;
 
     public static WorldLootPickup SpawnMesos(Vector3 worldPosition, int mesoAmount)
     {
-        return Spawn(worldPosition, WorldLootType.Mesos, string.Empty, mesoAmount);
+        return Spawn(worldPosition, WorldLootType.Mesos, string.Empty, mesoAmount, GameBootstrap.FindReadyBootstrap());
     }
 
     public static WorldLootPickup SpawnItem(Vector3 worldPosition, string itemId, int amount)
@@ -42,7 +47,7 @@ public class WorldLootPickup : MonoBehaviour
             return null;
         }
 
-        return Spawn(worldPosition, WorldLootType.Item, itemId, amount);
+        return Spawn(worldPosition, WorldLootType.Item, itemId, amount, GameBootstrap.FindReadyBootstrap());
     }
 
     public static WorldLootPickup SpawnRedPotion(Vector3 worldPosition, int amount)
@@ -55,12 +60,18 @@ public class WorldLootPickup : MonoBehaviour
         return SpawnItem(worldPosition, ItemDatabase.BluePotionId, amount);
     }
 
-    private static WorldLootPickup Spawn(Vector3 worldPosition, WorldLootType type, string itemId, int amount)
+    private static WorldLootPickup Spawn(
+        Vector3 worldPosition,
+        WorldLootType type,
+        string itemId,
+        int amount,
+        GameBootstrap sessionBootstrap)
     {
         GameObject pickupObject = new GameObject(type == WorldLootType.Mesos ? "Mesos" : itemId);
         pickupObject.transform.position = worldPosition;
 
         WorldLootPickup pickup = pickupObject.AddComponent<WorldLootPickup>();
+        pickup.BindBootstrap(sessionBootstrap);
         pickup.Initialize(type, itemId, amount);
         return pickup;
     }
@@ -156,7 +167,6 @@ public class WorldLootPickup : MonoBehaviour
         if (targetCollector == null || !targetCollector.IsLocalPlayer)
             return false;
 
-        ResolveBootstrap();
         if (bootstrap == null)
             return false;
 
@@ -202,11 +212,6 @@ public class WorldLootPickup : MonoBehaviour
         float sqrMagnetRange = magnetRange * magnetRange;
 
         return sqrDistance <= sqrMagnetRange ? collector : null;
-    }
-
-    private void ResolveBootstrap()
-    {
-        bootstrap = GameBootstrap.FindReadyBootstrap(bootstrap);
     }
 
     private void CreateDefaultVisual()

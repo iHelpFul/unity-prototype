@@ -37,6 +37,16 @@ public class PlayerInventoryPanelController : MonoBehaviour
     private string selectedEntryId = string.Empty;
     private bool isVisible;
 
+    public void BindRuntimeContext(GameBootstrap sessionBootstrap, PlayerCharacter player)
+    {
+        bootstrap = sessionBootstrap;
+
+        if (player != null && player.IsLocalPlayer)
+            trackedPlayer = player;
+
+        RefreshView();
+    }
+
     private void Start()
     {
         if (actionButton != null)
@@ -88,8 +98,6 @@ public class PlayerInventoryPanelController : MonoBehaviour
 
     public void ExecuteSelectedAction()
     {
-        ResolveRuntimeContext();
-
         PlayerSessionInventoryApplicationService inventorySession = bootstrap != null ? bootstrap.InventorySession : null;
         PlayerSessionEquipmentApplicationService equipmentSession = bootstrap != null ? bootstrap.EquipmentSession : null;
 
@@ -194,15 +202,9 @@ public class PlayerInventoryPanelController : MonoBehaviour
 
     private void OnMapTransitionCompleted(MapTransitionCompletedEvent e)
     {
-        ResolveRuntimeContext();
-
         if (e.Player != null && e.Player.IsLocalPlayer)
             trackedPlayer = e.Player;
-        else if (!PlayerRuntimeIdentityUtility.MatchesTrackedCharacter(
-                     bootstrap,
-                     trackedPlayer,
-                     e.Player,
-                     e.CharacterId))
+        else if (!IsTrackedPlayer(e.Player, e.CharacterId))
             return;
 
         RefreshView();
@@ -210,7 +212,6 @@ public class PlayerInventoryPanelController : MonoBehaviour
 
     private void RefreshView()
     {
-        ResolveRuntimeContext();
         SetVisibleInternal(isVisible);
 
         PlayerSessionCharacterApplicationService characterSession = bootstrap != null ? bootstrap.CharacterSession : null;
@@ -384,7 +385,6 @@ public class PlayerInventoryPanelController : MonoBehaviour
 
     private void OnEquipmentSlotClicked(EquipmentSlotType slot)
     {
-        ResolveRuntimeContext();
         PlayerSessionEquipmentApplicationService equipmentSession = bootstrap != null ? bootstrap.EquipmentSession : null;
         if (equipmentSession == null || trackedPlayer == null)
             return;
@@ -460,22 +460,11 @@ public class PlayerInventoryPanelController : MonoBehaviour
         spawnedEntryViews.Clear();
     }
 
-    private void ResolveRuntimeContext()
-    {
-        bootstrap = GameBootstrap.FindReadyBootstrap(bootstrap);
-
-        if (trackedPlayer != null && trackedPlayer.IsLocalPlayer && trackedPlayer.gameObject.scene.IsValid())
-            return;
-
-        trackedPlayer = WorldRuntimeSceneUtility.FindLocalPlayer(FindObjectsInactive.Include);
-    }
-
     private bool IsTrackedPlayer(PlayerCharacter player, string characterId)
     {
-        ResolveRuntimeContext();
-        return PlayerRuntimeIdentityUtility.MatchesTrackedCharacter(
-            bootstrap,
+        return PlayerRuntimeIdentityUtility.MatchesCharacter(
             trackedPlayer,
+            trackedPlayer != null ? trackedPlayer.CharacterId : string.Empty,
             player,
             characterId);
     }
