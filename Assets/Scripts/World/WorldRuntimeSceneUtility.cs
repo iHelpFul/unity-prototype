@@ -218,6 +218,17 @@ public static class WorldRuntimeSceneUtility
             if (progressionPanel != null)
                 progressionPanel.BindRuntimeContext(bootstrap, player);
         }
+
+        NpcQuestLogPanelController[] questLogPanels = Object.FindObjectsByType<NpcQuestLogPanelController>(
+            includeInactive,
+            FindObjectsSortMode.None);
+
+        for (int index = 0; index < questLogPanels.Length; index++)
+        {
+            NpcQuestLogPanelController questLogPanel = questLogPanels[index];
+            if (questLogPanel != null)
+                questLogPanel.BindRuntimeContext(bootstrap, player);
+        }
     }
 }
 

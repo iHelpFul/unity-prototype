@@ -49,7 +49,8 @@ public static class CharacterSaveFactory
             PendingSpawnId = string.Empty,
             Inventory = new List<InventoryEntry>(),
             EquippedItems = new List<EquippedItemEntry>(),
-            UnlockedSkills = new List<PlayerSkillEntry>()
+            UnlockedSkills = new List<PlayerSkillEntry>(),
+            QuestProgress = new List<PlayerQuestProgressEntry>()
         };
 
         PlayerProgressionRules.RefreshDerivedState(runtimeData);

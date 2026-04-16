@@ -229,6 +229,8 @@ public class PlayerSessionPersistenceService
         runtimeData.Inventory ??= new List<InventoryEntry>();
         runtimeData.EquippedItems ??= new List<EquippedItemEntry>();
         runtimeData.UnlockedSkills ??= new List<PlayerSkillEntry>();
+        runtimeData.QuestProgress ??= new List<PlayerQuestProgressEntry>();
+        NormalizeQuestProgress(runtimeData.QuestProgress);
 
         PlayerProgressionRules.Normalize(runtimeData);
 
@@ -242,6 +244,24 @@ public class PlayerSessionPersistenceService
 
         runtimeData.PendingMapId = string.Empty;
         runtimeData.PendingSpawnId = string.Empty;
+    }
+
+    private void NormalizeQuestProgress(List<PlayerQuestProgressEntry> questProgress)
+    {
+        if (questProgress == null)
+            return;
+
+        for (int index = questProgress.Count - 1; index >= 0; index--)
+        {
+            PlayerQuestProgressEntry entry = questProgress[index];
+            if (entry == null)
+            {
+                questProgress.RemoveAt(index);
+                continue;
+            }
+
+            entry.ObjectiveProgress ??= new List<PlayerQuestObjectiveProgress>();
+        }
     }
 
     private void ClearDanglingSlots(AccountProfileData accountProfile)

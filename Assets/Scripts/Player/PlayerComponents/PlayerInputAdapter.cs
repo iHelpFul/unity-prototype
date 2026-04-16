@@ -144,6 +144,18 @@ public class PlayerInputAdapter : MonoBehaviour
         });
     }
 
+    public void OnQuestLogToggle(InputAction.CallbackContext context)
+    {
+        if (!ShouldPublishInput() || !context.performed)
+            return;
+
+        EventBus.Publish(new QuestLogTogglePressedEvent
+        {
+            Player = playerCharacter,
+            CharacterId = ResolveCharacterId()
+        });
+    }
+
     private bool ShouldPublishInput()
     {
         return enabled && playerCharacter != null && playerCharacter.IsLocalPlayer;

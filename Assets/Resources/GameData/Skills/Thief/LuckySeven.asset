@@ -24,8 +24,8 @@ MonoBehaviour:
   damageMultiplier: 1.02
   hitCount: 1
   hitInterval: 0.1
-  animationVariantIndex: 2
-  animatorStateName: Combo02_InPlace_SingleSword 0
+  animationVariantIndex: 6
+  animatorStateName: Shurikan_Throwing
   animationSpeed: 0.5
   attackDuration: 0.82
   targetingMode: 2

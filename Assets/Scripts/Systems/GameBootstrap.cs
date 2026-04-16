@@ -273,6 +273,16 @@ public class GameBootstrap : MonoBehaviour
             if (service != null)
                 service.BindBootstrap(this);
         }
+
+        NpcQuestService[] questServices = FindObjectsByType<NpcQuestService>(
+            FindObjectsInactive.Include,
+            FindObjectsSortMode.None);
+        for (int index = 0; index < questServices.Length; index++)
+        {
+            NpcQuestService service = questServices[index];
+            if (service != null)
+                service.BindBootstrap(this);
+        }
     }
 
     public static string FormatJobName(PlayerJobType jobType)

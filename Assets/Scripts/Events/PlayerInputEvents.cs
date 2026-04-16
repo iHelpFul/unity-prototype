@@ -57,3 +57,9 @@ public struct ProgressionTogglePressedEvent
     public string CharacterId;
 }
 
+public struct QuestLogTogglePressedEvent
+{
+    public PlayerCharacter Player;
+    public string CharacterId;
+}
+

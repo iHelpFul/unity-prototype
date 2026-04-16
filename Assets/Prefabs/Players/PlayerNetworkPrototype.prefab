@@ -10667,6 +10667,22 @@ MonoBehaviour:
         m_CallState: 2
     m_ActionId: 5b6d18ab-ec47-4959-b343-0243b26383ca
     m_ActionName: 'Player/ProgressionToggle[/Keyboard/u]'
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 8372885736269628600}
+        m_TargetAssemblyTypeName: PlayerInputAdapter, Assembly-CSharp
+        m_MethodName: OnQuestLogToggle
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: 6bf88849-7547-401a-8094-e051f1f89b61
+    m_ActionName: 'Player/QuestLogToggle[/Keyboard/y]'
   m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: 
   m_DefaultActionMap: Player

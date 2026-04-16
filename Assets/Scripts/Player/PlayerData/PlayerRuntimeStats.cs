@@ -7,6 +7,13 @@ public enum PlayerConsumableType
     BluePotion
 }
 
+public enum PlayerQuestProgressStatus
+{
+    None,
+    Accepted,
+    Completed
+}
+
 [System.Serializable]
 public class PlayerRuntimeData
 {
@@ -37,10 +44,30 @@ public class PlayerRuntimeData
     public List<InventoryEntry> Inventory = new List<InventoryEntry>();
     public List<EquippedItemEntry> EquippedItems = new List<EquippedItemEntry>();
     public List<PlayerSkillEntry> UnlockedSkills = new List<PlayerSkillEntry>();
+    public List<PlayerQuestProgressEntry> QuestProgress = new List<PlayerQuestProgressEntry>();
     public bool HasPendingJobAdvancement;
 
     public string CurrentMapId;
     public string LastSpawnId;
     public string PendingMapId;
     public string PendingSpawnId;
+}
+
+[System.Serializable]
+public sealed class PlayerQuestObjectiveProgress
+{
+    public int ObjectiveIndex;
+    public NpcQuestObjectiveType ObjectiveType;
+    public string TargetId;
+    public int BaselineValue;
+    public int RequiredAmount;
+}
+
+[System.Serializable]
+public sealed class PlayerQuestProgressEntry
+{
+    public string QuestId;
+    public PlayerQuestProgressStatus Status;
+    public int CompletionCount;
+    public List<PlayerQuestObjectiveProgress> ObjectiveProgress = new List<PlayerQuestObjectiveProgress>();
 }

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class PlayerSessionRuntimeService
@@ -79,6 +80,7 @@ public class PlayerSessionRuntimeService
             return;
 
         PlayerProgressionRules.Normalize(data);
+        data.QuestProgress ??= new List<PlayerQuestProgressEntry>();
 
         if (data.UnspentStatPoints < 0)
             data.UnspentStatPoints = 0;

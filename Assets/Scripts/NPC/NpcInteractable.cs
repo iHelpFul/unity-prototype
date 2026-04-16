@@ -13,6 +13,8 @@ public class NpcInteractable : MonoBehaviour
     [SerializeField] private string promptActionText = "Press E";
     [SerializeField] private string promptLabelOverride = string.Empty;
 
+    public NpcPromptType PromptType => promptType;
+
     private readonly HashSet<PlayerCharacter> overlappingPlayers = new HashSet<PlayerCharacter>();
 
     public string NpcId => NormalizeId(npcId);
@@ -149,6 +151,7 @@ public class NpcInteractable : MonoBehaviour
         return promptType switch
         {
             NpcPromptType.Shop => "SHOP",
+            NpcPromptType.Job => "JOB",
             NpcPromptType.Quest => "QUEST",
             _ => "TALK"
         };
