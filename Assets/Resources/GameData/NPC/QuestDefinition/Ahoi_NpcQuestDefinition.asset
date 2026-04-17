@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4655fa097878a1e47beb8b9e942115e5, type: 3}
+  m_Name: Ahoi_NpcQuestDefinition
+  m_EditorClassIdentifier: Assembly-CSharp::NpcQuestDefinition
+  questId: AhoiQuest_001
+  questTitle: Kill Red Slimes
+  isNarrativeOnly: 0
+  questSummary: Complete this quest to receive rewards.
+  progressionHint: 
+  completionInstruction: Kill the amount of Red Slimes then back to the npc to complete
+    the quest
+  starterNpcs:
+  - {fileID: 11400000, guid: d0636cf0a1a04d34ebc4eb97086bb929, type: 2}
+  completionNpcs:
+  - {fileID: 11400000, guid: d0636cf0a1a04d34ebc4eb97086bb929, type: 2}
+  introPages:
+  - 'Hello Big/Middle/Ahoit !  '
+  - Welcome to Omiryum, Here you need to take care of yourself
+  - if you a real AHOI ! so you will kill for me 3 of those Red Slimes.
+  inProgressPages:
+  - Lets see if you are a real AHOI.
+  completionPages:
+  - 'A REAL AHOI IS HERE!!!! take, you deserve that. '
+  minimumPlayerLevel: 1
+  repeatable: 0
+  hideRewardsUntilCompletion: 1
+  expReward: 25
+  mesosReward: 150
+  rewardItems:
+  - item: {fileID: 11400000, guid: cc06d177582a8304ebabb80fd2da7249, type: 2}
+    amount: 1
+  objectives:
+  - type: 0
+    targetItem: {fileID: 0}
+    targetEnemy: {fileID: 11400000, guid: 8f21dc763ae55de4eaab8e8a863b8e3d, type: 2}
+    requiredAmount: 3
+    displayLabel: Red Slime
+    displayHint: 

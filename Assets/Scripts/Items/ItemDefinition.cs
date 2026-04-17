@@ -20,6 +20,7 @@ public class ItemDefinition : ScriptableObject
     [SerializeField] private int restoreMP;
     [SerializeField] private Color primaryColor = Color.white;
     [SerializeField] private Color accentColor = Color.white;
+    [SerializeField] private Sprite icon;
     [SerializeField] private GameObject worldLootPickupPrefab;
     [Header("Equipment")]
     [SerializeField] private EquipmentSlotType equipmentSlot = EquipmentSlotType.None;
@@ -37,6 +38,7 @@ public class ItemDefinition : ScriptableObject
     public int RestoreMP => restoreMP;
     public Color PrimaryColor => primaryColor;
     public Color AccentColor => accentColor;
+    public Sprite Icon => icon;
     public GameObject WorldLootPickupPrefab => worldLootPickupPrefab;
     public EquipmentSlotType EquipmentSlot => IsEquipment ? equipmentSlot : EquipmentSlotType.None;
     public ItemStatModifierData EquipmentStatBonuses => equipmentStatBonuses;

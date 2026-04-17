@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-//using UnityEngine;
 
 public sealed class NpcQuestActionProcessor
 {
@@ -176,7 +175,13 @@ public sealed class NpcQuestActionProcessor
             progress != null ? progress.Status : PlayerQuestProgressStatus.None,
             progress != null ? progress.CompletionCount : 0,
             progressData.ObjectiveProgress,
-            progressData.RewardSummaries);
+            progressData.RewardSummaries,
+            quest.QuestSummary,
+            quest.CompletionInstruction,
+            ResolveNpcDisplayName(quest.PrimaryStarterNpc),
+            ResolveNpcPortrait(quest.PrimaryStarterNpc),
+            ResolveNpcDisplayName(quest.PrimaryCompletionNpc),
+            ResolveNpcPortrait(quest.PrimaryCompletionNpc));
     }
 
     private static NpcQuestProgressData ResolveProgressData(
@@ -214,8 +219,11 @@ public sealed class NpcQuestActionProcessor
             if (objective == null)
                 continue;
 
-            string targetId = (objective.TargetId ?? string.Empty).Trim();
+            string targetId = ResolveObjectiveTargetId(objective);
             int requiredAmount = Mathf.Max(1, objective.RequiredAmount);
+            string objectiveLabel = objective.DisplayLabel;
+            string objectiveHint = objective.DisplayHint;
+            Sprite objectiveIcon = ResolveObjectiveIcon(objective);
             int baseline = 0;
 
             if (progress != null && progress.ObjectiveProgress != null)
@@ -226,18 +234,22 @@ public sealed class NpcQuestActionProcessor
                     targetId,
                     NormalizeToken(targetId),
                     requiredAmount,
-                    out baseline);
+                out baseline);
 
             if (objective.Type == NpcQuestObjectiveType.KillEnemy
-                && TryResolveEnemyType(targetId, out EnemyType enemyType)
+                && objective.TargetEnemy != null
                 && killTracker != null)
             {
+                EnemyType enemyType = objective.TargetEnemy.EnemyType;
                 int currentKills = killTracker.GetKillCountForCharacter(characterId, enemyType);
                 progressSnapshots.Add(new NpcQuestLogObjectiveProgressSnapshot(
                     objective.Type,
                     targetId,
                     Mathf.Max(0, currentKills - baseline),
-                    requiredAmount));
+                    requiredAmount,
+                    objectiveLabel,
+                    objectiveHint,
+                    objectiveIcon));
                 continue;
             }
 
@@ -248,7 +260,10 @@ public sealed class NpcQuestActionProcessor
                     objective.Type,
                     targetId,
                     Mathf.Max(0, currentItems - baseline),
-                    requiredAmount));
+                    requiredAmount,
+                    objectiveLabel,
+                    objectiveHint,
+                    objectiveIcon));
                 continue;
             }
 
@@ -256,10 +271,33 @@ public sealed class NpcQuestActionProcessor
                 objective.Type,
                 targetId,
                 0,
-                requiredAmount));
+                requiredAmount,
+                objectiveLabel,
+                objectiveHint,
+                objectiveIcon));
         }
 
         return progressSnapshots;
+    }
+
+    private static Sprite ResolveObjectiveIcon(NpcQuestObjective objective)
+    {
+        if (objective == null)
+            return null;
+
+        if (objective.Type == NpcQuestObjectiveType.CollectItem
+            && objective.TargetItem != null)
+        {
+            return objective.TargetItem.Icon;
+        }
+
+        if (objective.Type == NpcQuestObjectiveType.KillEnemy
+            && objective.TargetEnemy != null)
+        {
+            return objective.TargetEnemy.Icon;
+        }
+
+        return null;
     }
 
     private static IReadOnlyList<string> BuildRewardSummaries(
@@ -488,7 +526,7 @@ public sealed class NpcQuestActionProcessor
                 continue;
 
             int requiredAmount = Mathf.Max(1, objective.RequiredAmount);
-            string targetId = (objective.TargetId ?? string.Empty).Trim();
+            string targetId = ResolveObjectiveTargetId(objective);
             string objectiveKey = NormalizeToken(targetId);
             if (!TryResolveObjectiveBaseline(
                 progress,
@@ -515,13 +553,15 @@ public sealed class NpcQuestActionProcessor
                         "Player data is missing for kill objective validation.");
                 }
 
-                if (!TryResolveEnemyType(targetId, out EnemyType enemyType))
+                if (objective.TargetEnemy == null)
                 {
                     return NpcQuestActionResult.Fail(
                         NpcQuestActionType.Complete,
                         quest.QuestId,
                         "Kill objective references an unknown enemy type.");
                 }
+
+                EnemyType enemyType = objective.TargetEnemy.EnemyType;
 
                 if (tracker == null)
                 {
@@ -549,20 +589,12 @@ public sealed class NpcQuestActionProcessor
 
             if (objective.Type == NpcQuestObjectiveType.CollectItem)
             {
-                if (string.IsNullOrWhiteSpace(targetId))
+                if (objective.TargetItem == null || string.IsNullOrWhiteSpace(targetId))
                 {
                     return NpcQuestActionResult.Fail(
                         NpcQuestActionType.Complete,
                         quest.QuestId,
                         "Quest collect objective is missing a target item.");
-                }
-
-                if (!ItemDatabase.TryGetDefinition(targetId, out _))
-                {
-                    return NpcQuestActionResult.Fail(
-                        NpcQuestActionType.Complete,
-                        quest.QuestId,
-                        "Quest objective references an invalid item.");
                 }
 
                 int currentItems = inventorySession.GetInventoryCount(targetId);
@@ -664,20 +696,23 @@ public sealed class NpcQuestActionProcessor
                 continue;
 
             int requiredAmount = Mathf.Max(1, objective.RequiredAmount);
-            string targetId = (objective.TargetId ?? string.Empty).Trim();
+            string targetId = ResolveObjectiveTargetId(objective);
             int baselineValue = 0;
 
             if (objective.Type == NpcQuestObjectiveType.KillEnemy)
             {
-                if (TryResolveEnemyType(targetId, out EnemyType enemyType))
+                if (objective.TargetEnemy != null)
+                {
+                    EnemyType enemyType = objective.TargetEnemy.EnemyType;
                     baselineValue = tracker != null
                         ? tracker.GetKillCountForCharacter(characterId, enemyType)
                         : 0;
+                }
             }
 
             if (objective.Type == NpcQuestObjectiveType.CollectItem
-                && !string.IsNullOrWhiteSpace(targetId)
-                && ItemDatabase.TryGetDefinition(targetId, out _))
+                && objective.TargetItem != null
+                && !string.IsNullOrWhiteSpace(targetId))
             {
                 baselineValue = 0;
             }
@@ -745,6 +780,30 @@ public sealed class NpcQuestActionProcessor
         return false;
     }
 
+    private static string ResolveObjectiveTargetId(NpcQuestObjective objective)
+    {
+        if (objective == null)
+            return string.Empty;
+
+        if (objective.Type == NpcQuestObjectiveType.CollectItem)
+            return objective.TargetItem != null ? (objective.TargetItem.ItemId ?? string.Empty).Trim() : string.Empty;
+
+        if (objective.Type == NpcQuestObjectiveType.KillEnemy)
+            return objective.TargetEnemy != null ? objective.TargetEnemy.EnemyType.ToString() : string.Empty;
+
+        return string.Empty;
+    }
+
+    private static string ResolveNpcDisplayName(NpcDefinition npcDefinition)
+    {
+        return npcDefinition != null ? npcDefinition.DisplayName : string.Empty;
+    }
+
+    private static Sprite ResolveNpcPortrait(NpcDefinition npcDefinition)
+    {
+        return npcDefinition != null ? npcDefinition.Portrait : null;
+    }
+
     private static bool TryConsumeCollectRequirements(
         Dictionary<string, int> collectRequirements,
         PlayerCharacter player,
@@ -776,25 +835,6 @@ public sealed class NpcQuestActionProcessor
 
         progress.Status = PlayerQuestProgressStatus.Completed;
         progress.CompletionCount++;
-    }
-
-    private static bool TryResolveEnemyType(string targetId, out EnemyType enemyType)
-    {
-        enemyType = default;
-        string normalizedTarget = NormalizeToken(targetId);
-        if (string.IsNullOrWhiteSpace(normalizedTarget))
-            return false;
-
-        foreach (EnemyType candidate in Enum.GetValues(typeof(EnemyType)))
-        {
-            if (NormalizeToken(candidate.ToString()) == normalizedTarget)
-            {
-                enemyType = candidate;
-                return true;
-            }
-        }
-
-        return false;
     }
 
     private readonly struct NpcQuestProgressData

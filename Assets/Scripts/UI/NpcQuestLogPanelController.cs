@@ -123,7 +123,7 @@ public class NpcQuestLogPanelController : MonoBehaviour
 
     public void RequestQuestDetails(NpcQuestLogQuestEntry quest)
     {
-        if (quest == null || activeTab != NpcQuestLogTab.InProgress || detailPanel == null)
+        if (quest == null || detailPanel == null)
             return;
 
         activeQuest = quest;
@@ -287,7 +287,7 @@ public class NpcQuestLogPanelController : MonoBehaviour
         if (quest == null)
             return;
 
-        if (detailPanel == null || activeTab != NpcQuestLogTab.InProgress)
+        if (detailPanel == null)
             return;
 
         RequestQuestDetails(quest);
@@ -332,7 +332,7 @@ public class NpcQuestLogPanelController : MonoBehaviour
         if (activeTab != NpcQuestLogTab.InProgress && detailPanel != null)
             detailPanel.Hide();
 
-        if (activeTab != NpcQuestLogTab.InProgress || detailPanel == null || activeQuest == null)
+        if (detailPanel == null || activeQuest == null)
             return;
 
         detailPanel.Show(activeQuest);

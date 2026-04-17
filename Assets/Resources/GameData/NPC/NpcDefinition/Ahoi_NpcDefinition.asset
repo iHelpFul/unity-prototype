@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 013d60ca322334f4ca2f68dd902e3d6e, type: 3}
+  m_Name: Ahoi_NpcDefinition
+  m_EditorClassIdentifier: Assembly-CSharp::NpcDefinition
+  npcId: npc_ahoi
+  displayName: Ahoi
+  portrait: {fileID: 21300000, guid: 7c076760c677fc94597beb2c2b734adb, type: 3}
+  quests:
+  - {fileID: 11400000, guid: d2cf54dbfc2e0134ea2a68662b6eefbd, type: 2}
+  - {fileID: 11400000, guid: c4f9507880b9b184ab6e67ad0eb19427, type: 2}

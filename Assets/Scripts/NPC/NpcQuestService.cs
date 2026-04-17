@@ -294,6 +294,12 @@ public class NpcQuestService : MonoBehaviour
                 progress != null ? progress.Status : PlayerQuestProgressStatus.None,
                 quest.Repeatable,
                 quest.MinimumPlayerLevel,
+                quest.QuestSummary,
+                quest.CompletionInstruction,
+                ResolveNpcDisplayName(quest.PrimaryStarterNpc),
+                ResolveNpcPortrait(quest.PrimaryStarterNpc),
+                ResolveNpcDisplayName(quest.PrimaryCompletionNpc),
+                ResolveNpcPortrait(quest.PrimaryCompletionNpc),
                 quest.IntroPages,
                 quest.InProgressPages,
                 quest.CompletionPages));
@@ -321,20 +327,20 @@ public class NpcQuestService : MonoBehaviour
         if (quest == null)
             return false;
 
-        string activeNpcId = activeNpc != null ? activeNpc.NpcId : string.Empty;
+        NpcDefinition activeNpcDefinition = activeNpc != null ? activeNpc.NpcDefinition : null;
 
         if (playerData == null || playerData.QuestProgress == null)
-            return quest.IsStarterNpc(activeNpcId);
+            return quest.IsStarterNpc(activeNpcDefinition);
 
         progress = FindProgress(playerData, quest.QuestId);
         if (progress == null)
-            return quest.IsStarterNpc(activeNpcId);
+            return quest.IsStarterNpc(activeNpcDefinition);
 
         if (progress.Status == PlayerQuestProgressStatus.Accepted)
-            return quest.IsCompletionNpc(activeNpcId);
+            return quest.IsCompletionNpc(activeNpcDefinition);
 
         if (progress.Status == PlayerQuestProgressStatus.Completed)
-            return quest.Repeatable && quest.IsStarterNpc(activeNpcId);
+            return quest.Repeatable && quest.IsStarterNpc(activeNpcDefinition);
 
         return true;
     }
@@ -498,6 +504,16 @@ public class NpcQuestService : MonoBehaviour
     private static string NormalizeQuestId(string questId)
     {
         return (questId ?? string.Empty).Trim();
+    }
+
+    private static string ResolveNpcDisplayName(NpcDefinition npcDefinition)
+    {
+        return npcDefinition != null ? npcDefinition.DisplayName : string.Empty;
+    }
+
+    private static Sprite ResolveNpcPortrait(NpcDefinition npcDefinition)
+    {
+        return npcDefinition != null ? npcDefinition.Portrait : null;
     }
 
     private static string ResolveCharacterId(PlayerCharacter player, string characterId)

@@ -16,6 +16,7 @@ public class NpcQuestPanelController : MonoBehaviour
     [SerializeField] private Button actionButton;
     [SerializeField] private TextMeshProUGUI actionButtonText;
     [SerializeField] private Button closeButton;
+    [SerializeField] private Image questGiverPortraitImage;
 
     [SerializeField] private Transform questSelectionRoot;
     [SerializeField] private Button questOptionButtonTemplate;
@@ -160,12 +161,14 @@ public class NpcQuestPanelController : MonoBehaviour
         if (quests == null || quests.Count == 0)
         {
             EnterSelectionMode();
+            RefreshQuestGiverPortrait();
             return;
         }
 
         if (activeSnapshot.HasMultipleQuests)
         {
             EnterSelectionMode();
+            RefreshQuestGiverPortrait();
             return;
         }
 
@@ -246,6 +249,7 @@ public class NpcQuestPanelController : MonoBehaviour
         activeQuest = quest;
         dialogueMode = ResolveQuestMode(mode, quest, false);
         currentPageIndex = 0;
+        RefreshQuestGiverPortrait(quest.StarterNpcPortrait);
 
         if (titleText != null)
             titleText.text = quest.QuestTitle;
@@ -348,6 +352,7 @@ public class NpcQuestPanelController : MonoBehaviour
     {
         if (dialogueMode == QuestDialogueMode.Selection)
         {
+            RefreshQuestGiverPortrait();
             if (npcNameText != null)
                 npcNameText.text = activeSnapshot != null ? activeSnapshot.NpcName : "NPC";
 
@@ -366,9 +371,12 @@ public class NpcQuestPanelController : MonoBehaviour
 
         if (activeQuest == null || activeSnapshot == null)
         {
+            RefreshQuestGiverPortrait();
             SetPanelVisible(false);
             return;
         }
+
+        RefreshQuestGiverPortrait(activeQuest.StarterNpcPortrait);
 
         if (npcNameText != null)
             npcNameText.text = activeSnapshot.NpcName;
@@ -571,6 +579,23 @@ public class NpcQuestPanelController : MonoBehaviour
     {
         if (statusText != null)
             statusText.text = string.IsNullOrWhiteSpace(message) ? string.Empty : message;
+    }
+
+    private void RefreshQuestGiverPortrait(Sprite portrait = null)
+    {
+        if (questGiverPortraitImage == null)
+            return;
+
+        if (portrait == null)
+        {
+            questGiverPortraitImage.sprite = null;
+            questGiverPortraitImage.enabled = false;
+        }
+        else
+        {
+            questGiverPortraitImage.sprite = portrait;
+            questGiverPortraitImage.enabled = true;
+        }
     }
 
     private bool MatchesActiveQuest(PlayerCharacter player, string characterId, string npcId)

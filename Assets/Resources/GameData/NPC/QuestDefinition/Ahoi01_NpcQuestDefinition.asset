@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4655fa097878a1e47beb8b9e942115e5, type: 3}
+  m_Name: Ahoi01_NpcQuestDefinition
+  m_EditorClassIdentifier: Assembly-CSharp::NpcQuestDefinition
+  questId: AhoiQuest_02
+  questTitle: MARYUM!
+  isNarrativeOnly: 0
+  questSummary: Complete this quest to receive rewards.
+  progressionHint: 
+  completionInstruction: Go to Maryum and tell her what ahoi said
+  starterNpcs:
+  - {fileID: 11400000, guid: d0636cf0a1a04d34ebc4eb97086bb929, type: 2}
+  completionNpcs:
+  - {fileID: 11400000, guid: d0636cf0a1a04d34ebc4eb97086bb929, type: 2}
+  introPages:
+  - 'Hello Big/Middle/Ahoit !  '
+  - Welcome to Omiryum, what a loveley day, go to Maryum
+  - Tell her I LOVE HER SO MUCH SHE IS SO GOOD SISTER!
+  inProgressPages:
+  - 'What ahoi want? He''s Houngry again...??? '
+  completionPages:
+  - 'As I tought, He is Houngry.....Take this, give it to him, he love to eat, DO 
+    NOT USE IT ! '
+  minimumPlayerLevel: 1
+  repeatable: 0
+  hideRewardsUntilCompletion: 1
+  expReward: 5
+  mesosReward: 20
+  rewardItems:
+  - item: {fileID: 11400000, guid: 3daf6c060af662440af831c47b6386bf, type: 2}
+    amount: 1
+  objectives: []

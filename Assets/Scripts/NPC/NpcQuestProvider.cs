@@ -5,32 +5,26 @@ using UnityEngine;
 [RequireComponent(typeof(NpcInteractable))]
 public class NpcQuestProvider : MonoBehaviour
 {
-    [SerializeField] private List<NpcQuestDefinition> quests = new List<NpcQuestDefinition>();
+    private NpcInteractable interactable;
 
-    public IReadOnlyList<NpcQuestDefinition> Quests => quests;
+    public NpcDefinition NpcDefinition => ResolveInteractable() != null ? ResolveInteractable().NpcDefinition : null;
+    public IReadOnlyList<NpcQuestDefinition> Quests => NpcDefinition != null ? NpcDefinition.Quests : System.Array.Empty<NpcQuestDefinition>();
 
     public bool TryGetQuest(string questId, out NpcQuestDefinition quest)
     {
         quest = null;
 
-        if (quests == null)
+        if (NpcDefinition == null)
             return false;
 
-        string normalizedQuestId = string.IsNullOrWhiteSpace(questId) ? string.Empty : questId.Trim();
-        for (int index = 0; index < quests.Count; index++)
-        {
-            NpcQuestDefinition candidate = quests[index];
-            if (candidate == null)
-                continue;
-
-            if (candidate.QuestId == normalizedQuestId || candidate.name == normalizedQuestId)
-            {
-                quest = candidate;
-                return true;
-            }
-        }
-
-        return false;
+        return NpcDefinition.TryGetQuest(questId, out quest);
     }
 
+    private NpcInteractable ResolveInteractable()
+    {
+        if (interactable == null)
+            interactable = GetComponent<NpcInteractable>();
+
+        return interactable;
+    }
 }

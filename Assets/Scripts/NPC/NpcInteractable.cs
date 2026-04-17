@@ -4,8 +4,7 @@ using UnityEngine;
 [RequireComponent(typeof(Collider))]
 public class NpcInteractable : MonoBehaviour
 {
-    [SerializeField] private string npcId = "npc_vendor";
-    [SerializeField] private string displayName = "Vendor";
+    [SerializeField] private NpcDefinition npcDefinition;
     [SerializeField] private bool requiresInteract = true;
     [SerializeField] private NpcPromptType promptType = NpcPromptType.Shop;
     [SerializeField] private Transform promptAnchor;
@@ -13,21 +12,24 @@ public class NpcInteractable : MonoBehaviour
     [SerializeField] private string promptActionText = "Press E";
     [SerializeField] private string promptLabelOverride = string.Empty;
 
+    public NpcDefinition NpcDefinition => npcDefinition;
     public NpcPromptType PromptType => promptType;
 
     private readonly HashSet<PlayerCharacter> overlappingPlayers = new HashSet<PlayerCharacter>();
 
-    public string NpcId => NormalizeId(npcId);
-    public string DisplayName => string.IsNullOrWhiteSpace(displayName) ? NpcId : displayName.Trim();
+    public string NpcId => npcDefinition != null
+        ? NormalizeId(npcDefinition.NpcId)
+        : NormalizeId(gameObject.name);
+
+    public string DisplayName => npcDefinition != null
+        ? npcDefinition.DisplayName
+        : ResolveFallbackDisplayName();
 
     private void Reset()
     {
         Collider triggerCollider = GetComponent<Collider>();
         if (triggerCollider != null)
             triggerCollider.isTrigger = true;
-
-        if (string.IsNullOrWhiteSpace(displayName))
-            displayName = gameObject.name;
     }
 
     private void Awake()
@@ -160,6 +162,11 @@ public class NpcInteractable : MonoBehaviour
     private static string NormalizeId(string value)
     {
         return string.IsNullOrWhiteSpace(value) ? "npc_vendor" : value.Trim();
+    }
+
+    private string ResolveFallbackDisplayName()
+    {
+        return string.IsNullOrWhiteSpace(gameObject.name) ? NpcId : gameObject.name.Trim();
     }
 
     private PlayerCharacter ResolveOverlappingPlayer(PlayerCharacter player, string characterId)

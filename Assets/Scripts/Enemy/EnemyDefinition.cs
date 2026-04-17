@@ -9,6 +9,7 @@ public class EnemyDefinition : ScriptableObject
     [SerializeField, Min(1)] private int maxHP = 30;
     [SerializeField, Min(0)] private int defense = 1;
     [SerializeField, Min(0)] private int expReward = 10;
+    [SerializeField] private Sprite icon;
 
     [Header("Damage")]
     [SerializeField, Min(0)] private int contactDamage = 5;
@@ -34,6 +35,7 @@ public class EnemyDefinition : ScriptableObject
     public int MaxHP => maxHP;
     public int Defense => defense;
     public int ExpReward => expReward;
+    public Sprite Icon => icon;
     public int ContactDamage => contactDamage;
     public int AnimatedAttackDamage => animatedAttackDamage;
     public int MinMesoDrop => minMesoDrop;
