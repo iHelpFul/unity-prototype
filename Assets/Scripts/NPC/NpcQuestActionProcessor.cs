@@ -8,7 +8,8 @@ public sealed class NpcQuestActionProcessor
         PlayerCharacter player,
         PlayerRuntimeData playerData,
         IReadOnlyList<NpcQuestDefinition> questDefinitions,
-        PlayerSessionInventoryApplicationService inventorySession = null)
+        PlayerSessionInventoryApplicationService inventorySession = null,
+        QuestUiIconCatalog questUiIconCatalog = null)
     {
         List<NpcQuestLogQuestEntry> available = new List<NpcQuestLogQuestEntry>();
         List<NpcQuestLogQuestEntry> inProgress = new List<NpcQuestLogQuestEntry>();
@@ -49,7 +50,8 @@ public sealed class NpcQuestActionProcessor
                     progress,
                     characterId,
                     inventorySession,
-                    ResolveKillTracker()));
+                    ResolveKillTracker(),
+                    questUiIconCatalog));
 
             if (entry.ProgressStatus == PlayerQuestProgressStatus.Accepted)
             {
@@ -175,13 +177,11 @@ public sealed class NpcQuestActionProcessor
             progress != null ? progress.Status : PlayerQuestProgressStatus.None,
             progress != null ? progress.CompletionCount : 0,
             progressData.ObjectiveProgress,
-            progressData.RewardSummaries,
+            progressData.Rewards,
             quest.QuestSummary,
             quest.CompletionInstruction,
-            ResolveNpcDisplayName(quest.PrimaryStarterNpc),
-            ResolveNpcPortrait(quest.PrimaryStarterNpc),
-            ResolveNpcDisplayName(quest.PrimaryCompletionNpc),
-            ResolveNpcPortrait(quest.PrimaryCompletionNpc));
+            ResolveDetailNpcDisplayName(quest, progress != null ? progress.Status : PlayerQuestProgressStatus.None),
+            ResolveDetailNpcPortrait(quest, progress != null ? progress.Status : PlayerQuestProgressStatus.None));
     }
 
     private static NpcQuestProgressData ResolveProgressData(
@@ -189,7 +189,8 @@ public sealed class NpcQuestActionProcessor
         PlayerQuestProgressEntry progress,
         string characterId,
         PlayerSessionInventoryApplicationService inventorySession,
-        KillTrackerSystem killTracker)
+        KillTrackerSystem killTracker,
+        QuestUiIconCatalog questUiIconCatalog)
     {
         return new NpcQuestProgressData(
             BuildObjectiveProgressSnapshots(
@@ -198,7 +199,7 @@ public sealed class NpcQuestActionProcessor
                 characterId,
                 inventorySession,
                 killTracker),
-            BuildRewardSummaries(quest, progress));
+            BuildRewardSnapshots(quest, progress, questUiIconCatalog));
     }
 
     private static IReadOnlyList<NpcQuestLogObjectiveProgressSnapshot> BuildObjectiveProgressSnapshots(
@@ -212,6 +213,7 @@ public sealed class NpcQuestActionProcessor
             return System.Array.Empty<NpcQuestLogObjectiveProgressSnapshot>();
 
         List<NpcQuestLogObjectiveProgressSnapshot> progressSnapshots = new List<NpcQuestLogObjectiveProgressSnapshot>(quest.Objectives.Count);
+        bool isCompletedQuest = progress != null && progress.Status == PlayerQuestProgressStatus.Completed;
 
         for (int index = 0; index < quest.Objectives.Count; index++)
         {
@@ -221,7 +223,7 @@ public sealed class NpcQuestActionProcessor
 
             string targetId = ResolveObjectiveTargetId(objective);
             int requiredAmount = Mathf.Max(1, objective.RequiredAmount);
-            string objectiveLabel = objective.DisplayLabel;
+            string objectiveLabel = ResolveObjectiveDisplayLabel(objective, targetId);
             string objectiveHint = objective.DisplayHint;
             Sprite objectiveIcon = ResolveObjectiveIcon(objective);
             int baseline = 0;
@@ -235,6 +237,19 @@ public sealed class NpcQuestActionProcessor
                     NormalizeToken(targetId),
                     requiredAmount,
                 out baseline);
+
+            if (isCompletedQuest)
+            {
+                progressSnapshots.Add(new NpcQuestLogObjectiveProgressSnapshot(
+                    objective.Type,
+                    targetId,
+                    requiredAmount,
+                    requiredAmount,
+                    objectiveLabel,
+                    objectiveHint,
+                    objectiveIcon));
+                continue;
+            }
 
             if (objective.Type == NpcQuestObjectiveType.KillEnemy
                 && objective.TargetEnemy != null
@@ -300,26 +315,68 @@ public sealed class NpcQuestActionProcessor
         return null;
     }
 
-    private static IReadOnlyList<string> BuildRewardSummaries(
+    private static string ResolveObjectiveDisplayLabel(NpcQuestObjective objective, string targetId)
+    {
+        if (objective == null)
+            return "Objective";
+
+        if (!string.IsNullOrWhiteSpace(objective.DisplayLabel))
+            return objective.DisplayLabel.Trim();
+
+        if (objective.Type == NpcQuestObjectiveType.CollectItem)
+        {
+            string itemName = objective.TargetItem != null && !string.IsNullOrWhiteSpace(objective.TargetItem.DisplayName)
+                ? objective.TargetItem.DisplayName
+                : (!string.IsNullOrWhiteSpace(targetId) ? targetId : "Item");
+
+            return $"Collect {itemName}";
+        }
+
+        if (objective.Type == NpcQuestObjectiveType.KillEnemy)
+        {
+            string enemyName = objective.TargetEnemy != null
+                ? objective.TargetEnemy.EnemyType.ToString()
+                : (!string.IsNullOrWhiteSpace(targetId) ? targetId : "Enemy");
+
+            return $"Kill {enemyName}";
+        }
+
+        return !string.IsNullOrWhiteSpace(targetId) ? targetId : "Objective";
+    }
+
+    private static IReadOnlyList<NpcQuestLogRewardSnapshot> BuildRewardSnapshots(
         NpcQuestDefinition quest,
-        PlayerQuestProgressEntry progress)
+        PlayerQuestProgressEntry progress,
+        QuestUiIconCatalog questUiIconCatalog)
     {
         if (quest == null)
-            return System.Array.Empty<string>();
+            return System.Array.Empty<NpcQuestLogRewardSnapshot>();
 
         if (quest.HideRewardsUntilCompletion && (progress == null || progress.Status != PlayerQuestProgressStatus.Completed))
-            return System.Array.Empty<string>();
+            return System.Array.Empty<NpcQuestLogRewardSnapshot>();
 
-        List<string> rewardSummaries = new List<string>();
-
-        if (quest.ExpReward > 0)
-            rewardSummaries.Add($"EXP: {quest.ExpReward}");
+        List<NpcQuestLogRewardSnapshot> rewards = new List<NpcQuestLogRewardSnapshot>();
 
         if (quest.MesosReward > 0)
-            rewardSummaries.Add($"Mesos: {quest.MesosReward}");
+        {
+            rewards.Add(new NpcQuestLogRewardSnapshot(
+                NpcQuestLogRewardType.Mesos,
+                "Mesos",
+                quest.MesosReward,
+                questUiIconCatalog != null ? questUiIconCatalog.MesosIcon : null));
+        }
+
+        if (quest.ExpReward > 0)
+        {
+            rewards.Add(new NpcQuestLogRewardSnapshot(
+                NpcQuestLogRewardType.Exp,
+                "EXP",
+                quest.ExpReward,
+                questUiIconCatalog != null ? questUiIconCatalog.ExpIcon : null));
+        }
 
         if (quest.RewardItems == null || quest.RewardItems.Count == 0)
-            return rewardSummaries;
+            return rewards;
 
         for (int index = 0; index < quest.RewardItems.Count; index++)
         {
@@ -327,10 +384,14 @@ public sealed class NpcQuestActionProcessor
             if (reward == null || reward.Item == null || reward.Amount <= 0)
                 continue;
 
-            rewardSummaries.Add($"{reward.Item.DisplayName} x{Mathf.Max(1, reward.Amount)}");
+            rewards.Add(new NpcQuestLogRewardSnapshot(
+                NpcQuestLogRewardType.Item,
+                reward.Item.DisplayName,
+                Mathf.Max(1, reward.Amount),
+                reward.Item.Icon));
         }
 
-        return rewardSummaries;
+        return rewards;
     }
 
     private static NpcQuestActionResult ProcessAccept(
@@ -804,6 +865,39 @@ public sealed class NpcQuestActionProcessor
         return npcDefinition != null ? npcDefinition.Portrait : null;
     }
 
+    private static string ResolveDetailNpcDisplayName(
+        NpcQuestDefinition quest,
+        PlayerQuestProgressStatus progressStatus)
+    {
+        return ResolveNpcDisplayName(ResolveDetailNpcDefinition(quest, progressStatus));
+    }
+
+    private static Sprite ResolveDetailNpcPortrait(
+        NpcQuestDefinition quest,
+        PlayerQuestProgressStatus progressStatus)
+    {
+        return ResolveNpcPortrait(ResolveDetailNpcDefinition(quest, progressStatus));
+    }
+
+    private static NpcDefinition ResolveDetailNpcDefinition(
+        NpcQuestDefinition quest,
+        PlayerQuestProgressStatus progressStatus)
+    {
+        if (quest == null)
+            return null;
+
+        NpcDefinition starterNpc = quest.PrimaryStarterNpc;
+        NpcDefinition completionNpc = quest.PrimaryCompletionNpc;
+
+        if (progressStatus == PlayerQuestProgressStatus.Accepted
+            || progressStatus == PlayerQuestProgressStatus.Completed)
+        {
+            return completionNpc != null ? completionNpc : starterNpc;
+        }
+
+        return starterNpc != null ? starterNpc : completionNpc;
+    }
+
     private static bool TryConsumeCollectRequirements(
         Dictionary<string, int> collectRequirements,
         PlayerCharacter player,
@@ -840,14 +934,14 @@ public sealed class NpcQuestActionProcessor
     private readonly struct NpcQuestProgressData
     {
         public IReadOnlyList<NpcQuestLogObjectiveProgressSnapshot> ObjectiveProgress { get; }
-        public IReadOnlyList<string> RewardSummaries { get; }
+        public IReadOnlyList<NpcQuestLogRewardSnapshot> Rewards { get; }
 
         public NpcQuestProgressData(
             IReadOnlyList<NpcQuestLogObjectiveProgressSnapshot> objectiveProgress,
-            IReadOnlyList<string> rewardSummaries)
+            IReadOnlyList<NpcQuestLogRewardSnapshot> rewards)
         {
             ObjectiveProgress = objectiveProgress ?? System.Array.Empty<NpcQuestLogObjectiveProgressSnapshot>();
-            RewardSummaries = rewardSummaries ?? System.Array.Empty<string>();
+            Rewards = rewards ?? System.Array.Empty<NpcQuestLogRewardSnapshot>();
         }
     }
 

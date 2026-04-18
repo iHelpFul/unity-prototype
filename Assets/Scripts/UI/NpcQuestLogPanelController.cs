@@ -137,6 +137,8 @@ public class NpcQuestLogPanelController : MonoBehaviour
 
         activeTab = tab;
         activeQuest = null;
+        if (detailPanel != null)
+            detailPanel.Hide();
         RefreshTabButtons();
         ClearQuestEntries();
         RefreshView();
@@ -265,8 +267,6 @@ public class NpcQuestLogPanelController : MonoBehaviour
             spawnedEntryButtons.Add(rowButton);
         }
 
-        if (activeTab != NpcQuestLogTab.InProgress && detailPanel != null)
-            detailPanel.Hide();
     }
 
     private void ConfigureRowButton(Button rowButton, NpcQuestLogQuestEntry quest)
@@ -329,11 +329,14 @@ public class NpcQuestLogPanelController : MonoBehaviour
 
     private void RefreshDetailState()
     {
-        if (activeTab != NpcQuestLogTab.InProgress && detailPanel != null)
-            detailPanel.Hide();
-
-        if (detailPanel == null || activeQuest == null)
+        if (detailPanel == null)
             return;
+
+        if (activeQuest == null)
+        {
+            detailPanel.Hide();
+            return;
+        }
 
         detailPanel.Show(activeQuest);
     }

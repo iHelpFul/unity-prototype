@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4655fa097878a1e47beb8b9e942115e5, type: 3}
   m_Name: Ahoi_NpcQuestDefinition
   m_EditorClassIdentifier: Assembly-CSharp::NpcQuestDefinition
-  questId: AhoiQuest_001
+  questId: AhoiQuest_0001
   questTitle: Kill Red Slimes
   isNarrativeOnly: 0
   questSummary: Complete this quest to receive rewards.
@@ -33,16 +33,14 @@ MonoBehaviour:
   - 'A REAL AHOI IS HERE!!!! take, you deserve that. '
   minimumPlayerLevel: 1
   repeatable: 0
-  hideRewardsUntilCompletion: 1
+  hideRewardsUntilCompletion: 0
   expReward: 25
   mesosReward: 150
-  rewardItems:
-  - item: {fileID: 11400000, guid: cc06d177582a8304ebabb80fd2da7249, type: 2}
-    amount: 1
+  rewardItems: []
   objectives:
   - type: 0
     targetItem: {fileID: 0}
     targetEnemy: {fileID: 11400000, guid: 8f21dc763ae55de4eaab8e8a863b8e3d, type: 2}
     requiredAmount: 3
-    displayLabel: Red Slime
+    displayLabel: 'Need to kill red slimes:'
     displayHint: 

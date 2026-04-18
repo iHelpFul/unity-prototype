@@ -70,7 +70,7 @@ public class MultiplayerPrototypeNameplate : MonoBehaviour
         label.color = textColor;
         label.text = string.Empty;
         label.raycastTarget = false;
-        label.enableWordWrapping = false;
+        label.textWrappingMode = TextWrappingModes.NoWrap;
         label.outlineWidth = 0.2f;
         label.outlineColor = Color.black;
 

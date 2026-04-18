@@ -3,10 +3,10 @@ using UnityEngine;
 
 public enum NpcPromptType
 {
-    Talk,
-    Shop,
-    Job,
-    Quest
+    None = 0,
+    Shop = 1,
+    Job = 2,
+    Quest = 3
 }
 
 public struct NpcPromptShownEvent
@@ -204,13 +204,6 @@ public struct NpcQuestLogRefreshEvent
     public NpcQuestLogSnapshot Snapshot;
 }
 
-public struct NpcQuestLogSelectRequestEvent
-{
-    public PlayerCharacter Requester;
-    public string CharacterId;
-    public string QuestId;
-}
-
 public sealed class NpcQuestLogObjectiveProgressSnapshot
 {
     public NpcQuestObjectiveType ObjectiveType { get; }
@@ -239,7 +232,33 @@ public sealed class NpcQuestLogObjectiveProgressSnapshot
         Icon = icon;
     }
 
-    public bool IsCompleted => CurrentAmount >= RequiredAmount;
+}
+
+public enum NpcQuestLogRewardType
+{
+    Mesos,
+    Exp,
+    Item
+}
+
+public sealed class NpcQuestLogRewardSnapshot
+{
+    public NpcQuestLogRewardType RewardType { get; }
+    public string DisplayLabel { get; }
+    public int Amount { get; }
+    public Sprite Icon { get; }
+
+    public NpcQuestLogRewardSnapshot(
+        NpcQuestLogRewardType rewardType,
+        string displayLabel,
+        int amount,
+        Sprite icon = null)
+    {
+        RewardType = rewardType;
+        DisplayLabel = displayLabel ?? string.Empty;
+        Amount = Mathf.Max(0, amount);
+        Icon = icon;
+    }
 }
 
 public sealed class NpcQuestLogQuestEntry
@@ -253,12 +272,10 @@ public sealed class NpcQuestLogQuestEntry
     public PlayerQuestProgressStatus ProgressStatus { get; }
     public int CompletionCount { get; }
     public IReadOnlyList<NpcQuestLogObjectiveProgressSnapshot> ObjectiveProgress { get; }
-    public IReadOnlyList<string> RewardSummaries { get; }
+    public IReadOnlyList<NpcQuestLogRewardSnapshot> Rewards { get; }
     public string CompletionInstruction { get; }
-    public string StarterNpcDisplayName { get; }
-    public Sprite StarterNpcPortrait { get; }
-    public string CompletionNpcDisplayName { get; }
-    public Sprite CompletionNpcPortrait { get; }
+    public string DetailNpcDisplayName { get; }
+    public Sprite DetailNpcPortrait { get; }
     public bool HideRewardsUntilCompletion { get; }
     public int ExpReward { get; }
     public int MesosReward { get; }
@@ -275,48 +292,11 @@ public sealed class NpcQuestLogQuestEntry
         PlayerQuestProgressStatus progressStatus,
         int completionCount,
         IReadOnlyList<NpcQuestLogObjectiveProgressSnapshot> objectiveProgress,
-        IReadOnlyList<string> rewardSummaries)
-        : this(
-            questId,
-            questTitle,
-            isNarrativeOnly,
-            minimumPlayerLevel,
-            isRepeatable,
-            hideRewardsUntilCompletion,
-            expReward,
-            mesosReward,
-            progressStatus,
-            completionCount,
-            objectiveProgress,
-            rewardSummaries,
-            string.Empty,
-            string.Empty,
-            string.Empty,
-            null,
-            string.Empty,
-            null)
-    {
-    }
-
-    public NpcQuestLogQuestEntry(
-        string questId,
-        string questTitle,
-        bool isNarrativeOnly,
-        int minimumPlayerLevel,
-        bool isRepeatable,
-        bool hideRewardsUntilCompletion,
-        int expReward,
-        int mesosReward,
-        PlayerQuestProgressStatus progressStatus,
-        int completionCount,
-        IReadOnlyList<NpcQuestLogObjectiveProgressSnapshot> objectiveProgress,
-        IReadOnlyList<string> rewardSummaries,
+        IReadOnlyList<NpcQuestLogRewardSnapshot> rewards,
         string questSummary,
         string completionInstruction,
-        string starterNpcDisplayName,
-        Sprite starterNpcPortrait,
-        string completionNpcDisplayName,
-        Sprite completionNpcPortrait)
+        string detailNpcDisplayName,
+        Sprite detailNpcPortrait)
     {
         QuestId = questId;
         QuestTitle = questTitle;
@@ -330,12 +310,10 @@ public sealed class NpcQuestLogQuestEntry
         ProgressStatus = progressStatus;
         CompletionCount = completionCount;
         ObjectiveProgress = objectiveProgress;
-        RewardSummaries = rewardSummaries;
+        Rewards = rewards;
         CompletionInstruction = completionInstruction ?? string.Empty;
-        StarterNpcDisplayName = starterNpcDisplayName ?? string.Empty;
-        StarterNpcPortrait = starterNpcPortrait;
-        CompletionNpcDisplayName = completionNpcDisplayName ?? string.Empty;
-        CompletionNpcPortrait = completionNpcPortrait;
+        DetailNpcDisplayName = detailNpcDisplayName ?? string.Empty;
+        DetailNpcPortrait = detailNpcPortrait;
     }
 }
 
@@ -376,40 +354,7 @@ public sealed class NpcQuestPromptEntry
     public IReadOnlyList<string> CompletionPages { get; }
     public bool SupportsInProgress { get; }
     public bool SupportsCompletion { get; }
-    public string StarterNpcDisplayName { get; }
-    public Sprite StarterNpcPortrait { get; }
-    public string CompletionNpcDisplayName { get; }
-    public Sprite CompletionNpcPortrait { get; }
     public string CompletionInstruction { get; }
-
-    public NpcQuestPromptEntry(
-        string questId,
-        string questTitle,
-        bool isNarrativeOnly,
-        PlayerQuestProgressStatus progressStatus,
-        bool isRepeatable,
-        int minimumPlayerLevel,
-        IReadOnlyList<string> introPages,
-        IReadOnlyList<string> inProgressPages,
-        IReadOnlyList<string> completionPages)
-        : this(
-            questId,
-            questTitle,
-            isNarrativeOnly,
-            progressStatus,
-            isRepeatable,
-            minimumPlayerLevel,
-            string.Empty,
-            string.Empty,
-            string.Empty,
-            null,
-            string.Empty,
-            null,
-            introPages,
-            inProgressPages,
-            completionPages)
-    {
-    }
 
     public NpcQuestPromptEntry(
         string questId,
@@ -420,10 +365,6 @@ public sealed class NpcQuestPromptEntry
         int minimumPlayerLevel,
         string questSummary,
         string completionInstruction,
-        string starterNpcDisplayName,
-        Sprite starterNpcPortrait,
-        string completionNpcDisplayName,
-        Sprite completionNpcPortrait,
         IReadOnlyList<string> introPages,
         IReadOnlyList<string> inProgressPages,
         IReadOnlyList<string> completionPages)
@@ -436,10 +377,6 @@ public sealed class NpcQuestPromptEntry
         MinimumPlayerLevel = minimumPlayerLevel;
         QuestSummary = questSummary ?? string.Empty;
         CompletionInstruction = completionInstruction ?? string.Empty;
-        StarterNpcDisplayName = starterNpcDisplayName ?? string.Empty;
-        StarterNpcPortrait = starterNpcPortrait;
-        CompletionNpcDisplayName = completionNpcDisplayName ?? string.Empty;
-        CompletionNpcPortrait = completionNpcPortrait;
         IntroPages = introPages ?? System.Array.Empty<string>();
         InProgressPages = inProgressPages ?? System.Array.Empty<string>();
         CompletionPages = completionPages ?? System.Array.Empty<string>();
@@ -459,6 +396,7 @@ public sealed class NpcQuestPromptSnapshot
     public string CharacterId { get; }
     public string NpcId { get; }
     public string NpcName { get; }
+    public Sprite NpcPortrait { get; }
     public bool HasMultipleQuests { get; }
     public IReadOnlyList<NpcQuestPromptEntry> Quests { get; }
 
@@ -467,6 +405,7 @@ public sealed class NpcQuestPromptSnapshot
         string characterId,
         string npcId,
         string npcName,
+        Sprite npcPortrait,
         bool hasMultipleQuests,
         IReadOnlyList<NpcQuestPromptEntry> quests)
     {
@@ -474,6 +413,7 @@ public sealed class NpcQuestPromptSnapshot
         CharacterId = PlayerRuntimeIdentityUtility.NormalizeCharacterId(characterId);
         NpcId = npcId;
         NpcName = npcName;
+        NpcPortrait = npcPortrait;
         HasMultipleQuests = hasMultipleQuests;
         Quests = quests;
     }

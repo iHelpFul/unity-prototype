@@ -148,7 +148,7 @@ public class MultiplayerPrototypeBootstrap : MonoBehaviour
 
     private void ApplyPrototypeRuntimeSettings()
     {
-        Application.runInBackground = true;
+        Application.runInBackground = forceRunInBackground;
 
         int resolvedTargetFrameRate = prototypeTargetFrameRate > 0 ? prototypeTargetFrameRate : 120;
         Application.targetFrameRate = resolvedTargetFrameRate;

@@ -5,6 +5,7 @@ using UnityEngine;
 public class NpcQuestService : MonoBehaviour
 {
     [SerializeField] private GameBootstrap bootstrap;
+    [SerializeField] private QuestUiIconCatalog questUiIconCatalog;
     private readonly NpcQuestActionProcessor actionProcessor = new NpcQuestActionProcessor();
 
     private NpcInteractable activeNpc;
@@ -264,7 +265,8 @@ public class NpcQuestService : MonoBehaviour
             activeLogPlayer,
             playerData,
             questDefinitions,
-            bootstrap != null ? bootstrap.InventorySession : null);
+            bootstrap != null ? bootstrap.InventorySession : null,
+            questUiIconCatalog);
     }
 
     private NpcQuestPromptSnapshot BuildSnapshot()
@@ -296,10 +298,6 @@ public class NpcQuestService : MonoBehaviour
                 quest.MinimumPlayerLevel,
                 quest.QuestSummary,
                 quest.CompletionInstruction,
-                ResolveNpcDisplayName(quest.PrimaryStarterNpc),
-                ResolveNpcPortrait(quest.PrimaryStarterNpc),
-                ResolveNpcDisplayName(quest.PrimaryCompletionNpc),
-                ResolveNpcPortrait(quest.PrimaryCompletionNpc),
                 quest.IntroPages,
                 quest.InProgressPages,
                 quest.CompletionPages));
@@ -313,6 +311,7 @@ public class NpcQuestService : MonoBehaviour
             activeCharacterId,
             activeNpc.NpcId,
             activeNpc.DisplayName,
+            ResolveNpcPortrait(activeNpc.NpcDefinition),
             entries.Count > 1,
             entries);
     }
@@ -504,11 +503,6 @@ public class NpcQuestService : MonoBehaviour
     private static string NormalizeQuestId(string questId)
     {
         return (questId ?? string.Empty).Trim();
-    }
-
-    private static string ResolveNpcDisplayName(NpcDefinition npcDefinition)
-    {
-        return npcDefinition != null ? npcDefinition.DisplayName : string.Empty;
     }
 
     private static Sprite ResolveNpcPortrait(NpcDefinition npcDefinition)

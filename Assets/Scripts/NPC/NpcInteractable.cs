@@ -155,7 +155,7 @@ public class NpcInteractable : MonoBehaviour
             NpcPromptType.Shop => "SHOP",
             NpcPromptType.Job => "JOB",
             NpcPromptType.Quest => "QUEST",
-            _ => "TALK"
+            _ => "NPC"
         };
     }
 

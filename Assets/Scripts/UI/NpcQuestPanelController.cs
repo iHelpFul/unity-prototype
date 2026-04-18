@@ -161,14 +161,14 @@ public class NpcQuestPanelController : MonoBehaviour
         if (quests == null || quests.Count == 0)
         {
             EnterSelectionMode();
-            RefreshQuestGiverPortrait();
+            RefreshQuestGiverPortrait(ResolveCurrentNpcPortrait());
             return;
         }
 
         if (activeSnapshot.HasMultipleQuests)
         {
             EnterSelectionMode();
-            RefreshQuestGiverPortrait();
+            RefreshQuestGiverPortrait(ResolveCurrentNpcPortrait());
             return;
         }
 
@@ -249,7 +249,7 @@ public class NpcQuestPanelController : MonoBehaviour
         activeQuest = quest;
         dialogueMode = ResolveQuestMode(mode, quest, false);
         currentPageIndex = 0;
-        RefreshQuestGiverPortrait(quest.StarterNpcPortrait);
+        RefreshQuestGiverPortrait(ResolveCurrentNpcPortrait());
 
         if (titleText != null)
             titleText.text = quest.QuestTitle;
@@ -352,7 +352,7 @@ public class NpcQuestPanelController : MonoBehaviour
     {
         if (dialogueMode == QuestDialogueMode.Selection)
         {
-            RefreshQuestGiverPortrait();
+            RefreshQuestGiverPortrait(ResolveCurrentNpcPortrait());
             if (npcNameText != null)
                 npcNameText.text = activeSnapshot != null ? activeSnapshot.NpcName : "NPC";
 
@@ -371,12 +371,12 @@ public class NpcQuestPanelController : MonoBehaviour
 
         if (activeQuest == null || activeSnapshot == null)
         {
-            RefreshQuestGiverPortrait();
+            RefreshQuestGiverPortrait(ResolveCurrentNpcPortrait());
             SetPanelVisible(false);
             return;
         }
 
-        RefreshQuestGiverPortrait(activeQuest.StarterNpcPortrait);
+        RefreshQuestGiverPortrait(ResolveCurrentNpcPortrait());
 
         if (npcNameText != null)
             npcNameText.text = activeSnapshot.NpcName;
@@ -596,6 +596,11 @@ public class NpcQuestPanelController : MonoBehaviour
             questGiverPortraitImage.sprite = portrait;
             questGiverPortraitImage.enabled = true;
         }
+    }
+
+    private Sprite ResolveCurrentNpcPortrait()
+    {
+        return activeSnapshot != null ? activeSnapshot.NpcPortrait : null;
     }
 
     private bool MatchesActiveQuest(PlayerCharacter player, string characterId, string npcId)

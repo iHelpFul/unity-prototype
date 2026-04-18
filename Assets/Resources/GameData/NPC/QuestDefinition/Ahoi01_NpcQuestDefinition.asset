@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4655fa097878a1e47beb8b9e942115e5, type: 3}
   m_Name: Ahoi01_NpcQuestDefinition
   m_EditorClassIdentifier: Assembly-CSharp::NpcQuestDefinition
-  questId: AhoiQuest_02
+  questId: AhoiQuest_0000002
   questTitle: MARYUM!
   isNarrativeOnly: 0
   questSummary: Complete this quest to receive rewards.
@@ -21,7 +21,7 @@ MonoBehaviour:
   starterNpcs:
   - {fileID: 11400000, guid: d0636cf0a1a04d34ebc4eb97086bb929, type: 2}
   completionNpcs:
-  - {fileID: 11400000, guid: d0636cf0a1a04d34ebc4eb97086bb929, type: 2}
+  - {fileID: 11400000, guid: b99af2cc6c025e84da999529bae3cae7, type: 2}
   introPages:
   - 'Hello Big/Middle/Ahoit !  '
   - Welcome to Omiryum, what a loveley day, go to Maryum

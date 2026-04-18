@@ -1,4 +1,4 @@
-using System.Text;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -15,15 +15,23 @@ public class NpcQuestLogDetailPanelController : MonoBehaviour
 
     [Header("Content")]
     [SerializeField] private TextMeshProUGUI titleText;
+    [SerializeField] private Image npcPortraitImage;
+    [SerializeField] private TextMeshProUGUI npcNameText;
     [SerializeField] private TextMeshProUGUI questSummaryText;
     [SerializeField] private TextMeshProUGUI completionInstructionText;
-    [SerializeField] private TextMeshProUGUI objectiveText;
+    [SerializeField] private Transform objectiveListRoot;
+    [SerializeField] private NpcQuestObjectiveProgressRowView objectiveRowTemplate;
+    [SerializeField] private TextMeshProUGUI objectiveEmptyText;
     [SerializeField] private TextMeshProUGUI npcProgressText;
-    [SerializeField] private TextMeshProUGUI rewardsText;
+    [SerializeField] private Transform rewardsListRoot;
+    [SerializeField] private NpcQuestRewardEntryView rewardEntryTemplate;
+    [SerializeField] private TextMeshProUGUI rewardsEmptyText;
     [SerializeField] private TextMeshProUGUI statusText;
 
     private Coroutine slideCoroutine;
     private bool isOpen;
+    private readonly List<NpcQuestObjectiveProgressRowView> spawnedObjectiveRows = new List<NpcQuestObjectiveProgressRowView>();
+    private readonly List<NpcQuestRewardEntryView> spawnedRewardEntries = new List<NpcQuestRewardEntryView>();
 
     private void Start()
     {
@@ -33,10 +41,22 @@ public class NpcQuestLogDetailPanelController : MonoBehaviour
         if (panelRect == null)
             panelRect = GetComponent<RectTransform>();
 
+        if (objectiveRowTemplate != null)
+            objectiveRowTemplate.gameObject.SetActive(false);
+
+        if (rewardEntryTemplate != null)
+            rewardEntryTemplate.gameObject.SetActive(false);
+
         isOpen = false;
         SetStaticPosition(closedAnchoredPosition);
         SetRootActive(false);
         ClearTexts();
+    }
+
+    private void OnDisable()
+    {
+        ClearObjectiveRows();
+        ClearRewardEntries();
     }
 
     public void Show(NpcQuestLogQuestEntry quest)
@@ -77,6 +97,8 @@ public class NpcQuestLogDetailPanelController : MonoBehaviour
         if (titleText != null)
             titleText.text = quest.QuestTitle;
 
+        BindNpc(quest);
+
         if (questSummaryText != null)
             questSummaryText.text = string.IsNullOrWhiteSpace(quest.QuestSummary)
                 ? "Quest summary unavailable."
@@ -87,60 +109,110 @@ public class NpcQuestLogDetailPanelController : MonoBehaviour
                 ? "No completion instruction."
                 : quest.CompletionInstruction;
 
-        if (objectiveText != null)
-            objectiveText.text = BuildObjectiveText(quest);
+        BindObjectives(quest);
 
         if (npcProgressText != null)
             npcProgressText.text = BuildNpcProgressText(quest);
 
-        if (rewardsText != null)
-            rewardsText.text = BuildRewardsText(quest);
+        BindRewards(quest);
 
         string status = BuildStatusText(quest);
         SetStatus(status);
     }
 
-    private static string BuildObjectiveText(NpcQuestLogQuestEntry quest)
+    private void BindNpc(NpcQuestLogQuestEntry quest)
     {
-        if (quest == null || quest.ObjectiveProgress == null || quest.ObjectiveProgress.Count == 0)
-            return "No objectives.";
-
-        StringBuilder builder = new StringBuilder();
-        for (int index = 0; index < quest.ObjectiveProgress.Count; index++)
+        if (npcNameText != null)
         {
-            NpcQuestLogObjectiveProgressSnapshot objective = quest.ObjectiveProgress[index];
-            string objectiveName = ResolveObjectiveDisplayName(objective);
-            string objectiveHint = string.IsNullOrWhiteSpace(objective.DisplayHint)
-                ? string.Empty
-                : $" - {objective.DisplayHint}";
-
-            builder.AppendLine($"{objectiveName}: {objective.CurrentAmount}/{objective.RequiredAmount}{objectiveHint}");
+            npcNameText.text = quest != null && !string.IsNullOrWhiteSpace(quest.DetailNpcDisplayName)
+                ? quest.DetailNpcDisplayName
+                : string.Empty;
+            npcNameText.gameObject.SetActive(!string.IsNullOrWhiteSpace(npcNameText.text));
         }
 
-        return builder.ToString().TrimEnd();
+        if (npcPortraitImage != null)
+        {
+            Sprite portrait = quest != null ? quest.DetailNpcPortrait : null;
+            npcPortraitImage.sprite = portrait;
+            npcPortraitImage.enabled = portrait != null;
+        }
     }
 
-    private static string BuildRewardsText(NpcQuestLogQuestEntry quest)
+    private void BindObjectives(NpcQuestLogQuestEntry quest)
     {
-        if (quest == null)
-            return "Rewards: -";
-
-        if (quest.HideRewardsUntilCompletion && quest.ProgressStatus != PlayerQuestProgressStatus.Completed)
-            return "Rewards:\n- Hidden until quest completion.";
-
-        if (quest == null || quest.RewardSummaries == null || quest.RewardSummaries.Count == 0)
-            return "Rewards:\n- None";
-
-        StringBuilder builder = new StringBuilder();
-        builder.AppendLine("Rewards:");
-        for (int index = 0; index < quest.RewardSummaries.Count; index++)
+        ClearObjectiveRows();
+        if (objectiveListRoot == null || objectiveRowTemplate == null)
         {
-            string reward = quest.RewardSummaries[index];
-            if (!string.IsNullOrWhiteSpace(reward))
-                builder.AppendLine($"- {reward}");
+            return;
         }
 
-        return builder.ToString().TrimEnd();
+        IReadOnlyList<NpcQuestLogObjectiveProgressSnapshot> objectives = quest != null ? quest.ObjectiveProgress : null;
+        if (objectives == null || objectives.Count == 0)
+        {
+            SetOptionalText(objectiveEmptyText, "No objectives.");
+            return;
+        }
+
+        SetOptionalText(objectiveEmptyText, string.Empty);
+
+        for (int index = 0; index < objectives.Count; index++)
+        {
+            NpcQuestLogObjectiveProgressSnapshot objective = objectives[index];
+            if (objective == null)
+                continue;
+
+            NpcQuestObjectiveProgressRowView row = Instantiate(objectiveRowTemplate, objectiveListRoot);
+            row.gameObject.SetActive(true);
+            row.Bind(objective);
+            spawnedObjectiveRows.Add(row);
+        }
+
+        if (spawnedObjectiveRows.Count == 0)
+            SetOptionalText(objectiveEmptyText, "No objectives.");
+    }
+
+    private void BindRewards(NpcQuestLogQuestEntry quest)
+    {
+        ClearRewardEntries();
+        if (rewardsListRoot == null || rewardEntryTemplate == null)
+        {
+            return;
+        }
+
+        if (quest == null)
+        {
+            SetOptionalText(rewardsEmptyText, "No rewards.");
+            return;
+        }
+
+        if (quest.HideRewardsUntilCompletion && quest.ProgressStatus != PlayerQuestProgressStatus.Completed)
+        {
+            SetOptionalText(rewardsEmptyText, "Rewards hidden until quest completion.");
+            return;
+        }
+
+        if (quest.Rewards == null || quest.Rewards.Count == 0)
+        {
+            SetOptionalText(rewardsEmptyText, "No rewards.");
+            return;
+        }
+
+        SetOptionalText(rewardsEmptyText, string.Empty);
+
+        for (int index = 0; index < quest.Rewards.Count; index++)
+        {
+            NpcQuestLogRewardSnapshot reward = quest.Rewards[index];
+            if (reward == null)
+                continue;
+
+            NpcQuestRewardEntryView row = Instantiate(rewardEntryTemplate, rewardsListRoot);
+            row.gameObject.SetActive(true);
+            row.Bind(reward);
+            spawnedRewardEntries.Add(row);
+        }
+
+        if (spawnedRewardEntries.Count == 0)
+            SetOptionalText(rewardsEmptyText, "No rewards.");
     }
 
     private static string BuildStatusText(NpcQuestLogQuestEntry quest)
@@ -148,27 +220,22 @@ public class NpcQuestLogDetailPanelController : MonoBehaviour
         if (quest == null)
             return string.Empty;
 
-        StringBuilder builder = new StringBuilder("Status: ");
-        switch (quest.ProgressStatus)
+        string status = quest.ProgressStatus switch
         {
-            case PlayerQuestProgressStatus.Accepted:
-                builder.Append("In Progress");
-                break;
-            case PlayerQuestProgressStatus.Completed:
-                builder.Append("Completed");
-                break;
-            default:
-                builder.Append("Available");
-                break;
-        }
+            PlayerQuestProgressStatus.Accepted => "In Progress",
+            PlayerQuestProgressStatus.Completed => "Completed",
+            _ => "Available"
+        };
+
+        string result = $"Status: {status}";
 
         if (quest.ProgressStatus == PlayerQuestProgressStatus.Completed && quest.CompletionCount > 0)
-            builder.Append($" | Completed {quest.CompletionCount} time(s)");
+            result += $" | Completed {quest.CompletionCount} time(s)";
 
         if (quest.MinimumPlayerLevel > 1)
-            builder.Append($" | Lvl {quest.MinimumPlayerLevel}+");
+            result += $" | Lvl {quest.MinimumPlayerLevel}+";
 
-        return builder.ToString();
+        return result;
     }
 
     private static string BuildNpcProgressText(NpcQuestLogQuestEntry quest)
@@ -176,11 +243,16 @@ public class NpcQuestLogDetailPanelController : MonoBehaviour
         if (quest == null)
             return string.Empty;
 
-        if (!string.IsNullOrWhiteSpace(quest.CompletionNpcDisplayName))
-            return $"Complete at: {quest.CompletionNpcDisplayName}";
+        if (!string.IsNullOrWhiteSpace(quest.DetailNpcDisplayName))
+        {
+            string prefix = quest.ProgressStatus == PlayerQuestProgressStatus.Completed
+                ? "Completed at"
+                : quest.ProgressStatus == PlayerQuestProgressStatus.Accepted
+                    ? "Complete at"
+                    : "Given by";
 
-        if (!string.IsNullOrWhiteSpace(quest.StarterNpcDisplayName))
-            return $"Given by: {quest.StarterNpcDisplayName}";
+            return $"{prefix}: {quest.DetailNpcDisplayName}";
+        }
 
         return string.Empty;
     }
@@ -191,56 +263,37 @@ public class NpcQuestLogDetailPanelController : MonoBehaviour
             statusText.text = string.IsNullOrWhiteSpace(value) ? (fallback ?? string.Empty) : value;
     }
 
-    private static string ResolveObjectiveTargetName(NpcQuestLogObjectiveProgressSnapshot objective)
+    private static void SetOptionalText(TextMeshProUGUI text, string value)
     {
-        if (objective == null)
-            return "Objective";
+        if (text == null)
+            return;
 
-        if (!string.IsNullOrWhiteSpace(objective.DisplayLabel))
-            return objective.DisplayLabel;
-
-        string targetLabel = string.IsNullOrWhiteSpace(objective.TargetId) ? "Unknown" : objective.TargetId;
-
-        if (objective.ObjectiveType == NpcQuestObjectiveType.CollectItem
-            && ItemDatabase.TryGetDefinition(targetLabel, out ItemDefinition definition)
-            && definition != null)
-        {
-            targetLabel = definition.DisplayName;
-        }
-
-        if (objective.ObjectiveType == NpcQuestObjectiveType.KillEnemy)
-        {
-            if (TryResolveEnemyTypeDisplayName(targetLabel, out string enemyName))
-                targetLabel = enemyName;
-            else
-                targetLabel = $"Enemy [{targetLabel}]";
-        }
-
-        string prefix = objective.ObjectiveType == NpcQuestObjectiveType.CollectItem ? "Collect" : "Kill";
-        return $"{prefix} {targetLabel}";
+        text.text = string.IsNullOrWhiteSpace(value) ? string.Empty : value;
+        text.gameObject.SetActive(!string.IsNullOrWhiteSpace(value));
     }
 
-    private static string ResolveObjectiveDisplayName(NpcQuestLogObjectiveProgressSnapshot objective)
+    private void ClearObjectiveRows()
     {
-        return ResolveObjectiveTargetName(objective);
-    }
-
-    private static bool TryResolveEnemyTypeDisplayName(string targetId, out string enemyName)
-    {
-        enemyName = string.Empty;
-        if (string.IsNullOrWhiteSpace(targetId))
-            return false;
-
-        foreach (EnemyType enemyType in System.Enum.GetValues(typeof(EnemyType)))
+        for (int index = 0; index < spawnedObjectiveRows.Count; index++)
         {
-            if (enemyType.ToString().Equals(targetId, System.StringComparison.OrdinalIgnoreCase))
-            {
-                enemyName = enemyType.ToString();
-                return true;
-            }
+            NpcQuestObjectiveProgressRowView row = spawnedObjectiveRows[index];
+            if (row != null)
+                Destroy(row.gameObject);
         }
 
-        return false;
+        spawnedObjectiveRows.Clear();
+    }
+
+    private void ClearRewardEntries()
+    {
+        for (int index = 0; index < spawnedRewardEntries.Count; index++)
+        {
+            NpcQuestRewardEntryView row = spawnedRewardEntries[index];
+            if (row != null)
+                Destroy(row.gameObject);
+        }
+
+        spawnedRewardEntries.Clear();
     }
 
     private void StartSlideAnimation(Vector2 targetPosition, bool openState)
@@ -318,8 +371,23 @@ public class NpcQuestLogDetailPanelController : MonoBehaviour
 
     private void ClearTexts()
     {
+        ClearObjectiveRows();
+        ClearRewardEntries();
+
         if (titleText != null)
             titleText.text = "Quest Details";
+
+        if (npcPortraitImage != null)
+        {
+            npcPortraitImage.sprite = null;
+            npcPortraitImage.enabled = false;
+        }
+
+        if (npcNameText != null)
+        {
+            npcNameText.text = string.Empty;
+            npcNameText.gameObject.SetActive(false);
+        }
 
         if (questSummaryText != null)
             questSummaryText.text = string.Empty;
@@ -327,14 +395,12 @@ public class NpcQuestLogDetailPanelController : MonoBehaviour
         if (completionInstructionText != null)
             completionInstructionText.text = string.Empty;
 
-        if (objectiveText != null)
-            objectiveText.text = "No quest selected.";
+        SetOptionalText(objectiveEmptyText, string.Empty);
 
         if (npcProgressText != null)
             npcProgressText.text = string.Empty;
 
-        if (rewardsText != null)
-            rewardsText.text = "Rewards: -";
+        SetOptionalText(rewardsEmptyText, string.Empty);
 
         SetStatus("No selected quest.");
     }

@@ -16,6 +16,4 @@ MonoBehaviour:
   displayName: Maryum
   portrait: {fileID: 21300000, guid: af907d2d6b963a44b9fb47629258ef43, type: 3}
   quests:
-  - {fileID: 11400000, guid: 0595a6bd592acc847942e064a4b9f1bc, type: 2}
-  - {fileID: 11400000, guid: 6252c26c57ceee446a77cf8d2d164aca, type: 2}
-  - {fileID: 11400000, guid: b640bf2eeefa5234b8d0ec806bfeba66, type: 2}
+  - {fileID: 11400000, guid: c4f9507880b9b184ab6e67ad0eb19427, type: 2}
