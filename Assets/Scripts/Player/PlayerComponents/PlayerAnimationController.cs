@@ -64,14 +64,17 @@ public class PlayerAnimationController : MonoBehaviour
         animator.SetBool(groundedHash, isGrounded);
         animator.SetFloat(verticalHash, verticalVelocity);
         if (string.IsNullOrWhiteSpace(activeSkillStateName))
-            animator.SetInteger(comboHash, comboIndex);
+        animator.SetInteger(comboHash, comboIndex);
         animator.SetBool(attackingHash, isAttacking);
         animator.speed = isAttacking ? Mathf.Max(0.1f, attackAnimationSpeed) : 1f;
 
-        if (jumpedThisFrame)
+        bool suppressInterruptingMovementTriggers =
+            playerCharacter != null && playerCharacter.ShouldSuppressInterruptingAnimation;
+
+        if (jumpedThisFrame && !suppressInterruptingMovementTriggers)
             animator.SetTrigger(jumpHash);
 
-        if (landedThisFrame)
+        if (landedThisFrame && !suppressInterruptingMovementTriggers)
             animator.SetTrigger(landHash);
         if (!isAttacking && !string.IsNullOrWhiteSpace(activeSkillStateName))
             activeSkillStateName = string.Empty;
@@ -157,8 +160,13 @@ public class PlayerAnimationController : MonoBehaviour
         activeSkillStateName = definition.AnimatorStateName;
         if (string.IsNullOrWhiteSpace(activeSkillStateName))
             return;
-        //Debug.Log("Skill Name:" + activeSkillStateName);
-        animator.CrossFadeInFixedTime(activeSkillStateName, 0.04f, 1, 0f);
+
+        AnimationProfile animationProfile = ResolveAnimationProfile();
+        int layerIndex = animationProfile != null ? animationProfile.SkillAnimationLayerIndex : 1;
+        float crossFadeDuration = animationProfile != null ? animationProfile.SkillCrossFadeDuration : 0.04f;
+        float startNormalizedTime = animationProfile != null ? animationProfile.SkillStartNormalizedTime : 0f;
+
+        animator.CrossFadeInFixedTime(activeSkillStateName, crossFadeDuration, layerIndex, startNormalizedTime);
     }
 
     public void ClearSkillAnimationOverride()
@@ -169,6 +177,9 @@ public class PlayerAnimationController : MonoBehaviour
     private void OnPlayerHit(PlayerHitEvent e)
     {
         if (!MatchesPlayerEvent(e.Target, e.CharacterId))
+            return;
+
+        if (playerCharacter != null && playerCharacter.ShouldSuppressHitReactionAnimation)
             return;
 
         animator.SetTrigger(hitHash);
@@ -187,7 +198,7 @@ public class PlayerAnimationController : MonoBehaviour
         animator.SetInteger(comboHash, 0);
         animator.SetBool(diedHash, true);
         activeSkillStateName = string.Empty;
-        animator.Play("Die01Stay_SingleSword", 0, 0f); 
+        animator.Play(ResolveDeathStateName(), 0, 0f);
     }
 
     private void OnPlayerRespawn(PlayerRespawnedEvent e)
@@ -205,8 +216,32 @@ public class PlayerAnimationController : MonoBehaviour
         animator.SetBool(diedHash, false);
         activeSkillStateName = string.Empty;
 
+        animator.Play(ResolveRespawnStateName(), 0, 0f);
+    }
 
-        animator.Play("Idle_Battle_SingleSword", 0, 0f); 
+    private AnimationProfile ResolveAnimationProfile()
+    {
+        if (playerCharacter == null)
+            return null;
+
+        PlayerJobDefinition jobDefinition = PlayerJobCombatProfiles.GetJobDefinition(playerCharacter.CurrentJob);
+        return jobDefinition != null ? jobDefinition.AnimationProfile : null;
+    }
+
+    private string ResolveDeathStateName()
+    {
+        AnimationProfile animationProfile = ResolveAnimationProfile();
+        return animationProfile != null && !string.IsNullOrWhiteSpace(animationProfile.DeathStateName)
+            ? animationProfile.DeathStateName
+            : AnimationProfile.DefaultDeathStateName;
+    }
+
+    private string ResolveRespawnStateName()
+    {
+        AnimationProfile animationProfile = ResolveAnimationProfile();
+        return animationProfile != null && !string.IsNullOrWhiteSpace(animationProfile.RespawnStateName)
+            ? animationProfile.RespawnStateName
+            : AnimationProfile.DefaultRespawnStateName;
     }
 
     private bool MatchesPlayerEvent(PlayerCharacter target, string characterId)

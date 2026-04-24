@@ -14,27 +14,47 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerSkillDefinition
   skillId: arcanist_magic_claw
   displayName: Magic Claw
+  description:
+  icon: {fileID: 0}
   jobType: 3
   skillType: 2
+  attackFamily: 5
+  executionKind: 1
+  combatTargetingKind: 2
+  defaultProjectileProfile: {fileID: 0}
+  baseMomentumGain: 0
+  baseMomentumCost: 0
+  baseSurgeChanceBonus: 0
+  baseSurgePowerBonus: 0
+  defaultElement: 0
+  levels:
+  - level: 1
+    manaCost: 13
+    cooldown: 1.1
+    castTime: 0
+    recoveryTime: 0.1
+    range: 6.5
+    hitCount: 2
+    damageCoefficient: 1
+    extraSurgeChance: 0
+    extraSurgePower: 0
+    momentumGain: 0
+    momentumCost: 0
+    projectileProfile: {fileID: 0}
+    requiredSelfStateIds: []
+    requiredTargetStateIds: []
+    consumedSelfStateIds: []
+    consumedTargetStateIds: []
+    appliedSelfStateIds: []
+    appliedTargetStateIds: []
   maxLevel: 20
   defaultSlotIndex: 1
-  manaCost: 13
-  cooldown: 1.1
-  range: 6.5
   damageMultiplier: 1.5
-  hitCount: 2
   hitInterval: 0.14
   animationVariantIndex: 1
   animatorStateName: Combo03_InPlace_SingleSword 0
   animationSpeed: 0.8
   attackDuration: 0.9
-  targetingMode: 1
   maxTargets: 1
   projectileCount: 1
-  projectileSpeed: 0
-  projectileRadius: 0.2
-  projectileLifetime: 0.5
   projectileSpreadAngle: 0
-  projectileSpawnForwardOffset: 0.8
-  projectileSpawnUpOffset: 1
-  projectileVisualScale: 0.2

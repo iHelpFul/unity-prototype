@@ -4,5 +4,6 @@ public enum VfxType
     EnemyDeath,
     PlayerLand,
     PlayerJump,
-    PlayerHit
+    PlayerHit,
+    TestToSeeIfHere
 }

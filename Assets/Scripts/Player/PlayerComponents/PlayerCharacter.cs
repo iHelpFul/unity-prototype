@@ -22,6 +22,8 @@ public class PlayerCharacter : MonoBehaviour
     [SerializeField] private PlayerInteractionController interactionController;
 
     [SerializeField] private PlayerRuntimeStateController runtimeStateController;
+    [SerializeField] private PlayerActionStateController actionStateController;
+    [SerializeField] private PlayerCombatStateController combatStateController;
 
     private bool? runtimeLocalPlayerOverride;
     private string runtimeCharacterId;
@@ -38,6 +40,20 @@ public class PlayerCharacter : MonoBehaviour
         : 0;
     public bool HasPendingJobAdvancement => runtimeStateController != null
         && runtimeStateController.HasPendingJobAdvancement;
+    public int CurrentMomentumStacks => combatStateController != null
+        ? combatStateController.CurrentMomentumStacks
+        : 0;
+    public PlayerActionStateType CurrentActionState => actionStateController != null
+        ? actionStateController.CurrentActionState
+        : PlayerActionStateType.None;
+    public bool HasPendingSkillCommit => actionStateController != null && actionStateController.HasPendingSkillCommit;
+    public bool ShouldSuppressInterruptingAnimation => actionStateController != null
+        && actionStateController.ShouldSuppressInterruptingAnimation;
+    public bool ShouldSuppressHitReactionAnimation => actionStateController != null
+        && actionStateController.ShouldSuppressHitReactionAnimation;
+    public PlayerActionStateController ActionStateController => actionStateController;
+    public PlayerCombatStateController CombatStateController => combatStateController;
+    public PlayerRuntimeData RuntimeData => runtimeStateController != null ? runtimeStateController.RuntimeData : null;
 
     public void SetRuntimeLocalPlayer(bool isRuntimeLocalPlayer)
     {
@@ -73,6 +89,18 @@ public class PlayerCharacter : MonoBehaviour
         if (runtimeStateController == null)
             runtimeStateController = gameObject.AddComponent<PlayerRuntimeStateController>();
 
+        if (actionStateController == null)
+            actionStateController = GetComponent<PlayerActionStateController>();
+
+        if (actionStateController == null)
+            actionStateController = gameObject.AddComponent<PlayerActionStateController>();
+
+        if (combatStateController == null)
+            combatStateController = GetComponent<PlayerCombatStateController>();
+
+        if (combatStateController == null)
+            combatStateController = gameObject.AddComponent<PlayerCombatStateController>();
+
         runtimeStateController.Initialize(
             this,
             baseStats,
@@ -81,6 +109,8 @@ public class PlayerCharacter : MonoBehaviour
             timeToStun,
             timeToInv,
             timeToFlash);
+        actionStateController.Initialize(this);
+        combatStateController.Initialize(this);
 
         if (interactionController == null)
             interactionController = GetComponent<PlayerInteractionController>();
@@ -148,6 +178,21 @@ public class PlayerCharacter : MonoBehaviour
     public bool TrySpendMP(int amount)
     {
         return runtimeStateController != null && runtimeStateController.TrySpendMP(amount);
+    }
+
+    public void GainCombatMomentum(int amount)
+    {
+        combatStateController?.GainMomentum(amount);
+    }
+
+    public void ConsumeCombatMomentum(int amount)
+    {
+        combatStateController?.ConsumeMomentum(amount);
+    }
+
+    public void ResetCombatMomentum()
+    {
+        combatStateController?.ResetMomentum();
     }
 
     public void ResetAfterDeath()

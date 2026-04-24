@@ -61,6 +61,11 @@ public class PlayerMovementModel
         jumpHeld = false;
     }
 
+    public void ResetHorizontalVelocity()
+    {
+        horizontalVelocity = Vector3.zero;
+    }
+
     private void HandleTimers(float dt, bool isGrounded)
     {
         if (isGrounded)

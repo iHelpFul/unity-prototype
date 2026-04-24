@@ -87,6 +87,10 @@ public static class DamageCalculator
         bool isSkillDamage,
         float damageMultiplier = 1f)
     {
+        CombatFormulaProfile formulaProfile = ResolveCombatFormulaProfile(snapshot.CurrentJob);
+        if (formulaProfile != null)
+            return CalculateDamageRangeWithFormula(snapshot, formulaProfile, isSkillDamage, damageMultiplier);
+
         PlayerJobType job = snapshot.CurrentJob;
         float might = Mathf.Max(0, snapshot.Might);
         float precision = Mathf.Max(0, snapshot.Precision);
@@ -143,6 +147,10 @@ public static class DamageCalculator
         PlayerCombatSnapshot snapshot,
         bool isSkillDamage)
     {
+        CombatFormulaProfile formulaProfile = ResolveCombatFormulaProfile(snapshot.CurrentJob);
+        if (formulaProfile != null)
+            return CalculateDamageWithFormula(snapshot, formulaProfile, isSkillDamage);
+
         PlayerJobType job = snapshot.CurrentJob;
         float might = Mathf.Max(0, snapshot.Might);
         float precision = Mathf.Max(0, snapshot.Precision);
@@ -195,6 +203,73 @@ public static class DamageCalculator
         return CalculateDamage(snapshot, isSkillDamage: false);
     }
 
+    private static DamageRange CalculateDamageRangeWithFormula(
+        PlayerCombatSnapshot snapshot,
+        CombatFormulaProfile formulaProfile,
+        bool isSkillDamage,
+        float damageMultiplier)
+    {
+        float minDamage = CalculateFormulaDamage(snapshot, formulaProfile, isSkillDamage, true);
+        float maxDamage = CalculateFormulaDamage(snapshot, formulaProfile, isSkillDamage, false);
+        float multiplier = Mathf.Max(0.1f, damageMultiplier);
+
+        return new DamageRange(
+            Mathf.Max(1, Mathf.RoundToInt(minDamage * multiplier)),
+            Mathf.Max(1, Mathf.RoundToInt(maxDamage * multiplier)));
+    }
+
+    private static int CalculateDamageWithFormula(
+        PlayerCombatSnapshot snapshot,
+        CombatFormulaProfile formulaProfile,
+        bool isSkillDamage)
+    {
+        float minDamage = CalculateFormulaDamage(snapshot, formulaProfile, isSkillDamage, true);
+        float maxDamage = CalculateFormulaDamage(snapshot, formulaProfile, isSkillDamage, false);
+        float rolledDamage = Random.Range(Mathf.Min(minDamage, maxDamage), Mathf.Max(minDamage, maxDamage));
+        return Mathf.Max(1, Mathf.RoundToInt(rolledDamage));
+    }
+
+    private static float CalculateFormulaDamage(
+        PlayerCombatSnapshot snapshot,
+        CombatFormulaProfile formulaProfile,
+        bool isSkillDamage,
+        bool isMinimumDamage)
+    {
+        PlayerJobDefinition jobDefinition = PlayerJobCombatProfiles.GetJobDefinition(snapshot.CurrentJob);
+        PlayerProgressionStatType coreStatType = jobDefinition != null ? jobDefinition.CoreStat : snapshot.CoreStat;
+        PlayerProgressionStatType supportStatType = jobDefinition != null ? jobDefinition.SecondaryStat : snapshot.SecondaryStat;
+
+        float coreStat = ResolveConfiguredStat(snapshot, coreStatType);
+        float supportStat = ResolveConfiguredStat(snapshot, supportStatType);
+        float weightedContribution = CalculateWeightedContribution(snapshot, formulaProfile.StatContributions);
+        float coreWeight = GetContributionWeight(formulaProfile.StatContributions, coreStatType);
+        float supportWeight = GetContributionWeight(formulaProfile.StatContributions, supportStatType);
+        float accuracyFactor = CalculateFormulaAccuracyFactor(snapshot, formulaProfile, coreStat, supportStat);
+        float skillScale = isSkillDamage ? 1.15f : 1f;
+        float masteryMultiplier = Mathf.Lerp(0.75f, 1f, Mathf.Clamp01(snapshot.SkillMastery));
+        float weaponPower = Mathf.Max(1f, snapshot.WeaponPower * Mathf.Max(0f, formulaProfile.DamageRules.WeaponPowerWeight));
+
+        float baseStat =
+            coreStat * Mathf.Max(0.1f, coreWeight) * 4f
+            + supportStat * Mathf.Max(0.05f, supportWeight) * 1.5f
+            + weightedContribution * 0.5f;
+
+        float accuracyMultiplier = isMinimumDamage
+            ? Mathf.Lerp(0.85f, 0.98f, accuracyFactor)
+            : Mathf.Lerp(0.98f, 1.12f, accuracyFactor);
+
+        float variance = isMinimumDamage
+            ? Mathf.Max(0f, formulaProfile.DamageRules.BaseVarianceMin)
+            : Mathf.Max(formulaProfile.DamageRules.BaseVarianceMin, formulaProfile.DamageRules.BaseVarianceMax);
+
+        float scaledDamage =
+            ((baseStat * skillScale * masteryMultiplier) * weaponPower * Mathf.Max(0.01f, formulaProfile.DamageRules.DamageCoefficientWeight))
+            / 100f;
+
+        float mitigatedDamage = scaledDamage * variance * accuracyMultiplier;
+        return Mathf.Max(formulaProfile.DamageRules.MinimumDamageFloor, mitigatedDamage);
+    }
+
     private static float CalculateAccuracyFactor(
         float precision,
         float hitRate,
@@ -208,6 +283,67 @@ public static class DamageCalculator
             + supportStat * profile.AccuracySupportWeight;
 
         return Mathf.Clamp01(accuracy / 120f);
+    }
+
+    private static float CalculateFormulaAccuracyFactor(
+        PlayerCombatSnapshot snapshot,
+        CombatFormulaProfile formulaProfile,
+        float coreStat,
+        float supportStat)
+    {
+        float hitRate = Mathf.Max(0, snapshot.HitRate) * formulaProfile.HitRules.HitRateWeight;
+        float levelContribution = Mathf.Max(1, snapshot.Level) * formulaProfile.HitRules.LevelDeltaWeight;
+        float precisionContribution = Mathf.Max(0, snapshot.Precision) * 0.5f;
+        float accuracy = hitRate + precisionContribution + coreStat * 0.1f + supportStat * 0.05f + levelContribution;
+
+        return Mathf.Clamp01(accuracy / 120f);
+    }
+
+    private static float CalculateWeightedContribution(
+        PlayerCombatSnapshot snapshot,
+        CombatStatContributionBlock statContributions)
+    {
+        return Mathf.Max(0, snapshot.Might) * statContributions.MightWeight
+            + Mathf.Max(0, snapshot.Precision) * statContributions.PrecisionWeight
+            + Mathf.Max(0, snapshot.Arcane) * statContributions.ArcaneWeight
+            + Mathf.Max(0, snapshot.Finesse) * statContributions.FinesseWeight
+            + Mathf.Max(0, snapshot.HitRate) * statContributions.HitRateWeight;
+    }
+
+    private static float ResolveConfiguredStat(
+        PlayerCombatSnapshot snapshot,
+        PlayerProgressionStatType statType)
+    {
+        return statType switch
+        {
+            PlayerProgressionStatType.Might => Mathf.Max(0, snapshot.Might),
+            PlayerProgressionStatType.Precision => Mathf.Max(0, snapshot.Precision),
+            PlayerProgressionStatType.Arcane => Mathf.Max(0, snapshot.Arcane),
+            PlayerProgressionStatType.Finesse => Mathf.Max(0, snapshot.Finesse),
+            PlayerProgressionStatType.HitRate => Mathf.Max(0, snapshot.HitRate),
+            _ => Mathf.Max(0, snapshot.Might)
+        };
+    }
+
+    private static float GetContributionWeight(
+        CombatStatContributionBlock statContributions,
+        PlayerProgressionStatType statType)
+    {
+        return statType switch
+        {
+            PlayerProgressionStatType.Might => statContributions.MightWeight,
+            PlayerProgressionStatType.Precision => statContributions.PrecisionWeight,
+            PlayerProgressionStatType.Arcane => statContributions.ArcaneWeight,
+            PlayerProgressionStatType.Finesse => statContributions.FinesseWeight,
+            PlayerProgressionStatType.HitRate => statContributions.HitRateWeight,
+            _ => statContributions.MightWeight
+        };
+    }
+
+    private static CombatFormulaProfile ResolveCombatFormulaProfile(PlayerJobType job)
+    {
+        PlayerJobDefinition jobDefinition = PlayerJobCombatProfiles.GetJobDefinition(job);
+        return jobDefinition != null ? jobDefinition.CombatFormulaProfile : null;
     }
 
     private static float ResolveCoreStat(

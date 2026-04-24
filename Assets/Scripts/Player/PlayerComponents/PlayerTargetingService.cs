@@ -35,9 +35,12 @@ public class PlayerTargetingService
         this.attackLowerHeightAllowance = attackLowerHeightAllowance;
     }
 
-    public EnemyHealth FindFrontSingleTarget(PlayerSkillDefinition definition)
+    public EnemyHealth FindFrontSingleTarget(PlayerSkillDefinition definition, int skillLevel = 1)
     {
-        List<EnemyHealth> candidates = GetEnemiesInSphere(ownerTransform.position, definition.Range);
+        float resolvedRange = definition != null
+            ? definition.GetResolvedRange(skillLevel)
+            : 0f;
+        List<EnemyHealth> candidates = GetEnemiesInSphere(ownerTransform.position, resolvedRange);
 
         EnemyHealth bestTarget = null;
         float bestSqrDistance = float.MaxValue;
@@ -63,10 +66,10 @@ public class PlayerTargetingService
         return bestTarget;
     }
 
-    public List<EnemyHealth> FindSkillAreaTargets(PlayerSkillDefinition definition)
+    public List<EnemyHealth> FindSkillAreaTargets(PlayerSkillDefinition definition, int skillLevel = 1)
     {
-        float searchRadius = GetSkillAreaRadius(definition);
-        Vector3 center = GetSkillAreaCenter(definition, searchRadius);
+        float searchRadius = GetSkillAreaRadius(definition, skillLevel);
+        Vector3 center = GetSkillAreaCenter(definition, searchRadius, skillLevel);
 
         List<EnemyHealth> candidates = GetEnemiesInSphere(center, searchRadius);
         List<EnemyHealth> validTargets = new List<EnemyHealth>();
@@ -91,7 +94,9 @@ public class PlayerTargetingService
             return leftDistance.CompareTo(rightDistance);
         });
 
-        int maxTargets = Mathf.Max(1, definition.MaxTargets);
+        int maxTargets = definition != null
+            ? definition.GetResolvedMaxTargets(skillLevel)
+            : 1;
         if (validTargets.Count > maxTargets)
             validTargets.RemoveRange(maxTargets, validTargets.Count - maxTargets);
 
@@ -101,7 +106,8 @@ public class PlayerTargetingService
     public EnemyHealth ResolveLockedSkillTarget(
         PlayerSkillDefinition definition,
         EnemyHealth lockedTarget,
-        bool allowReacquire)
+        bool allowReacquire,
+        int skillLevel = 1)
     {
         if (lockedTarget != null && !lockedTarget.IsDead)
         {
@@ -111,12 +117,12 @@ public class PlayerTargetingService
                 return lockedTarget;
 
             if (!IsInFront(targetPoint))
-                return allowReacquire ? FindFrontSingleTarget(definition) : null;
+                return allowReacquire ? FindFrontSingleTarget(definition, skillLevel) : null;
 
             if (!IsWithinAllowedAttackHeight(lockedTarget, ownerTransform.position.y))
-                return allowReacquire ? FindFrontSingleTarget(definition) : null;
+                return allowReacquire ? FindFrontSingleTarget(definition, skillLevel) : null;
 
-            float maxDistance = definition.Range + lockedSkillTargetGraceRange;
+            float maxDistance = (definition != null ? definition.GetResolvedRange(skillLevel) : 0f) + lockedSkillTargetGraceRange;
             float sqrMaxDistance = maxDistance * maxDistance;
             float sqrDistance = (targetPoint - ownerTransform.position).sqrMagnitude;
 
@@ -124,7 +130,7 @@ public class PlayerTargetingService
                 return lockedTarget;
         }
 
-        return allowReacquire ? FindFrontSingleTarget(definition) : null;
+        return allowReacquire ? FindFrontSingleTarget(definition, skillLevel) : null;
     }
 
     public List<EnemyHealth> GetEnemiesInSphere(Vector3 center, float radius)
@@ -194,15 +200,21 @@ public class PlayerTargetingService
         return GetEnemyTopY(enemy) + attackLowerHeightAllowance >= referenceY;
     }
 
-    public float GetSkillAreaRadius(PlayerSkillDefinition definition)
+    public float GetSkillAreaRadius(PlayerSkillDefinition definition, int skillLevel = 1)
     {
-        return Mathf.Max(skillAreaMinRadius, definition.Range * skillAreaRadiusFactor);
+        float resolvedRange = definition != null
+            ? definition.GetResolvedRange(skillLevel)
+            : 0f;
+        return Mathf.Max(skillAreaMinRadius, resolvedRange * skillAreaRadiusFactor);
     }
 
-    public Vector3 GetSkillAreaCenter(PlayerSkillDefinition definition, float radius)
+    public Vector3 GetSkillAreaCenter(PlayerSkillDefinition definition, float radius, int skillLevel = 1)
     {
         Transform facingTransform = visualTransform != null ? visualTransform : ownerTransform;
+        float resolvedRange = definition != null
+            ? definition.GetResolvedRange(skillLevel)
+            : 0f;
         return facingTransform.position
-            + facingTransform.forward * Mathf.Max(radius * 0.25f, definition.Range * skillAreaForwardOffsetFactor);
+            + facingTransform.forward * Mathf.Max(radius * 0.25f, resolvedRange * skillAreaForwardOffsetFactor);
     }
 }

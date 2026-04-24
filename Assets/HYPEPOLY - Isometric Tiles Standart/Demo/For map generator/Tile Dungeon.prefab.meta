@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 1b400d05fba60c844a14e41638f8aaf3
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 192177
+  packageName: HYPEPOLY - Isometric Tiles Standart
+  packageVersion: 1.0.2
+  assetPath: Assets/HYPEPOLY - Isometric Tiles Standart/Demo/For map generator/Tile
+    Dungeon.prefab
+  uploadId: 428348

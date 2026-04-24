@@ -4,6 +4,7 @@ using UnityEngine.InputSystem;
 public class PlayerInputAdapter : MonoBehaviour
 {
     [SerializeField] private PlayerCharacter playerCharacter;
+    [SerializeField] private PlayerInputRouter inputRouter;
 
     private void Awake()
     {
@@ -14,7 +15,16 @@ public class PlayerInputAdapter : MonoBehaviour
         {
             Debug.LogError("PlayerInputAdapter requires a PlayerCharacter on the same GameObject.");
             enabled = false;
+            return;
         }
+
+        if (inputRouter == null)
+            inputRouter = GetComponent<PlayerInputRouter>();
+
+        if (inputRouter == null)
+            inputRouter = gameObject.AddComponent<PlayerInputRouter>();
+
+        inputRouter.Initialize(playerCharacter);
     }
 
     public void OnMove(InputAction.CallbackContext context)
@@ -22,12 +32,7 @@ public class PlayerInputAdapter : MonoBehaviour
         if (!ShouldPublishInput())
             return;
 
-        EventBus.Publish(new MoveInputEvent
-        {
-            Player = playerCharacter,
-            CharacterId = ResolveCharacterId(),
-            Direction = context.ReadValue<Vector2>()
-        });
+        inputRouter.RouteMove(context.ReadValue<Vector2>());
     }
 
     public void OnJump(InputAction.CallbackContext context)
@@ -36,22 +41,10 @@ public class PlayerInputAdapter : MonoBehaviour
             return;
 
         if (context.started)
-        {
-            EventBus.Publish(new JumpPressedEvent
-            {
-                Player = playerCharacter,
-                CharacterId = ResolveCharacterId()
-            });
-        }
+            inputRouter.RoutePressed(PlayerInputActionId.Jump);
 
         if (context.canceled)
-        {
-            EventBus.Publish(new JumpReleasedEvent
-            {
-                Player = playerCharacter,
-                CharacterId = ResolveCharacterId()
-            });
-        }
+            inputRouter.RouteReleased(PlayerInputActionId.Jump);
     }
 
     public void OnAttack(InputAction.CallbackContext context)
@@ -59,11 +52,7 @@ public class PlayerInputAdapter : MonoBehaviour
         if (!ShouldPublishInput() || !context.performed)
             return;
 
-        EventBus.Publish(new AttackPressedEvent
-        {
-            Player = playerCharacter,
-            CharacterId = ResolveCharacterId()
-        });
+        inputRouter.RoutePressed(PlayerInputActionId.BasicAttack);
     }
 
     public void OnInteract(InputAction.CallbackContext context)
@@ -71,11 +60,7 @@ public class PlayerInputAdapter : MonoBehaviour
         if (!ShouldPublishInput() || !context.started)
             return;
 
-        EventBus.Publish(new InteractPressedEvent
-        {
-            Player = playerCharacter,
-            CharacterId = ResolveCharacterId()
-        });
+        inputRouter.RoutePressed(PlayerInputActionId.Interact);
     }
 
     public void OnPrevious(InputAction.CallbackContext context)
@@ -83,12 +68,7 @@ public class PlayerInputAdapter : MonoBehaviour
         if (!ShouldPublishInput() || !context.performed)
             return;
 
-        EventBus.Publish(new UseConsumablePressedEvent
-        {
-            Player = playerCharacter,
-            CharacterId = ResolveCharacterId(),
-            ConsumableType = PlayerConsumableType.RedPotion
-        });
+        inputRouter.RoutePressed(PlayerInputActionId.UseRedPotion);
     }
 
     public void OnNext(InputAction.CallbackContext context)
@@ -96,12 +76,7 @@ public class PlayerInputAdapter : MonoBehaviour
         if (!ShouldPublishInput() || !context.performed)
             return;
 
-        EventBus.Publish(new UseConsumablePressedEvent
-        {
-            Player = playerCharacter,
-            CharacterId = ResolveCharacterId(),
-            ConsumableType = PlayerConsumableType.BluePotion
-        });
+        inputRouter.RoutePressed(PlayerInputActionId.UseBluePotion);
     }
 
     public void OnSkillSlot1(InputAction.CallbackContext context) => PublishSkillSlot(context, 1);
@@ -125,11 +100,7 @@ public class PlayerInputAdapter : MonoBehaviour
         if (!ShouldPublishInput() || !context.performed)
             return;
 
-        EventBus.Publish(new InventoryTogglePressedEvent
-        {
-            Player = playerCharacter,
-            CharacterId = ResolveCharacterId()
-        });
+        inputRouter.RoutePressed(PlayerInputActionId.InventoryToggle);
     }
 
     public void OnProgressionToggle(InputAction.CallbackContext context)
@@ -137,11 +108,7 @@ public class PlayerInputAdapter : MonoBehaviour
         if (!ShouldPublishInput() || !context.performed)
             return;
 
-        EventBus.Publish(new ProgressionTogglePressedEvent
-        {
-            Player = playerCharacter,
-            CharacterId = ResolveCharacterId()
-        });
+        inputRouter.RoutePressed(PlayerInputActionId.ProgressionToggle);
     }
 
     public void OnQuestLogToggle(InputAction.CallbackContext context)
@@ -149,11 +116,7 @@ public class PlayerInputAdapter : MonoBehaviour
         if (!ShouldPublishInput() || !context.performed)
             return;
 
-        EventBus.Publish(new QuestLogTogglePressedEvent
-        {
-            Player = playerCharacter,
-            CharacterId = ResolveCharacterId()
-        });
+        inputRouter.RoutePressed(PlayerInputActionId.QuestLogToggle);
     }
 
     private bool ShouldPublishInput()
@@ -166,18 +129,6 @@ public class PlayerInputAdapter : MonoBehaviour
         if (!ShouldPublishInput() || !context.performed || slotIndex <= 0)
             return;
 
-        EventBus.Publish(new SkillSlotPressedEvent
-        {
-            Player = playerCharacter,
-            CharacterId = ResolveCharacterId(),
-            SlotIndex = slotIndex
-        });
-    }
-
-    private string ResolveCharacterId()
-    {
-        return playerCharacter != null
-            ? PlayerRuntimeIdentityUtility.NormalizeCharacterId(playerCharacter.CharacterId)
-            : string.Empty;
+        inputRouter.RouteActionBarSlot(slotIndex);
     }
 }

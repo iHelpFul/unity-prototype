@@ -77,39 +77,17 @@ public class PlayerRuntimeStateController : MonoBehaviour
     public PlayerCombatSnapshot GetCombatSnapshot()
     {
         RefreshSessionBindings();
-        ItemStatModifierData equipmentBonuses = GetEquipmentBonuses();
+        PlayerJobDefinition jobDefinition = PlayerJobCombatProfiles.GetJobDefinition(CurrentJob);
 
-        int might = runtimeStats != null
-            ? runtimeStats.Might
-            : baseStats != null ? baseStats.Might : 0;
-
-        int precision = runtimeStats != null
-            ? runtimeStats.Precision
-            : baseStats != null ? baseStats.Precision : 0;
-
-        int hitRate = runtimeStats != null
-            ? runtimeStats.HitRate
-            : baseStats != null ? baseStats.HitRate : 0;
-
-        int arcane = runtimeStats != null
-            ? runtimeStats.Arcane
-            : baseStats != null ? baseStats.Arcane : 0;
-
-        int finesse = runtimeStats != null
-            ? runtimeStats.Finesse
-            : baseStats != null ? baseStats.Finesse : 0;
-
-        return new PlayerCombatSnapshot
-        {
-            CurrentJob = CurrentJob,
-            Might = might + equipmentBonuses.Might,
-            Precision = precision + equipmentBonuses.Precision,
-            Arcane = arcane + equipmentBonuses.Arcane,
-            Finesse = finesse + equipmentBonuses.Finesse,
-            HitRate = hitRate + equipmentBonuses.HitRate,
-            WeaponPower = baseWeaponPower + equipmentBonuses.WeaponPower,
-            SkillMastery = skillMastery
-        };
+        return CombatSnapshotBuilder.Build(
+            runtimeStats,
+            baseStats,
+            GetEquipmentBonuses(),
+            baseWeaponPower,
+            skillMastery,
+            jobDefinition,
+            currentWeaponType: default,
+            momentumStacks: character != null ? character.CurrentMomentumStacks : 0);
     }
 
     public PlayerBasicAttackProfile GetBasicAttackProfile()
@@ -157,7 +135,8 @@ public class PlayerRuntimeStateController : MonoBehaviour
             CharacterId = character != null ? character.CharacterId : PlayerRuntimeIdentityUtility.ResolveCharacterId(bootstrap, null),
             CurrentExp = runtimeStats.CurrentExp,
             RequiredExp = runtimeStats.RequiredExp,
-            UnspentStatPoints = runtimeStats.UnspentStatPoints
+            UnspentStatPoints = runtimeStats.UnspentStatPoints,
+            UnspentSkillPoints = runtimeStats.UnspentSkillPoints
         });
         return true;
     }
@@ -253,6 +232,8 @@ public class PlayerRuntimeStateController : MonoBehaviour
         isStunned = false;
         stunTimer = 0f;
         invulTimer = 0f;
+        character?.ResetCombatMomentum();
+        character?.ActionStateController?.ResetState();
 
         SaveSession();
         EventBus.Publish(new PlayerRespawnedEvent
@@ -408,6 +389,8 @@ public class PlayerRuntimeStateController : MonoBehaviour
             return;
 
         isDead = true;
+        character?.ResetCombatMomentum();
+        character?.ActionStateController?.ResetState();
 
         EventBus.Publish(new PlayerDiedEvent
         {

@@ -10334,6 +10334,8 @@ MonoBehaviour:
   manualPickupRange: 1.6
   interactionController: {fileID: 0}
   runtimeStateController: {fileID: 0}
+  actionStateController: {fileID: 0}
+  combatStateController: {fileID: 0}
 --- !u!114 &3159505403990584363
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -14478,7 +14480,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &944792294364478320
 Transform:
   m_ObjectHideFlags: 0

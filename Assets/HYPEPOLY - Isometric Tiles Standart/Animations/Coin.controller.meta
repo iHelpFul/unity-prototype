@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 50c79009c5ab7d54a9a65dacabd177e5
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 192177
+  packageName: HYPEPOLY - Isometric Tiles Standart
+  packageVersion: 1.0.2
+  assetPath: Assets/HYPEPOLY - Isometric Tiles Standart/Animations/Coin.controller
+  uploadId: 428348

@@ -946,7 +946,7 @@ public class MultiplayerPrototypeEnemyCoordinator : MonoBehaviour
     private static bool IsSupportedAuthoritativeSkillSequence(PlayerSkillDefinition definition)
     {
         return definition != null
-            && definition.TargetingMode == PlayerSkillTargetingMode.FrontSingleTarget
+            && definition.CombatTargetingKind == CombatTargetingKind.SingleTarget
             && definition.HitCount > 1;
     }
 

@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
 
 public class VfxSystem : MonoBehaviour
@@ -30,6 +31,23 @@ public class VfxSystem : MonoBehaviour
 
     private void OnPlayVfx(PlayVfxEvent e)
     {
+        if (e.Delay > 0f)
+        {
+            StartCoroutine(PlayDelayed(e));
+            return;
+        }
+
+        PlayNow(e);
+    }
+
+    private IEnumerator PlayDelayed(PlayVfxEvent e)
+    {
+        yield return new WaitForSeconds(e.Delay);
+        PlayNow(e);
+    }
+
+    private void PlayNow(PlayVfxEvent e)
+    {
         if (!lookup.TryGetValue(e.Type, out var entry))
             return;
 
@@ -41,6 +59,16 @@ public class VfxSystem : MonoBehaviour
 
         GameObject instance =
             Instantiate(prefab, e.Position, e.Rotation);
+
+        if (e.FollowTarget != null)
+        {
+            VfxFollowTarget followTarget = instance.GetComponent<VfxFollowTarget>();
+            if (followTarget == null)
+                followTarget = instance.AddComponent<VfxFollowTarget>();
+
+            followTarget.Initialize(e.FollowTarget, e.FollowOffset);
+            instance.transform.position = e.FollowTarget.position + e.FollowOffset;
+        }
 
         float scale =
             Random.Range(entry.MinScale, entry.MaxScale);

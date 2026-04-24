@@ -15,6 +15,8 @@ public class GameBootstrap : MonoBehaviour
     private readonly PlayerSessionInventoryService inventoryService = new PlayerSessionInventoryService();
     private readonly PlayerSessionEquipmentService equipmentService = new PlayerSessionEquipmentService();
     private readonly PlayerSessionSkillService skillService = new PlayerSessionSkillService();
+    private readonly PlayerSessionPassiveService passiveService = new PlayerSessionPassiveService();
+    private readonly PlayerSessionActionBarService actionBarService = new PlayerSessionActionBarService();
     private readonly PlayerSessionMapStateService mapStateService = new PlayerSessionMapStateService();
     private PlayerSessionEventPublisher eventPublisher;
     private PlayerSessionRuntimeService runtimeService;
@@ -23,6 +25,8 @@ public class GameBootstrap : MonoBehaviour
     private PlayerSessionEquipmentApplicationService equipmentApplicationService;
     private PlayerSessionCurrencyApplicationService currencyApplicationService;
     private PlayerSessionSkillApplicationService skillApplicationService;
+    private PlayerSessionPassiveApplicationService passiveApplicationService;
+    private PlayerSessionActionBarApplicationService actionBarApplicationService;
     private PlayerSessionJobApplicationService jobApplicationService;
     private PlayerSessionMapApplicationService mapApplicationService;
     public PlayerSessionCharacterApplicationService CharacterSession => characterSessionApplicationService;
@@ -30,6 +34,8 @@ public class GameBootstrap : MonoBehaviour
     public PlayerSessionEquipmentApplicationService EquipmentSession => equipmentApplicationService;
     public PlayerSessionCurrencyApplicationService CurrencySession => currencyApplicationService;
     public PlayerSessionSkillApplicationService SkillSession => skillApplicationService;
+    public PlayerSessionPassiveApplicationService PassiveSession => passiveApplicationService;
+    public PlayerSessionActionBarApplicationService ActionBarSession => actionBarApplicationService;
     public PlayerSessionJobApplicationService JobSession => jobApplicationService;
     public PlayerSessionMapApplicationService MapSession => mapApplicationService;
 
@@ -188,6 +194,8 @@ public class GameBootstrap : MonoBehaviour
             inventoryService,
             equipmentService,
             skillService,
+            passiveService,
+            actionBarService,
             mapStateService);
         characterSessionApplicationService ??= new PlayerSessionCharacterApplicationService(
             persistenceService,
@@ -221,8 +229,17 @@ public class GameBootstrap : MonoBehaviour
         skillApplicationService ??= new PlayerSessionSkillApplicationService(
             skillService,
             SavePlayer);
+        passiveApplicationService ??= new PlayerSessionPassiveApplicationService(
+            passiveService,
+            SavePlayer);
+        actionBarApplicationService ??= new PlayerSessionActionBarApplicationService(
+            actionBarService,
+            eventPublisher,
+            () => CharacterSession != null ? CharacterSession.PlayerData : null,
+            SavePlayer);
         jobApplicationService ??= new PlayerSessionJobApplicationService(
             skillService,
+            passiveService,
             eventPublisher,
             () => CharacterSession != null ? CharacterSession.PlayerData : null,
             SavePlayer);

@@ -6,30 +6,31 @@ public class PlayerJobDefinition : ScriptableObject
 {
     [SerializeField] private PlayerJobType jobType = PlayerJobType.Drifter;
     [SerializeField] private string displayName = "Drifter";
+    [SerializeField] private string description = string.Empty;
+    [SerializeField] private Sprite icon;
+    [SerializeField] private PlayerProgressionStatType coreStat = PlayerProgressionStatType.Might;
+    [SerializeField] private PlayerProgressionStatType secondaryStat = PlayerProgressionStatType.Precision;
+    [SerializeField] private WeaponType[] allowedWeaponTypes = new WeaponType[0];
     [SerializeField] private int advancementLevelRequirement = 10;
     [SerializeField] private PlayerBasicAttackProfile basicAttackProfile;
+    [SerializeField] private AnimationProfile animationProfile;
+    [SerializeField] private CombatFormulaProfile combatFormulaProfile;
     [SerializeField] private List<PlayerSkillDefinition> defaultSkills = new List<PlayerSkillDefinition>();
+    [SerializeField] private List<PassiveDefinition> defaultPassives = new List<PassiveDefinition>();
 
     public PlayerJobType JobType => jobType;
     public string DisplayName => displayName;
+    public string Description => description;
+    public Sprite Icon => icon;
+    public PlayerProgressionStatType CoreStat => coreStat;
+    public PlayerProgressionStatType SecondaryStat => secondaryStat;
+    public WeaponType[] AllowedWeaponTypes => allowedWeaponTypes;
     public int AdvancementLevelRequirement => advancementLevelRequirement;
     public PlayerBasicAttackProfile BasicAttackProfile => basicAttackProfile;
+    public AnimationProfile AnimationProfile => animationProfile;
+    public CombatFormulaProfile CombatFormulaProfile => combatFormulaProfile;
     public IReadOnlyList<PlayerSkillDefinition> DefaultSkills => defaultSkills;
-
-    public void Initialize(
-        PlayerJobType newJobType,
-        string newDisplayName,
-        int newAdvancementLevelRequirement,
-        PlayerBasicAttackProfile newBasicAttackProfile,
-        IReadOnlyList<PlayerSkillDefinition> newDefaultSkills)
-    {
-        jobType = newJobType;
-        displayName = newDisplayName;
-        advancementLevelRequirement = newAdvancementLevelRequirement;
-        basicAttackProfile = newBasicAttackProfile;
-        SetDefaultSkills(newDefaultSkills);
-        Sanitize();
-    }
+    public IReadOnlyList<PassiveDefinition> DefaultPassives => defaultPassives;
 
     public void SetDefaultSkills(IReadOnlyList<PlayerSkillDefinition> newDefaultSkills)
     {
@@ -46,22 +47,33 @@ public class PlayerJobDefinition : ScriptableObject
         }
     }
 
-    public static PlayerJobDefinition CreateTransient(
-        PlayerJobType newJobType,
-        string newDisplayName,
-        int newAdvancementLevelRequirement,
-        PlayerBasicAttackProfile newBasicAttackProfile,
-        IReadOnlyList<PlayerSkillDefinition> newDefaultSkills)
+    public void SetDefaultPassives(IReadOnlyList<PassiveDefinition> newDefaultPassives)
     {
-        PlayerJobDefinition definition = CreateInstance<PlayerJobDefinition>();
-        definition.hideFlags = HideFlags.HideAndDontSave;
-        definition.Initialize(
-            newJobType,
-            newDisplayName,
-            newAdvancementLevelRequirement,
-            newBasicAttackProfile,
-            newDefaultSkills);
-        return definition;
+        defaultPassives = new List<PassiveDefinition>();
+
+        if (newDefaultPassives == null)
+            return;
+
+        for (int index = 0; index < newDefaultPassives.Count; index++)
+        {
+            PassiveDefinition definition = newDefaultPassives[index];
+            if (definition != null)
+                defaultPassives.Add(definition);
+        }
+    }
+
+    public bool SupportsWeaponType(WeaponType weaponType)
+    {
+        if (allowedWeaponTypes == null || allowedWeaponTypes.Length == 0)
+            return false;
+
+        for (int index = 0; index < allowedWeaponTypes.Length; index++)
+        {
+            if (allowedWeaponTypes[index] == weaponType)
+                return true;
+        }
+
+        return false;
     }
 
     private void OnValidate()
@@ -72,16 +84,14 @@ public class PlayerJobDefinition : ScriptableObject
     private void Sanitize()
     {
         displayName = string.IsNullOrWhiteSpace(displayName) ? jobType.ToString() : displayName.Trim();
+        description = string.IsNullOrWhiteSpace(description) ? string.Empty : description.Trim();
         advancementLevelRequirement = Mathf.Max(0, advancementLevelRequirement);
+        allowedWeaponTypes ??= new WeaponType[0];
+        defaultSkills ??= new List<PlayerSkillDefinition>();
+        defaultPassives ??= new List<PassiveDefinition>();
 
-        if (defaultSkills == null)
-        {
-            defaultSkills = new List<PlayerSkillDefinition>();
-            return;
-        }
-
-        HashSet<string> uniqueIds = new HashSet<string>();
-        List<PlayerSkillDefinition> normalized = new List<PlayerSkillDefinition>();
+        HashSet<string> uniqueSkillIds = new HashSet<string>();
+        List<PlayerSkillDefinition> normalizedSkills = new List<PlayerSkillDefinition>();
 
         for (int index = 0; index < defaultSkills.Count; index++)
         {
@@ -89,14 +99,30 @@ public class PlayerJobDefinition : ScriptableObject
             if (definition == null || string.IsNullOrWhiteSpace(definition.SkillId))
                 continue;
 
-            if (!uniqueIds.Add(definition.SkillId))
+            if (!uniqueSkillIds.Add(definition.SkillId))
                 continue;
 
-            normalized.Add(definition);
+            normalizedSkills.Add(definition);
         }
 
-        normalized.Sort((left, right) => left.DefaultSlotIndex.CompareTo(right.DefaultSlotIndex));
-        defaultSkills = normalized;
+        normalizedSkills.Sort((left, right) => left.DefaultSlotIndex.CompareTo(right.DefaultSlotIndex));
+        defaultSkills = normalizedSkills;
+
+        HashSet<string> uniquePassiveIds = new HashSet<string>();
+        List<PassiveDefinition> normalizedPassives = new List<PassiveDefinition>();
+
+        for (int index = 0; index < defaultPassives.Count; index++)
+        {
+            PassiveDefinition definition = defaultPassives[index];
+            if (definition == null || string.IsNullOrWhiteSpace(definition.PassiveId))
+                continue;
+
+            if (!uniquePassiveIds.Add(definition.PassiveId))
+                continue;
+
+            normalizedPassives.Add(definition);
+        }
+
+        defaultPassives = normalizedPassives;
     }
 }
-

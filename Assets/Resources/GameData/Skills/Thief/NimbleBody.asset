@@ -14,27 +14,47 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerSkillDefinition
   skillId: shade_nimble_body
   displayName: Nimble Body
+  description:
+  icon: {fileID: 0}
   jobType: 2
   skillType: 0
+  attackFamily: 0
+  executionKind: 0
+  combatTargetingKind: 0
+  defaultProjectileProfile: {fileID: 0}
+  baseMomentumGain: 0
+  baseMomentumCost: 0
+  baseSurgeChanceBonus: 0
+  baseSurgePowerBonus: 0
+  defaultElement: 0
+  levels:
+  - level: 1
+    manaCost: 0
+    cooldown: 0
+    castTime: 0
+    recoveryTime: 0
+    range: 0
+    hitCount: 1
+    damageCoefficient: 1
+    extraSurgeChance: 0
+    extraSurgePower: 0
+    momentumGain: 0
+    momentumCost: 0
+    projectileProfile: {fileID: 0}
+    requiredSelfStateIds: []
+    requiredTargetStateIds: []
+    consumedSelfStateIds: []
+    consumedTargetStateIds: []
+    appliedSelfStateIds: []
+    appliedTargetStateIds: []
   maxLevel: 20
   defaultSlotIndex: -1
-  manaCost: 0
-  cooldown: 0
-  range: 0
   damageMultiplier: 1
-  hitCount: 1
   hitInterval: 0
   animationVariantIndex: 1
   animatorStateName: 
   animationSpeed: 1
   attackDuration: 0.9
-  targetingMode: 1
   maxTargets: 1
   projectileCount: 1
-  projectileSpeed: 0
-  projectileRadius: 0.2
-  projectileLifetime: 0.5
   projectileSpreadAngle: 0
-  projectileSpawnForwardOffset: 0.8
-  projectileSpawnUpOffset: 1
-  projectileVisualScale: 0.2

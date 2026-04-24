@@ -37,6 +37,9 @@ public class EnemyTouchDamage : MonoBehaviour
         if (enemyAI != null && enemyAI.IsDead)
             return;
 
+        if (enemyAI != null && enemyAI.IsExternallyLocked)
+            return;
+
         CheckForPlayerContact();
     }
 

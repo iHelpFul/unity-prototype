@@ -45,7 +45,8 @@ public class PlayerSessionEventPublisher
             CharacterId = characterId,
             CurrentExp = data.CurrentExp,
             RequiredExp = data.RequiredExp,
-            UnspentStatPoints = data.UnspentStatPoints
+            UnspentStatPoints = data.UnspentStatPoints,
+            UnspentSkillPoints = data.UnspentSkillPoints
         });
 
         PublishCurrencyChanged(data, player);
@@ -53,6 +54,7 @@ public class PlayerSessionEventPublisher
         PublishConsumablesChanged(player);
         PublishAllInventoryEntries(player);
         PublishAllEquippedItems(player);
+        PublishActionBarState(data, player);
     }
 
     public void PublishJobState(PlayerRuntimeData data, PlayerCharacter player)
@@ -162,6 +164,38 @@ public class PlayerSessionEventPublisher
             CharacterId = player.CharacterId,
             RedPotions = inventoryService.GetCount(ItemDatabase.RedPotionId),
             BluePotions = inventoryService.GetCount(ItemDatabase.BluePotionId)
+        });
+    }
+
+    public void PublishActionBarState(PlayerRuntimeData data, PlayerCharacter player)
+    {
+        if (data == null || player == null)
+            return;
+
+        PlayerInputBindingUtility.EnsureDefaultInputData(data);
+        if (data.ActionBarSlots == null)
+            return;
+
+        for (int index = 0; index < data.ActionBarSlots.Count; index++)
+        {
+            PublishActionBarSlotChanged(player, data.ActionBarSlots[index]);
+        }
+    }
+
+    public void PublishActionBarSlotChanged(PlayerCharacter player, PlayerActionBarSlotEntry slot)
+    {
+        if (player == null || slot == null)
+            return;
+
+        EventBus.Publish(new PlayerActionBarSlotChangedEvent
+        {
+            Target = player,
+            CharacterId = player.CharacterId,
+            SlotIndex = slot.SlotIndex,
+            AssignmentKind = slot.AssignmentKind,
+            AssignedId = slot.AssignedId,
+            ConsumableType = slot.ConsumableType,
+            SystemAction = slot.SystemAction
         });
     }
 

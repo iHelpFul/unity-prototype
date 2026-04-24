@@ -28,6 +28,7 @@ public class PlayerRuntimeData
     public int Finesse;
     public int HitRate;
     public int UnspentStatPoints;
+    public int UnspentSkillPoints;
 
     public int MaxHP;
     public int CurrentHP;
@@ -44,6 +45,9 @@ public class PlayerRuntimeData
     public List<InventoryEntry> Inventory = new List<InventoryEntry>();
     public List<EquippedItemEntry> EquippedItems = new List<EquippedItemEntry>();
     public List<PlayerSkillEntry> UnlockedSkills = new List<PlayerSkillEntry>();
+    public List<PlayerPassiveEntry> UnlockedPassives = new List<PlayerPassiveEntry>();
+    public List<PlayerActionBarSlotEntry> ActionBarSlots = new List<PlayerActionBarSlotEntry>();
+    public List<PlayerInputBindingEntry> InputBindings = new List<PlayerInputBindingEntry>();
     public List<PlayerQuestProgressEntry> QuestProgress = new List<PlayerQuestProgressEntry>();
     public bool HasPendingJobAdvancement;
 

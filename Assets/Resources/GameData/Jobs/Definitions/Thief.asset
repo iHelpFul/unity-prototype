@@ -14,9 +14,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerJobDefinition
   jobType: 2
   displayName: Shade
+  description: 
+  icon: {fileID: 0}
+  coreStat: 3
+  secondaryStat: 1
+  allowedWeaponTypes: 
   advancementLevelRequirement: 10
   basicAttackProfile: {fileID: 11400000, guid: 2e2898cf7bdc35b45b747a1eb7ae3c23, type: 2}
+  animationProfile: {fileID: 11400000, guid: 60f48ed9643dae84e932d4533f2da706, type: 2}
+  combatFormulaProfile: {fileID: 11400000, guid: 02eea45eaa673c54f9651a1a55fbc1fe, type: 2}
   defaultSkills:
   - {fileID: 11400000, guid: 887f88b7e160e4a41832e88e97651424, type: 2}
   - {fileID: 11400000, guid: eb4b65d3c30710d4093b3fd8861c1099, type: 2}
   - {fileID: 11400000, guid: 0f156011f61469f4ab028edd50646dba, type: 2}
+  defaultPassives: []

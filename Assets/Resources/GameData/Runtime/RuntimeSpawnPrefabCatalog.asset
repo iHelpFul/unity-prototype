@@ -12,7 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6257343e12e79414ab345ab9d6e57a3a, type: 3}
   m_Name: RuntimeSpawnPrefabCatalog
   m_EditorClassIdentifier: Assembly-CSharp::RuntimeSpawnPrefabCatalog
-  skillProjectilePrefab: {fileID: 4128154299569746695, guid: 414a4989b03918443b5013dfde4b12e4, type: 3}
   worldLootPickupPrefab: {fileID: 4128154299569746695, guid: 201e51989efe52b4ea8a595b4d04038a, type: 3}
   mesoWorldLootPickupPrefab: {fileID: 4128154299569746695, guid: b1fba7cfe26d6f840a482e56ffc00e07, type: 3}
   itemWorldLootPickupPrefab: {fileID: 4128154299569746695, guid: c856d7cf8b5a5054a8997286961eeedf, type: 3}

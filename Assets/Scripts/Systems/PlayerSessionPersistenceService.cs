@@ -229,6 +229,8 @@ public class PlayerSessionPersistenceService
         runtimeData.Inventory ??= new List<InventoryEntry>();
         runtimeData.EquippedItems ??= new List<EquippedItemEntry>();
         runtimeData.UnlockedSkills ??= new List<PlayerSkillEntry>();
+        PlayerPassiveRuntimeUtility.EnsureCollections(runtimeData);
+        PlayerInputBindingUtility.EnsureDefaultInputData(runtimeData);
         runtimeData.QuestProgress ??= new List<PlayerQuestProgressEntry>();
         NormalizeQuestProgress(runtimeData.QuestProgress);
 

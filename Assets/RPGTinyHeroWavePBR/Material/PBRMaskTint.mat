@@ -121,7 +121,7 @@ Material:
     - _Color07: {r: 1, g: 0.3075471, b: 0.3075471, a: 0}
     - _Color08: {r: 0, g: 0, b: 0, a: 0}
     - _Color09_SKIN: {r: 0.20870416, g: 0.26778442, b: 0.6603774, a: 0}
-    - _Color09_Skin: {r: 0.745283, g: 0.24992533, b: 0.24256852, a: 0}
+    - _Color09_Skin: {r: 0.6075471, g: 0.6038563, b: 0.18684934, a: 0}
     - _EmissionPower: {r: 1.3568628, g: 1.3568628, b: 1.3568628, a: 0}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

@@ -13,9 +13,10 @@ MonoBehaviour:
   m_Name: RedSlime
   m_EditorClassIdentifier: Assembly-CSharp::EnemyDefinition
   enemyType: 0
-  maxHP: 15
+  maxHP: 3977
   defense: 0
-  expReward: 1000
+  avoidance: 0
+  expReward: 15
   icon: {fileID: 21300000, guid: b0658407979f34d4ea639564b65c5fa7, type: 3}
   contactDamage: 4
   animatedAttackDamage: 12

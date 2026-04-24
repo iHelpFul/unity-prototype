@@ -14,9 +14,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerJobDefinition
   jobType: 3
   displayName: Arcanist
+  description: 
+  icon: {fileID: 0}
+  coreStat: 0
+  secondaryStat: 1
+  allowedWeaponTypes: 
   advancementLevelRequirement: 10
   basicAttackProfile: {fileID: 11400000, guid: e82ecd06196a5194b878af0d0e1a4666, type: 2}
   defaultSkills:
   - {fileID: 11400000, guid: abb9a479c30f037438f95c2a1742dc89, type: 2}
   - {fileID: 11400000, guid: 4394c9df15f83074785cf2f2af700db7, type: 2}
   - {fileID: 11400000, guid: 851ba2d7e97597445af1fd1bfdcf5ded, type: 2}
+  defaultPassives: []

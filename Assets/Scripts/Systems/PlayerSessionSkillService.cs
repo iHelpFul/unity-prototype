@@ -28,13 +28,12 @@ public class PlayerSessionSkillService
         if (data?.UnlockedSkills == null || slotIndex <= 0)
             return null;
 
-        foreach (PlayerSkillEntry skillEntry in data.UnlockedSkills)
-        {
-            if (skillEntry != null && skillEntry.AssignedSlotIndex == slotIndex)
-                return skillEntry;
-        }
-
-        return null;
+        PlayerActionBarSlotEntry actionBarSlot = PlayerInputBindingUtility.GetActionBarSlot(data, slotIndex);
+        return actionBarSlot != null
+            && actionBarSlot.AssignmentKind == PlayerActionBarAssignmentKind.ActiveSkill
+            && !string.IsNullOrWhiteSpace(actionBarSlot.AssignedId)
+            ? FindUnlockedSkill(actionBarSlot.AssignedId)
+            : null;
     }
 
     public PlayerSkillDefinition GetAssignedSkillDefinition(int slotIndex)
@@ -50,27 +49,14 @@ public class PlayerSessionSkillService
         if (data?.UnlockedSkills == null || slotIndex <= 0)
             return false;
 
-        if (!PlayerSkillDatabase.TryGetDefinition(skillId, out _))
+        string normalizedSkillId = string.IsNullOrWhiteSpace(skillId) ? string.Empty : skillId.Trim();
+        if (!PlayerSkillDatabase.TryGetDefinition(normalizedSkillId, out _))
             return false;
 
-        PlayerSkillEntry targetEntry = null;
-
-        foreach (PlayerSkillEntry skillEntry in data.UnlockedSkills)
-        {
-            if (skillEntry == null)
-                continue;
-
-            if (skillEntry.AssignedSlotIndex == slotIndex)
-                skillEntry.AssignedSlotIndex = -1;
-
-            if (skillEntry.SkillId == skillId)
-                targetEntry = skillEntry;
-        }
-
-        if (targetEntry == null)
+        if (FindUnlockedSkill(normalizedSkillId) == null)
             return false;
 
-        targetEntry.AssignedSlotIndex = slotIndex;
+        PlayerInputBindingUtility.AssignActiveSkillToActionBarSlot(data, normalizedSkillId, slotIndex);
         return true;
     }
 
@@ -89,8 +75,11 @@ public class PlayerSessionSkillService
             if (skillEntry != null && skillEntry.SkillId == definition.SkillId)
             {
                 skillEntry.SkillLevel = Mathf.Clamp(skillLevel, 1, definition.MaxLevel);
-                if (skillEntry.AssignedSlotIndex <= 0 && definition.DefaultSlotIndex > 0)
-                    skillEntry.AssignedSlotIndex = definition.DefaultSlotIndex;
+                if (PlayerInputBindingUtility.ResolveActionBarSlotForSkill(data, definition.SkillId) <= 0
+                    && definition.DefaultSlotIndex > 0)
+                {
+                    PlayerInputBindingUtility.AssignActiveSkillToActionBarSlot(data, definition.SkillId, definition.DefaultSlotIndex);
+                }
 
                 return true;
             }
@@ -99,9 +88,11 @@ public class PlayerSessionSkillService
         data.UnlockedSkills.Add(new PlayerSkillEntry
         {
             SkillId = definition.SkillId,
-            SkillLevel = Mathf.Clamp(skillLevel, 1, definition.MaxLevel),
-            AssignedSlotIndex = definition.DefaultSlotIndex
+            SkillLevel = Mathf.Clamp(skillLevel, 1, definition.MaxLevel)
         });
+
+        if (definition.DefaultSlotIndex > 0)
+            PlayerInputBindingUtility.AssignActiveSkillToActionBarSlot(data, definition.SkillId, definition.DefaultSlotIndex);
 
         return true;
     }
@@ -126,8 +117,11 @@ public class PlayerSessionSkillService
                 {
                     alreadyUnlocked = true;
 
-                    if (existingSkill.AssignedSlotIndex <= 0 && defaultSkill.DefaultSlotIndex > 0)
-                        existingSkill.AssignedSlotIndex = defaultSkill.DefaultSlotIndex;
+                    if (PlayerInputBindingUtility.ResolveActionBarSlotForSkill(data, defaultSkill.SkillId) <= 0
+                        && defaultSkill.DefaultSlotIndex > 0)
+                    {
+                        PlayerInputBindingUtility.AssignActiveSkillToActionBarSlot(data, defaultSkill.SkillId, defaultSkill.DefaultSlotIndex);
+                    }
 
                     break;
                 }
@@ -139,9 +133,11 @@ public class PlayerSessionSkillService
             data.UnlockedSkills.Add(new PlayerSkillEntry
             {
                 SkillId = defaultSkill.SkillId,
-                SkillLevel = 1,
-                AssignedSlotIndex = defaultSkill.DefaultSlotIndex
+                SkillLevel = 1
             });
+
+            if (defaultSkill.DefaultSlotIndex > 0)
+                PlayerInputBindingUtility.AssignActiveSkillToActionBarSlot(data, defaultSkill.SkillId, defaultSkill.DefaultSlotIndex);
         }
     }
 
@@ -163,6 +159,25 @@ public class PlayerSessionSkillService
     private void EnsureSkillCollections()
     {
         if (data != null)
+        {
             data.UnlockedSkills ??= new List<PlayerSkillEntry>();
+            PlayerInputBindingUtility.EnsureDefaultInputData(data);
+        }
+    }
+
+    private PlayerSkillEntry FindUnlockedSkill(string skillId)
+    {
+        if (data?.UnlockedSkills == null || string.IsNullOrWhiteSpace(skillId))
+            return null;
+
+        string normalizedSkillId = skillId.Trim();
+        for (int index = 0; index < data.UnlockedSkills.Count; index++)
+        {
+            PlayerSkillEntry skillEntry = data.UnlockedSkills[index];
+            if (skillEntry != null && skillEntry.SkillId == normalizedSkillId)
+                return skillEntry;
+        }
+
+        return null;
     }
 }

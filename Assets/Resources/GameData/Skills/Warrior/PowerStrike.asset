@@ -14,27 +14,47 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerSkillDefinition
   skillId: vanguard_power_strike
   displayName: Power Strike
+  description:
+  icon: {fileID: 0}
   jobType: 1
   skillType: 2
+  attackFamily: 0
+  executionKind: 1
+  combatTargetingKind: 3
+  defaultProjectileProfile: {fileID: 0}
+  baseMomentumGain: 0
+  baseMomentumCost: 0
+  baseSurgeChanceBonus: 0
+  baseSurgePowerBonus: 1.5
+  defaultElement: 0
+  levels:
+  - level: 1
+    manaCost: 0
+    cooldown: 0.5
+    castTime: 0.3
+    recoveryTime: 0
+    range: 15
+    hitCount: 1
+    damageCoefficient: 0.65
+    extraSurgeChance: 100
+    extraSurgePower: 0
+    momentumGain: 0
+    momentumCost: 0
+    projectileProfile: {fileID: 0}
+    requiredSelfStateIds: []
+    requiredTargetStateIds: []
+    consumedSelfStateIds: []
+    consumedTargetStateIds: []
+    appliedSelfStateIds: []
+    appliedTargetStateIds: []
   maxLevel: 20
   defaultSlotIndex: 1
-  manaCost: 8
-  cooldown: 0
-  range: 1.9
   damageMultiplier: 1.85
-  hitCount: 1
   hitInterval: 0
   animationVariantIndex: 4
   animatorStateName: Combo04_InPlace_SingleSword
   animationSpeed: 1.08
   attackDuration: 0.92
-  targetingMode: 0
-  maxTargets: 3
+  maxTargets: 8
   projectileCount: 1
-  projectileSpeed: 0
-  projectileRadius: 0.2
-  projectileLifetime: 0.5
   projectileSpreadAngle: 0
-  projectileSpawnForwardOffset: 0.8
-  projectileSpawnUpOffset: 1
-  projectileVisualScale: 0.2

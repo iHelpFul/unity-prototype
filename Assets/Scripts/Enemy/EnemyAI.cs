@@ -64,6 +64,7 @@ public class EnemyAI : MonoBehaviour
 
     public bool IsDead => isDead;
     public bool IsAggroActive => isAggroActive;
+    public bool IsExternallyLocked => externalMovementLockTimer > 0f;
 
     private void Awake()
     {
@@ -293,7 +294,17 @@ public class EnemyAI : MonoBehaviour
 
     public void NotifyExternalKnockback(float duration)
     {
-        externalMovementLockTimer = Mathf.Max(externalMovementLockTimer, duration);
+        ApplyExternalMovementLock(duration);
+    }
+
+    public void NotifyHitReactionLock(float duration)
+    {
+        ApplyExternalMovementLock(duration);
+    }
+
+    private void ApplyExternalMovementLock(float duration)
+    {
+        externalMovementLockTimer = Mathf.Max(externalMovementLockTimer, Mathf.Max(0f, duration));
 
         if (isAttackInProgress)
             EndAnimatedAttack();

@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using UnityEngine;
 
 public enum PlayerBasicAttackSelectionMode
@@ -11,6 +10,26 @@ public enum PlayerBasicAttackSelectionMode
 public class PlayerBasicAttackProfile : ScriptableObject
 {
     [SerializeField] private PlayerJobType jobType = PlayerJobType.Drifter;
+    [SerializeField] private string attackId = string.Empty;
+    [SerializeField] private string displayName = "New Basic Attack";
+    [SerializeField] private CombatAttackFamily attackFamily = CombatAttackFamily.None;
+    [SerializeField] private CombatExecutionKind executionKind = CombatExecutionKind.Melee;
+    [SerializeField] private CombatTargetingKind targetingKind = CombatTargetingKind.SingleTarget;
+    [SerializeField] private PresentationCueSet presentationCueSet;
+    [SerializeField] private ProjectileProfile defaultProjectileProfile;
+    [SerializeField] private float baseRange = 1.5f;
+    [SerializeField] private int hitCount = 1;
+    [SerializeField] private float damageCoefficient = 1f;
+    [SerializeField] private float windupTime = 0.15f;
+    [SerializeField] private float activeTime = 0.1f;
+    [SerializeField] private float recoveryTime = 0.3f;
+    [SerializeField] private bool hasTimingWindow;
+    [SerializeField] private float timingWindowStart = 0.1f;
+    [SerializeField] private float timingWindowEnd = 0.2f;
+    [SerializeField] private int momentumGainOnValidHit = 1;
+    [SerializeField] private float baseSurgeChanceBonus;
+    [SerializeField] private float baseSurgePowerBonus;
+    [SerializeField] private CombatElementType defaultElement = CombatElementType.None;
     [SerializeField] private int animationVariantCount = 1;
     [SerializeField] private int maxChainCount = 1;
     [SerializeField] private PlayerBasicAttackSelectionMode selectionMode = PlayerBasicAttackSelectionMode.Sequential;
@@ -25,6 +44,26 @@ public class PlayerBasicAttackProfile : ScriptableObject
     [SerializeField] private bool supportsComboCounter;
 
     public PlayerJobType JobType => jobType;
+    public string AttackId => attackId;
+    public string DisplayName => displayName;
+    public CombatAttackFamily AttackFamily => attackFamily;
+    public CombatExecutionKind ExecutionKind => executionKind;
+    public CombatTargetingKind TargetingKind => targetingKind;
+    public PresentationCueSet PresentationCueSet => presentationCueSet;
+    public ProjectileProfile DefaultProjectileProfile => defaultProjectileProfile;
+    public float BaseRange => baseRange;
+    public int HitCount => hitCount;
+    public float DamageCoefficient => damageCoefficient;
+    public float WindupTime => windupTime;
+    public float ActiveTime => activeTime;
+    public float RecoveryTime => recoveryTime;
+    public bool HasTimingWindow => hasTimingWindow;
+    public float TimingWindowStart => timingWindowStart;
+    public float TimingWindowEnd => timingWindowEnd;
+    public int MomentumGainOnValidHit => momentumGainOnValidHit;
+    public float BaseSurgeChanceBonus => baseSurgeChanceBonus;
+    public float BaseSurgePowerBonus => baseSurgePowerBonus;
+    public CombatElementType DefaultElement => defaultElement;
     public int AnimationVariantCount => animationVariantCount;
     public int MaxChainCount => maxChainCount;
     public PlayerBasicAttackSelectionMode SelectionMode => selectionMode;
@@ -38,71 +77,6 @@ public class PlayerBasicAttackProfile : ScriptableObject
     public float ComboDamageBonusPerStack => comboDamageBonusPerStack;
     public bool SupportsComboCounter => supportsComboCounter;
 
-    public void Initialize(
-        PlayerJobType newJobType,
-        int newAnimationVariantCount,
-        int newMaxChainCount,
-        PlayerBasicAttackSelectionMode newSelectionMode,
-        float newAttackCooldown,
-        float newMaxAttackDuration,
-        float newAttackAnimationSpeed,
-        int newMaxTargets,
-        float newBasicDamageMultiplier,
-        int newMaxComboCounter,
-        float newComboResetDelay,
-        float newComboDamageBonusPerStack,
-        bool newSupportsComboCounter)
-    {
-        jobType = newJobType;
-        animationVariantCount = newAnimationVariantCount;
-        maxChainCount = newMaxChainCount;
-        selectionMode = newSelectionMode;
-        attackCooldown = newAttackCooldown;
-        maxAttackDuration = newMaxAttackDuration;
-        attackAnimationSpeed = newAttackAnimationSpeed;
-        maxTargets = newMaxTargets;
-        basicDamageMultiplier = newBasicDamageMultiplier;
-        maxComboCounter = newMaxComboCounter;
-        comboResetDelay = newComboResetDelay;
-        comboDamageBonusPerStack = newComboDamageBonusPerStack;
-        supportsComboCounter = newSupportsComboCounter;
-        Sanitize();
-    }
-
-    public static PlayerBasicAttackProfile CreateTransient(
-        PlayerJobType newJobType,
-        int newAnimationVariantCount,
-        int newMaxChainCount,
-        PlayerBasicAttackSelectionMode newSelectionMode,
-        float newAttackCooldown,
-        float newMaxAttackDuration,
-        float newAttackAnimationSpeed,
-        int newMaxTargets,
-        float newBasicDamageMultiplier,
-        int newMaxComboCounter,
-        float newComboResetDelay,
-        float newComboDamageBonusPerStack,
-        bool newSupportsComboCounter)
-    {
-        PlayerBasicAttackProfile profile = CreateInstance<PlayerBasicAttackProfile>();
-        profile.hideFlags = HideFlags.HideAndDontSave;
-        profile.Initialize(
-            newJobType,
-            newAnimationVariantCount,
-            newMaxChainCount,
-            newSelectionMode,
-            newAttackCooldown,
-            newMaxAttackDuration,
-            newAttackAnimationSpeed,
-            newMaxTargets,
-            newBasicDamageMultiplier,
-            newMaxComboCounter,
-            newComboResetDelay,
-            newComboDamageBonusPerStack,
-            newSupportsComboCounter);
-        return profile;
-    }
-
     private void OnValidate()
     {
         Sanitize();
@@ -110,6 +84,21 @@ public class PlayerBasicAttackProfile : ScriptableObject
 
     private void Sanitize()
     {
+        attackId = string.IsNullOrWhiteSpace(attackId)
+            ? jobType.ToString().ToLowerInvariant() + "_basic"
+            : attackId.Trim();
+        displayName = string.IsNullOrWhiteSpace(displayName) ? jobType.ToString() + " Basic Attack" : displayName.Trim();
+        baseRange = Mathf.Max(0f, baseRange);
+        hitCount = Mathf.Max(1, hitCount);
+        damageCoefficient = Mathf.Max(0.05f, damageCoefficient);
+        windupTime = Mathf.Max(0f, windupTime);
+        activeTime = Mathf.Max(0f, activeTime);
+        recoveryTime = Mathf.Max(0f, recoveryTime);
+        timingWindowStart = Mathf.Max(0f, timingWindowStart);
+        timingWindowEnd = Mathf.Max(timingWindowStart, timingWindowEnd);
+        momentumGainOnValidHit = Mathf.Max(0, momentumGainOnValidHit);
+        baseSurgeChanceBonus = Mathf.Max(0f, baseSurgeChanceBonus);
+        baseSurgePowerBonus = Mathf.Max(0f, baseSurgePowerBonus);
         animationVariantCount = Mathf.Max(1, animationVariantCount);
         maxChainCount = Mathf.Max(1, maxChainCount);
         attackCooldown = Mathf.Max(0f, attackCooldown);
@@ -127,228 +116,6 @@ public class PlayerBasicAttackProfile : ScriptableObject
             comboResetDelay = 0f;
             comboDamageBonusPerStack = 0f;
         }
-    }
-}
-
-public static class PlayerJobCombatProfiles
-{
-    private const string ResourcePath = "GameData/PlayerJobDatabase";
-
-    private static Dictionary<PlayerJobType, PlayerJobDefinition> definitions;
-    private static Dictionary<PlayerJobType, PlayerJobDefinition> fallbackDefinitions;
-    private static PlayerJobDatabaseAsset asset;
-
-    public static PlayerBasicAttackProfile GetBasicAttackProfile(PlayerJobType jobType)
-    {
-        PlayerJobDefinition definition = GetJobDefinition(jobType);
-        if (definition != null && definition.BasicAttackProfile != null)
-            return definition.BasicAttackProfile;
-
-        return GetFallbackJobDefinition(jobType)?.BasicAttackProfile;
-    }
-
-    public static IReadOnlyList<PlayerSkillDefinition> GetDefaultSkillsForJob(PlayerJobType jobType)
-    {
-        PlayerJobDefinition definition = GetJobDefinition(jobType);
-        if (definition != null && definition.DefaultSkills != null && definition.DefaultSkills.Count > 0)
-        {
-            List<PlayerSkillDefinition> sortedSkills = new List<PlayerSkillDefinition>();
-
-            for (int index = 0; index < definition.DefaultSkills.Count; index++)
-            {
-                PlayerSkillDefinition skill = definition.DefaultSkills[index];
-                if (skill != null)
-                    sortedSkills.Add(skill);
-            }
-
-            sortedSkills.Sort((left, right) => left.DefaultSlotIndex.CompareTo(right.DefaultSlotIndex));
-            return sortedSkills;
-        }
-
-        return PlayerSkillDatabase.GetDefaultSkillsForJob(jobType);
-    }
-
-    public static PlayerJobDefinition GetJobDefinition(PlayerJobType jobType)
-    {
-        EnsureLoaded();
-
-        if (definitions != null && definitions.TryGetValue(jobType, out PlayerJobDefinition definition) && definition != null)
-            return definition;
-
-        return GetFallbackJobDefinition(jobType);
-    }
-
-    public static string GetDisplayName(PlayerJobType jobType)
-    {
-        PlayerJobDefinition definition = GetJobDefinition(jobType);
-        return definition != null && !string.IsNullOrWhiteSpace(definition.DisplayName)
-            ? definition.DisplayName
-            : jobType.ToString();
-    }
-
-    public static bool IsJobAdvancementAvailable(PlayerRuntimeData data)
-    {
-        if (data == null || data.CurrentJob != PlayerJobType.Drifter)
-            return false;
-
-        PlayerJobDefinition noviceDefinition = GetJobDefinition(PlayerJobType.Drifter);
-        int requiredLevel = noviceDefinition != null
-            ? Mathf.Max(1, noviceDefinition.AdvancementLevelRequirement)
-            : 10;
-
-        return data.Level >= requiredLevel;
-    }
-
-    public static void ResetCache()
-    {
-        definitions = null;
-        fallbackDefinitions = null;
-        asset = null;
-    }
-
-    private static void EnsureLoaded()
-    {
-        if (definitions != null)
-            return;
-
-        asset = Resources.Load<PlayerJobDatabaseAsset>(ResourcePath);
-        definitions = new Dictionary<PlayerJobType, PlayerJobDefinition>();
-
-        if (asset?.Definitions == null)
-            return;
-
-        for (int index = 0; index < asset.Definitions.Count; index++)
-        {
-            PlayerJobDefinition definition = asset.Definitions[index];
-            if (definition == null)
-                continue;
-
-            definitions[definition.JobType] = definition;
-        }
-    }
-
-    private static PlayerJobDefinition GetFallbackJobDefinition(PlayerJobType jobType)
-    {
-        fallbackDefinitions ??= CreateFallbackDefinitions();
-
-        if (fallbackDefinitions.TryGetValue(jobType, out PlayerJobDefinition definition))
-            return definition;
-
-        return fallbackDefinitions[PlayerJobType.Drifter];
-    }
-
-    private static Dictionary<PlayerJobType, PlayerJobDefinition> CreateFallbackDefinitions()
-    {
-        PlayerBasicAttackProfile noviceProfile = PlayerBasicAttackProfile.CreateTransient(
-            PlayerJobType.Drifter,
-            2,
-            2,
-            PlayerBasicAttackSelectionMode.Random,
-            0.72f,
-            1.1f,
-            0.8f,
-            1,
-            1f,
-            0,
-            0f,
-            0f,
-            false);
-
-        PlayerBasicAttackProfile warriorProfile = PlayerBasicAttackProfile.CreateTransient(
-            PlayerJobType.Vanguard,
-            5,
-            5,
-            PlayerBasicAttackSelectionMode.Sequential,
-            0.4f,
-            1.2f,
-            1f,
-            1,
-            1.18f,
-            10,
-            4f,
-            0.05f,
-            true);
-
-        PlayerBasicAttackProfile thiefProfile = PlayerBasicAttackProfile.CreateTransient(
-            PlayerJobType.Shade,
-            2,
-            2,
-            PlayerBasicAttackSelectionMode.Random,
-            0.6f,
-            1f,
-            0.86f,
-            1,
-            1f,
-            0,
-            0f,
-            0f,
-            false);
-
-        PlayerBasicAttackProfile mageProfile = PlayerBasicAttackProfile.CreateTransient(
-            PlayerJobType.Arcanist,
-            2,
-            2,
-            PlayerBasicAttackSelectionMode.Random,
-            0.76f,
-            1.12f,
-            0.78f,
-            1,
-            1f,
-            0,
-            0f,
-            0f,
-            false);
-
-        return new Dictionary<PlayerJobType, PlayerJobDefinition>
-        {
-            [PlayerJobType.Drifter] = PlayerJobDefinition.CreateTransient(
-                PlayerJobType.Drifter,
-                "Drifter",
-                10,
-                noviceProfile,
-                new PlayerSkillDefinition[0]),
-            [PlayerJobType.Vanguard] = PlayerJobDefinition.CreateTransient(
-                PlayerJobType.Vanguard,
-                "Vanguard",
-                10,
-                warriorProfile,
-                ResolveDefaultSkills(
-                    PlayerSkillDatabase.VanguardPowerStrikeId,
-                    PlayerSkillDatabase.VanguardRageId,
-                    PlayerSkillDatabase.VanguardComboMasteryId)),
-            [PlayerJobType.Shade] = PlayerJobDefinition.CreateTransient(
-                PlayerJobType.Shade,
-                "Shade",
-                10,
-                thiefProfile,
-                ResolveDefaultSkills(
-                    PlayerSkillDatabase.ShadeLuckySevenId,
-                    PlayerSkillDatabase.ShadeHasteId,
-                    PlayerSkillDatabase.ShadeNimbleBodyId)),
-            [PlayerJobType.Arcanist] = PlayerJobDefinition.CreateTransient(
-                PlayerJobType.Arcanist,
-                "Arcanist",
-                10,
-                mageProfile,
-                ResolveDefaultSkills(
-                    PlayerSkillDatabase.ArcanistMagicClawId,
-                    PlayerSkillDatabase.ArcanistMagicGuardId,
-                    PlayerSkillDatabase.ArcanistMpBoostId))
-        };
-    }
-
-    private static IReadOnlyList<PlayerSkillDefinition> ResolveDefaultSkills(params string[] skillIds)
-    {
-        List<PlayerSkillDefinition> defaultSkills = new List<PlayerSkillDefinition>();
-
-        for (int index = 0; index < skillIds.Length; index++)
-        {
-            PlayerSkillDefinition definition = PlayerSkillDatabase.GetDefinition(skillIds[index]);
-            if (definition != null)
-                defaultSkills.Add(definition);
-        }
-
-        return defaultSkills;
     }
 }
 

@@ -55,7 +55,12 @@ public class PlayerMovementController : MonoBehaviour
 
         UpdateCameraVectors();
 
-        Vector2 finalInput = character != null && character.IsStunned ? Vector2.zero : moveInput;
+        bool canApplyHorizontalMovement = character != null
+            && character.ActionStateController != null
+            && character.ActionStateController.CanApplyHorizontalMovement
+            && !character.IsStunned;
+
+        Vector2 finalInput = canApplyHorizontalMovement ? moveInput : Vector2.zero;
 
         bool isGrounded = motor != null && motor.IsGrounded;
 
@@ -70,8 +75,13 @@ public class PlayerMovementController : MonoBehaviour
         if (motor != null)
             motor.ApplyMovement(movementModel.Velocity);
 
-        if (character == null || !character.IsStunned)
-            HandleRotation(deltaTime);
+        if (character != null
+            && !character.IsStunned
+            && character.ActionStateController != null
+            && character.ActionStateController.CanRotateFromMovementInput)
+        {
+            HandleRotation();
+        }
     }
 
     private void UpdateCameraVectors()
@@ -96,7 +106,7 @@ public class PlayerMovementController : MonoBehaviour
         cameraRight.Normalize();
     }
 
-    private void HandleRotation(float deltaTime)
+    private void HandleRotation()
     {
         if (visual == null)
             return;
@@ -108,12 +118,7 @@ public class PlayerMovementController : MonoBehaviour
             return;
 
         Quaternion targetRotation = Quaternion.LookRotation(inputDirection);
-
-        visual.rotation = Quaternion.RotateTowards(
-            visual.rotation,
-            targetRotation,
-            720f * deltaTime
-        );
+        visual.rotation = targetRotation;
     }
 
     private void OnMove(MoveInputEvent e)
@@ -129,8 +134,14 @@ public class PlayerMovementController : MonoBehaviour
         if (!MatchesInputPlayer(e.Player, e.CharacterId))
             return;
 
-        if (character == null || character.IsStunned || character.IsDead)
+        if (character == null
+            || character.IsStunned
+            || character.IsDead
+            || character.ActionStateController == null
+            || !character.ActionStateController.CanStartJump)
+        {
             return;
+        }
 
         EnsureMovementModel();
         movementModel.PressJump();

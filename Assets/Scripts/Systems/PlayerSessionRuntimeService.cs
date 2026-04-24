@@ -6,6 +6,8 @@ public class PlayerSessionRuntimeService
     private readonly PlayerSessionInventoryService inventoryService;
     private readonly PlayerSessionEquipmentService equipmentService;
     private readonly PlayerSessionSkillService skillService;
+    private readonly PlayerSessionPassiveService passiveService;
+    private readonly PlayerSessionActionBarService actionBarService;
     private readonly PlayerSessionMapStateService mapStateService;
 
     private PlayerRuntimeData data;
@@ -14,11 +16,15 @@ public class PlayerSessionRuntimeService
         PlayerSessionInventoryService inventoryService,
         PlayerSessionEquipmentService equipmentService,
         PlayerSessionSkillService skillService,
+        PlayerSessionPassiveService passiveService,
+        PlayerSessionActionBarService actionBarService,
         PlayerSessionMapStateService mapStateService)
     {
         this.inventoryService = inventoryService;
         this.equipmentService = equipmentService;
         this.skillService = skillService;
+        this.passiveService = passiveService;
+        this.actionBarService = actionBarService;
         this.mapStateService = mapStateService;
     }
 
@@ -68,6 +74,8 @@ public class PlayerSessionRuntimeService
         inventoryService.SetRuntimeData(data);
         equipmentService.SetRuntimeData(data, inventoryService);
         skillService.SetRuntimeData(data);
+        passiveService.SetRuntimeData(data);
+        actionBarService.SetRuntimeData(data);
         mapStateService.SetRuntimeData(data);
     }
 
@@ -84,6 +92,9 @@ public class PlayerSessionRuntimeService
 
         if (data.UnspentStatPoints < 0)
             data.UnspentStatPoints = 0;
+
+        if (data.UnspentSkillPoints < 0)
+            data.UnspentSkillPoints = 0;
 
         if (data.Might < 0)
             data.Might = 0;
@@ -119,6 +130,8 @@ public class PlayerSessionRuntimeService
 
         inventoryService.MigrateLegacyConsumables();
         skillService.EnsureDefaultSkillsForJob(data.CurrentJob);
+        passiveService.EnsureDefaultPassivesForJob(data.CurrentJob);
+        PlayerInputBindingUtility.EnsureDefaultInputData(data);
 
         if (string.IsNullOrWhiteSpace(data.CurrentMapId))
             data.CurrentMapId = !string.IsNullOrWhiteSpace(defaultMapId) ? defaultMapId : activeSceneName ?? string.Empty;

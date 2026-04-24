@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b66f16f2ceb144f4ea00224341192a6a, type: 3}
+  m_Name: SO_VFXLibrary
+  m_EditorClassIdentifier: Assembly-CSharp::VfxLibrary
+  Entries:
+  - Type: 2
+    Prefabs:
+    - {fileID: 6988614892826202411, guid: 7b34a2c079bfb014db8bfc6c92241a13, type: 3}
+    MinScale: 1.1
+    MaxScale: 1.3
+  - Type: 0
+    Prefabs:
+    - {fileID: 5350078440463961981, guid: 727f997d8b02a5949909e7ee9f86aae0, type: 3}
+    MinScale: 0.5
+    MaxScale: 0.7
+  - Type: 4
+    Prefabs:
+    - {fileID: 5350078440463961981, guid: 727f997d8b02a5949909e7ee9f86aae0, type: 3}
+    MinScale: 0.5
+    MaxScale: 0.7
+  - Type: 5
+    Prefabs:
+    - {fileID: 2504214343621411470, guid: 3ed0d324122d7b24eaec75c55c74aafc, type: 3}
+    MinScale: 0.5
+    MaxScale: 0.7

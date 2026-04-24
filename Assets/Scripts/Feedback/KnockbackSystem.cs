@@ -15,6 +15,9 @@ public class KnockbackSystem : MonoBehaviour
 
     private void OnKnockback(CharacterKnockbackEvent e)
     {
+        if (e.Target == null || !e.Target.gameObject.activeInHierarchy)
+            return;
+
         StartCoroutine(ApplyKnockback(e));
     }
 
@@ -23,7 +26,7 @@ public class KnockbackSystem : MonoBehaviour
         CharacterController controller = e.Target.GetComponent<CharacterController>();
         EnemyAI enemyAI = e.Target.GetComponent<EnemyAI>();
 
-        if (controller == null)
+        if (controller == null || !controller.enabled || !controller.gameObject.activeInHierarchy)
             yield break;
 
         enemyAI?.NotifyExternalKnockback(e.Duration);
@@ -37,7 +40,7 @@ public class KnockbackSystem : MonoBehaviour
 
         while (timer < duration)
         {
-            if (controller == null)
+            if (controller == null || !controller.enabled || !controller.gameObject.activeInHierarchy)
                 yield break;
 
             timer += Time.deltaTime;
@@ -56,12 +59,13 @@ public class KnockbackSystem : MonoBehaviour
                 startPosition.z);
 
             Vector3 move = targetPosition - e.Target.position;
-            controller.Move(move);
+            if (move.sqrMagnitude > 0.000001f)
+                controller.Move(move);
 
             yield return null;
         }
 
-        if (controller == null)
+        if (controller == null || !controller.enabled || !controller.gameObject.activeInHierarchy)
             yield break;
 
         float finalX = startPosition.x + direction * force;
@@ -74,6 +78,7 @@ public class KnockbackSystem : MonoBehaviour
             startPosition.z);
 
         Vector3 correction = finalPosition - e.Target.position;
-        controller.Move(correction);
+        if (correction.sqrMagnitude > 0.000001f)
+            controller.Move(correction);
     }
 }

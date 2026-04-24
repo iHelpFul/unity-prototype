@@ -14,6 +14,8 @@ public class EnemyStats
     [SerializeField, Min(1)] private int maxHP = 30;
     [FormerlySerializedAs("Defense")]
     [SerializeField, Min(0)] private int defense = 1;
+    [Tooltip("Reduces incoming hit chance. 0 means this enemy cannot Evade unless the combat formula disables guaranteed hits.")]
+    [SerializeField, Min(0)] private int avoidance;
     [SerializeField, Min(0)] private int expReward = 10;
 
     [Header("Damage")]
@@ -44,6 +46,7 @@ public class EnemyStats
     public EnemyDefinition Definition => definition != null ? definition : EnemyDefinitionDatabase.GetDefinition(enemyType);
     public int MaxHP => preferDefinitionValues && Definition != null ? Definition.MaxHP : maxHP;
     public int Defense => preferDefinitionValues && Definition != null ? Definition.Defense : defense;
+    public int Avoidance => preferDefinitionValues && Definition != null ? Definition.Avoidance : avoidance;
     public int ExpReward => preferDefinitionValues && Definition != null ? Definition.ExpReward : expReward > 0 ? expReward : GetResolvedExpReward();
     public int ContactDamage => preferDefinitionValues && Definition != null ? Definition.ContactDamage : contactDamage > 0 ? contactDamage : GetResolvedContactDamage();
     public int AnimatedAttackDamage => preferDefinitionValues && Definition != null ? Definition.AnimatedAttackDamage : animatedAttackDamage > 0 ? animatedAttackDamage : GetResolvedAnimatedAttackDamage();
@@ -80,6 +83,7 @@ public class EnemyStats
 
         maxHP = Mathf.Max(1, maxHP);
         defense = Mathf.Max(0, defense);
+        avoidance = Mathf.Max(0, avoidance);
         expReward = Mathf.Max(0, expReward);
 
         contactDamage = Mathf.Max(0, contactDamage);

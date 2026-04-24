@@ -8,6 +8,9 @@ public class PlayerCombatController : MonoBehaviour
     {
         public PlayerSkillDefinition Definition;
         public EnemyHealth LockedTarget;
+        public AttackPayload Payload;
+        public int ResolvedSkillLevel;
+        public CommittedEnemyHitPacket[] CommittedHitPackets;
     }
 
     private PlayerCharacter character;
@@ -17,12 +20,12 @@ public class PlayerCombatController : MonoBehaviour
     private readonly PlayerHitApplicationService hitApplicationService = new PlayerHitApplicationService();
 
     private PlayerCombatModule combatModule;
+    private ProjectileSystem projectileSystem;
     private PlayerProgressionModule progression;
     private PlayerTargetingService targetingService;
     private PendingSkillCast pendingSkillCast;
     private Coroutine queuedSkillHitsRoutine;
 
-    private float attackRange;
     private LayerMask enemyLayer;
     private float skillFrontDotThreshold;
     private float skillAreaForwardOffsetFactor;
@@ -40,7 +43,6 @@ public class PlayerCombatController : MonoBehaviour
         PlayerCharacter ownerCharacter,
         Transform visualTransform,
         PlayerAnimationController playerAnimationController,
-        float basicAttackRange,
         LayerMask targetEnemyLayer,
         float frontDotThreshold,
         float areaForwardOffsetFactor,
@@ -52,7 +54,6 @@ public class PlayerCombatController : MonoBehaviour
         character = ownerCharacter;
         visual = visualTransform != null ? visualTransform : transform;
         animationController = playerAnimationController;
-        attackRange = basicAttackRange;
         enemyLayer = targetEnemyLayer;
         skillFrontDotThreshold = frontDotThreshold;
         skillAreaForwardOffsetFactor = areaForwardOffsetFactor;
@@ -62,6 +63,10 @@ public class PlayerCombatController : MonoBehaviour
         attackLowerHeightAllowance = lowerHeightAllowance;
 
         combatModule ??= new PlayerCombatModule();
+        projectileSystem ??= GetComponent<ProjectileSystem>();
+        if (projectileSystem == null)
+            projectileSystem = gameObject.AddComponent<ProjectileSystem>();
+
         CreateTargetingService();
         RefreshProgression();
         SyncCombatProfile();
@@ -84,10 +89,31 @@ public class PlayerCombatController : MonoBehaviour
 
     public void Tick(float deltaTime)
     {
-        if (combatModule == null || character == null || character.IsStunned)
+        if (combatModule == null || character == null)
             return;
 
+        bool wasAttacking = combatModule.IsAttacking;
+        if (character.IsStunned
+            && (character.ActionStateController == null
+                || !character.ActionStateController.CanContinueCombatWhileStunned))
+        {
+            return;
+        }
+
         combatModule.Tick(deltaTime);
+
+        if (wasAttacking
+            && !combatModule.IsAttacking)
+        {
+            if (pendingSkillCast != null)
+            {
+                CancelPendingSkillState(false);
+                return;
+            }
+
+            if (queuedSkillHitsRoutine == null)
+                CompleteCurrentActionState();
+        }
     }
 
     public void HandleJumpPressed()
@@ -95,8 +121,25 @@ public class PlayerCombatController : MonoBehaviour
         if (combatModule == null || !combatModule.IsAttacking)
             return;
 
+        // Once a skill has started but has not committed yet, jump should not cancel it.
+        if (character != null
+            && character.ActionStateController != null
+            && !character.ActionStateController.CanJumpCancelCurrentAction)
+            return;
+
+        if (queuedSkillHitsRoutine != null
+            && character != null
+            && character.ActionStateController != null
+            && character.ActionStateController.IsSkillCommitted)
+        {
+            combatModule.EndAttack();
+            CompleteCurrentActionState();
+            return;
+        }
+
         CancelPendingSkillState();
         combatModule.EndAttack();
+        CompleteCurrentActionState();
     }
 
     public void OnHitFrame()
@@ -104,22 +147,49 @@ public class PlayerCombatController : MonoBehaviour
         if (character == null || !character.IsLocalPlayer)
             return;
 
+        if (character.ActionStateController != null
+            && !character.ActionStateController.CanProcessAttackHitFrame)
+        {
+            return;
+        }
+
         if (pendingSkillCast != null)
         {
             ExecutePendingSkillCast();
             return;
         }
 
+        PlayerBasicAttackProfile basicAttackProfile = character.GetBasicAttackProfile();
+        PublishPresentationCue(
+            basicAttackProfile != null ? basicAttackProfile.PresentationCueSet : null,
+            CombatCuePhase.Release,
+            character.transform.position);
+
+        if (ShouldUseBasicAttackProjectile(basicAttackProfile))
+        {
+            SpawnBasicAttackProjectile(basicAttackProfile);
+            return;
+        }
+
         bool landedHit = TryHitEnemies();
 
         if (landedHit)
+        {
+            GainMomentumFromBasicAttack();
             combatModule?.RegisterSuccessfulBasicHit();
+        }
     }
 
     public void OnComboWindow()
     {
         if (character == null || !character.IsLocalPlayer || combatModule == null)
             return;
+
+        if (character.ActionStateController != null
+            && !character.ActionStateController.CanProcessComboWindow)
+        {
+            return;
+        }
 
         combatModule.OnComboWindow();
     }
@@ -132,6 +202,7 @@ public class PlayerCombatController : MonoBehaviour
         pendingSkillCast = null;
         animationController?.ClearSkillAnimationOverride();
         combatModule?.EndAttack();
+        CompleteCurrentActionState();
     }
 
     private void OnEnable()
@@ -139,6 +210,7 @@ public class PlayerCombatController : MonoBehaviour
         EventBus.Subscribe<AttackPressedEvent>(OnAttack);
         EventBus.Subscribe<SkillSlotPressedEvent>(OnSkillSlotPressed);
         EventBus.Subscribe<EnemyDiedEvent>(OnEnemyDied);
+        EventBus.Subscribe<PlayerHitEvent>(OnPlayerHit);
     }
 
     private void OnDisable()
@@ -146,7 +218,9 @@ public class PlayerCombatController : MonoBehaviour
         EventBus.Unsubscribe<AttackPressedEvent>(OnAttack);
         EventBus.Unsubscribe<SkillSlotPressedEvent>(OnSkillSlotPressed);
         EventBus.Unsubscribe<EnemyDiedEvent>(OnEnemyDied);
+        EventBus.Unsubscribe<PlayerHitEvent>(OnPlayerHit);
         CancelPendingSkillState();
+        character?.ActionStateController?.ResetState();
     }
 
     private void OnAttack(AttackPressedEvent e)
@@ -154,10 +228,27 @@ public class PlayerCombatController : MonoBehaviour
         if (!MatchesInputPlayer(e.Player, e.CharacterId))
             return;
 
-        if (character == null || character.IsDead || character.IsStunned || combatModule == null)
+        if (character == null
+            || character.IsDead
+            || character.IsStunned
+            || combatModule == null
+            || character.ActionStateController == null
+            || !character.ActionStateController.CanRequestBasicAttack)
+        {
             return;
+        }
 
+        bool wasAttacking = combatModule.IsAttacking;
         combatModule.RequestAttack();
+        if (!wasAttacking && combatModule.IsAttacking)
+        {
+            character.ActionStateController.BeginBasicAttack(GetBasicAttackRecoveryDuration());
+            PlayerBasicAttackProfile profile = character.GetBasicAttackProfile();
+            PublishPresentationCue(
+                profile != null ? profile.PresentationCueSet : null,
+                CombatCuePhase.CastStart,
+                character.transform.position);
+        }
     }
 
     private void OnSkillSlotPressed(SkillSlotPressedEvent e)
@@ -165,8 +256,15 @@ public class PlayerCombatController : MonoBehaviour
         if (!MatchesInputPlayer(e.Player, e.CharacterId))
             return;
 
-        if (character == null || character.IsDead || character.IsStunned || combatModule == null)
+        if (character == null
+            || character.IsDead
+            || character.IsStunned
+            || combatModule == null
+            || character.ActionStateController == null
+            || !character.ActionStateController.CanStartSkill)
+        {
             return;
+        }
 
         PlayerSessionSkillApplicationService skillSession = bootstrap != null ? bootstrap.SkillSession : null;
         if (skillSession == null)
@@ -200,7 +298,11 @@ public class PlayerCombatController : MonoBehaviour
             return;
         }
 
-        if (!character.HasEnoughMP(definition.ManaCost))
+        int resolvedSkillLevel = ResolveSkillLevel(definition.SkillId);
+        int resolvedManaCost = definition.GetResolvedManaCost(resolvedSkillLevel);
+        float resolvedCooldown = definition.GetResolvedCooldown(resolvedSkillLevel);
+
+        if (!character.HasEnoughMP(resolvedManaCost))
         {
             NotifySystemMessage($"Not enough MP for {definition.DisplayName}.");
             return;
@@ -209,44 +311,61 @@ public class PlayerCombatController : MonoBehaviour
         if (!combatModule.TryStartSkillAttack(definition))
             return;
 
-        if (!character.TrySpendMP(definition.ManaCost))
+        if (!character.TrySpendMP(resolvedManaCost))
         {
             animationController?.ClearSkillAnimationOverride();
             combatModule.EndAttack();
             return;
         }
 
-        skillSession.StartSkillCooldown(definition.SkillId, definition.Cooldown);
+        skillSession.StartSkillCooldown(definition.SkillId, resolvedCooldown);
         CancelPendingSkillState();
         pendingSkillCast = new PendingSkillCast
         {
             Definition = definition,
-            LockedTarget = null
+            LockedTarget = null,
+            ResolvedSkillLevel = resolvedSkillLevel
         };
+        character.ActionStateController.BeginSkillPreCommit(definition.GetResolvedRecoveryTime(resolvedSkillLevel));
         animationController?.PlaySkillAnimation(definition);
+        PublishPresentationCue(definition.PresentationCueSet, CombatCuePhase.CastStart, character.transform.position);
     }
 
     private bool TryHitEnemies()
     {
-        if (combatModule == null || targetingService == null)
+        if (combatModule == null || targetingService == null || character == null)
+            return false;
+
+        PlayerBasicAttackProfile profile = character.GetBasicAttackProfile();
+        AttackPayload payload = BuildBasicAttackPayload();
+        if (profile == null || payload == null)
             return false;
 
         Transform facingTransform = visual != null ? visual : transform;
-        Vector3 origin = facingTransform.position + facingTransform.forward * 1f;
-        List<EnemyHealth> enemies = targetingService.GetEnemiesInSphere(origin, attackRange);
+        float resolvedRange = GetResolvedBasicAttackRange(profile, payload);
+        Vector3 origin = GetBasicAttackOrigin(facingTransform, resolvedRange);
+        List<EnemyHealth> enemies = targetingService.GetEnemiesInSphere(origin, resolvedRange);
         int maxTargets = combatModule.MaxBasicTargets;
         int hitsApplied = 0;
+        float impactDuration = GetBasicAttackImpactDuration(profile);
 
         foreach (EnemyHealth enemy in enemies)
         {
             if (!targetingService.IsWithinAllowedAttackHeight(enemy, origin.y))
                 continue;
 
-            ApplyHitToEnemy(enemy, 0.05f);
+            bool landedHit = ApplyHitToEnemy(enemy, impactDuration, true, null, payload);
+            if (!landedHit)
+                continue;
+
             hitsApplied++;
 
-            if (hitsApplied >= maxTargets)
+            if (profile.TargetingKind == CombatTargetingKind.SingleTarget
+                || profile.TargetingKind == CombatTargetingKind.ForwardProjectile
+                || hitsApplied >= maxTargets)
+            {
                 break;
+            }
         }
 
         return hitsApplied > 0;
@@ -258,97 +377,175 @@ public class PlayerCombatController : MonoBehaviour
         pendingSkillCast = null;
 
         if (skillCast?.Definition == null)
-            return;
-
-        switch (skillCast.Definition.TargetingMode)
         {
-            case PlayerSkillTargetingMode.MeleeArea:
-                ExecuteAreaSkillHit(skillCast.Definition);
+            CompleteCurrentActionState();
+            return;
+        }
+
+        skillCast.Payload ??= BuildSkillPayload(skillCast.Definition, skillCast.ResolvedSkillLevel);
+        ConsumeMomentumForSkill(skillCast.Payload);
+        character.ActionStateController?.CommitSkill();
+        PublishPresentationCue(skillCast.Definition.PresentationCueSet, CombatCuePhase.Release, character.transform.position);
+
+        switch (skillCast.Definition.CombatTargetingKind)
+        {
+            case CombatTargetingKind.Area:
+                if (ExecuteAreaSkillHit(skillCast.Definition, skillCast.ResolvedSkillLevel, skillCast.Payload))
+                    GainMomentumFromSkill(skillCast.Definition, skillCast.ResolvedSkillLevel);
                 break;
 
-            case PlayerSkillTargetingMode.ForwardProjectile:
-                ExecuteProjectileSkillCast(skillCast.Definition);
+            case CombatTargetingKind.ForwardProjectile:
+                if (ExecuteProjectileSkillCast(skillCast.Definition, skillCast.ResolvedSkillLevel, skillCast.Payload))
+                    GainMomentumFromSkill(skillCast.Definition, skillCast.ResolvedSkillLevel);
                 break;
 
             default:
-                ExecuteFrontSingleTargetSkillHit(skillCast);
+                if (ExecuteFrontSingleTargetSkillHit(skillCast))
+                    GainMomentumFromSkill(skillCast.Definition, skillCast.ResolvedSkillLevel);
                 break;
         }
     }
 
-    private void ExecuteAreaSkillHit(PlayerSkillDefinition definition)
+    private bool ExecuteAreaSkillHit(PlayerSkillDefinition definition, int skillLevel, AttackPayload payload)
     {
         if (targetingService == null)
-            return;
+            return false;
 
-        List<EnemyHealth> targets = targetingService.FindSkillAreaTargets(definition);
+        List<EnemyHealth> targets = targetingService.FindSkillAreaTargets(definition, skillLevel);
         if (targets.Count == 0)
-            return;
+            return false;
 
-        int hitCount = Mathf.Max(1, definition.HitCount);
+        int hitCount = definition.GetResolvedHitCount(skillLevel);
         bool commitDeath = hitCount <= 1;
-        ApplyHitsToTargets(targets, definition, 0.06f, commitDeath);
+        ApplyHitsToTargets(targets, definition, payload, 0.06f, commitDeath);
 
         if (hitCount > 1)
         {
             CancelQueuedSkillHits(false);
-            queuedSkillHitsRoutine = StartCoroutine(PerformRepeatedAreaSkillHits(definition, hitCount - 1));
+            queuedSkillHitsRoutine = StartCoroutine(PerformRepeatedAreaSkillHits(definition, skillLevel, hitCount - 1, payload));
         }
+
+        return true;
     }
 
-    private void ExecuteProjectileSkillCast(PlayerSkillDefinition definition)
+    private bool ExecuteProjectileSkillCast(PlayerSkillDefinition definition, int skillLevel, AttackPayload payload)
     {
         if (definition == null || targetingService == null)
-            return;
+            return false;
 
         CancelQueuedSkillHits(false);
 
-        EnemyHealth lockedTarget = targetingService.FindFrontSingleTarget(definition);
-        int projectileCount = Mathf.Max(1, definition.ProjectileCount);
+        if (definition.ProjectileBehaviorKind != ProjectileBehaviorKind.SequenceLocked)
+            return ExecuteFreeProjectileSkillCast(definition, skillLevel, payload);
 
-        SpawnProjectileShot(definition, lockedTarget, 0, projectileCount);
+        EnemyHealth lockedTarget = targetingService.FindFrontSingleTarget(definition, skillLevel);
+        int projectileCount = definition.GetResolvedProjectileCount(skillLevel);
+        float projectileInterval = GetResolvedProjectileShotInterval(definition, skillLevel);
+        CommittedEnemyHitPacket[] committedPackets = lockedTarget != null
+            ? BuildCommittedHitPackets(payload, lockedTarget, projectileCount, PlayerSkillProjectileImpactDuration, projectileInterval)
+            : null;
+
+        SpawnProjectileShot(
+            definition,
+            skillLevel,
+            lockedTarget,
+            0,
+            projectileCount,
+            payload,
+            GetCommittedHitPacket(committedPackets, 0));
 
         if (projectileCount <= 1)
-            return;
+            return true;
 
         queuedSkillHitsRoutine = StartCoroutine(PerformQueuedProjectileShots(
             definition,
+            skillLevel,
             lockedTarget,
-            projectileCount));
+            projectileCount,
+            payload,
+            committedPackets));
+
+        return true;
+    }
+
+    private bool ExecuteFreeProjectileSkillCast(PlayerSkillDefinition definition, int skillLevel, AttackPayload payload)
+    {
+        if (definition == null || character == null)
+            return false;
+
+        int projectileCount = definition.GetResolvedProjectileCount(skillLevel);
+        if (projectileCount <= 0)
+            return false;
+
+        SpawnProjectileShot(
+            definition,
+            skillLevel,
+            null,
+            0,
+            projectileCount,
+            payload,
+            null);
+
+        if (projectileCount <= 1)
+            return true;
+
+        queuedSkillHitsRoutine = StartCoroutine(PerformQueuedProjectileShots(
+            definition,
+            skillLevel,
+            null,
+            projectileCount,
+            payload,
+            null));
+
+        return true;
     }
 
     private IEnumerator PerformQueuedProjectileShots(
         PlayerSkillDefinition definition,
+        int skillLevel,
         EnemyHealth lockedTarget,
-        int projectileCount)
+        int projectileCount,
+        AttackPayload payload,
+        CommittedEnemyHitPacket[] committedPackets)
     {
-        float interval = Mathf.Max(0.04f, definition.HitInterval > 0f ? definition.HitInterval : 0.08f);
+        float interval = GetResolvedProjectileShotInterval(definition, skillLevel);
 
         for (int projectileIndex = 1; projectileIndex < projectileCount; projectileIndex++)
         {
             yield return new WaitForSeconds(interval);
 
-            if (character == null || character.IsDead || character.IsStunned)
+            if (character == null || character.IsDead)
                 break;
 
-            SpawnProjectileShot(definition, lockedTarget, projectileIndex, projectileCount);
+            SpawnProjectileShot(
+                definition,
+                skillLevel,
+                lockedTarget,
+                projectileIndex,
+                projectileCount,
+                payload,
+                GetCommittedHitPacket(committedPackets, projectileIndex));
         }
 
         queuedSkillHitsRoutine = null;
+        CompleteCurrentActionState();
     }
 
     private void SpawnProjectileShot(
         PlayerSkillDefinition definition,
+        int skillLevel,
         EnemyHealth lockedTarget,
         int projectileIndex,
-        int projectileCount)
+        int projectileCount,
+        AttackPayload payload,
+        CommittedEnemyHitPacket? committedHitPacket)
     {
         Transform facingTransform = visual != null ? visual : transform;
         float spreadAngle = Mathf.Max(0f, definition.ProjectileSpreadAngle);
         float lateralSpacing = projectileCount > 1 ? 0.16f : 0f;
         Vector3 spawnBasePosition = facingTransform.position
-            + facingTransform.forward * Mathf.Max(0f, definition.ProjectileSpawnForwardOffset)
-            + Vector3.up * definition.ProjectileSpawnUpOffset;
+            + facingTransform.forward * Mathf.Max(0f, definition.GetResolvedProjectileSpawnForwardOffset(skillLevel))
+            + Vector3.up * definition.GetResolvedProjectileSpawnUpOffset(skillLevel);
 
         float normalizedIndex = projectileCount == 1
             ? 0.5f
@@ -373,75 +570,93 @@ public class PlayerCombatController : MonoBehaviour
         }
 
         bool commitDeathOnHit = projectileIndex >= projectileCount - 1;
-        SpawnSkillProjectile(definition, spawnPosition, direction, lockedTarget, commitDeathOnHit);
+        SpawnSkillProjectile(
+            definition,
+            skillLevel,
+            spawnPosition,
+            direction,
+            lockedTarget,
+            commitDeathOnHit,
+            payload,
+            committedHitPacket);
     }
 
-    private void ExecuteFrontSingleTargetSkillHit(PendingSkillCast skillCast)
+    private bool ExecuteFrontSingleTargetSkillHit(PendingSkillCast skillCast)
     {
         if (targetingService == null)
-            return;
+            return false;
 
-        EnemyHealth target = targetingService.ResolveLockedSkillTarget(skillCast.Definition, skillCast.LockedTarget, true);
+        EnemyHealth target = targetingService.ResolveLockedSkillTarget(
+            skillCast.Definition,
+            skillCast.LockedTarget,
+            true,
+            skillCast.ResolvedSkillLevel);
         if (target == null)
-            return;
+            return false;
 
-        if (TryExecuteAuthoritativeSkillSequence(skillCast.Definition, target))
+        if (TryExecuteAuthoritativeSkillSequence(skillCast.Definition, skillCast.ResolvedSkillLevel, target))
         {
             skillCast.LockedTarget = target;
-            return;
+            return true;
         }
 
-        int remainingHits = Mathf.Max(0, skillCast.Definition.HitCount - 1);
-        bool commitDeath = remainingHits <= 0;
-        ApplyHitToEnemy(
+        int totalHits = Mathf.Max(1, skillCast.Definition.GetResolvedHitCount(skillCast.ResolvedSkillLevel));
+        float hitInterval = Mathf.Max(0.01f, skillCast.Definition.GetResolvedHitInterval(skillCast.ResolvedSkillLevel));
+        skillCast.CommittedHitPackets ??= BuildCommittedHitPackets(
+            skillCast.Payload,
             target,
-            0.06f,
-            commitDeath,
-            skillCast.Definition);
+            totalHits,
+            DirectSkillImpactDuration,
+            hitInterval);
+        ApplyCommittedHitPacket(target, skillCast.Definition, skillCast.CommittedHitPackets, 0);
         skillCast.LockedTarget = target;
 
+        int remainingHits = Mathf.Max(0, totalHits - 1);
         if (remainingHits <= 0)
-            return;
+            return true;
 
         CancelQueuedSkillHits(false);
         queuedSkillHitsRoutine = StartCoroutine(PerformRepeatedSingleTargetSkillHits(
             skillCast.Definition,
+            skillCast.ResolvedSkillLevel,
             target,
-            remainingHits));
+            remainingHits,
+            skillCast.CommittedHitPackets));
+
+        return true;
     }
 
     private IEnumerator PerformRepeatedSingleTargetSkillHits(
         PlayerSkillDefinition definition,
+        int skillLevel,
         EnemyHealth initialTarget,
-        int remainingHits)
+        int remainingHits,
+        CommittedEnemyHitPacket[] committedPackets)
     {
         for (int hitIndex = 0; hitIndex < remainingHits; hitIndex++)
         {
-            yield return new WaitForSeconds(Mathf.Max(0.01f, definition.HitInterval));
+            yield return new WaitForSeconds(Mathf.Max(0.01f, definition.GetResolvedHitInterval(skillLevel)));
 
-            if (character == null || character.IsDead || character.IsStunned || targetingService == null)
+            if (character == null || character.IsDead || targetingService == null)
                 break;
 
-            EnemyHealth target = targetingService.ResolveLockedSkillTarget(definition, initialTarget, false);
+            EnemyHealth target = targetingService.ResolveLockedSkillTarget(definition, initialTarget, false, skillLevel);
             if (target == null)
                 break;
 
-            bool commitDeath = hitIndex >= remainingHits - 1;
-            ApplyHitToEnemy(
-                target,
-                0.045f,
-                commitDeath,
-                definition);
+            ApplyCommittedHitPacket(target, definition, committedPackets, hitIndex + 1);
         }
 
         queuedSkillHitsRoutine = null;
+        CompleteCurrentActionState();
     }
 
     private bool TryExecuteAuthoritativeSkillSequence(
         PlayerSkillDefinition definition,
+        int skillLevel,
         EnemyHealth target)
     {
-        if (!SupportsAuthoritativeSkillSequence(definition) || target == null || character == null)
+        if (!SupportsAuthoritativeSkillSequence(definition, skillLevel) || target == null || character == null)
             return false;
 
         float direction = Mathf.Sign(target.transform.position.x - transform.position.x);
@@ -452,56 +667,57 @@ public class PlayerCombatController : MonoBehaviour
             definition.SkillId);
     }
 
-    private IEnumerator PerformRepeatedAreaSkillHits(PlayerSkillDefinition definition, int remainingHits)
+    private IEnumerator PerformRepeatedAreaSkillHits(PlayerSkillDefinition definition, int skillLevel, int remainingHits, AttackPayload payload)
     {
         for (int hitIndex = 0; hitIndex < remainingHits; hitIndex++)
         {
-            yield return new WaitForSeconds(Mathf.Max(0.01f, definition.HitInterval));
+            yield return new WaitForSeconds(Mathf.Max(0.01f, definition.GetResolvedHitInterval(skillLevel)));
 
-            if (character == null || character.IsDead || character.IsStunned || targetingService == null)
+            if (character == null || character.IsDead || targetingService == null)
                 break;
 
-            List<EnemyHealth> targets = targetingService.FindSkillAreaTargets(definition);
+            List<EnemyHealth> targets = targetingService.FindSkillAreaTargets(definition, skillLevel);
             if (targets.Count == 0)
                 break;
 
             bool commitDeath = hitIndex >= remainingHits - 1;
-            ApplyHitsToTargets(targets, definition, 0.045f, commitDeath);
+            ApplyHitsToTargets(targets, definition, payload, 0.045f, commitDeath);
         }
 
         queuedSkillHitsRoutine = null;
+        CompleteCurrentActionState();
     }
 
     private void ApplyHitsToTargets(
         List<EnemyHealth> targets,
         PlayerSkillDefinition definition,
+        AttackPayload payload,
         float impactDuration = 0.06f,
         bool commitDeath = true)
     {
         foreach (EnemyHealth target in targets)
-            ApplyHitToEnemy(target, impactDuration, commitDeath, definition);
+            ApplyHitToEnemy(target, impactDuration, commitDeath, definition, payload);
     }
 
     private int CalculateSkillDamage(PlayerSkillDefinition definition)
     {
-        if (definition == null || combatModule == null || character == null)
-            return 1;
-
-        PlayerCombatSnapshot snapshot = character.GetCombatSnapshot();
-        int baseDamage = combatModule.CalculateDamage(snapshot, isSkillDamage: true);
-        return Mathf.Max(1, Mathf.RoundToInt(baseDamage * Mathf.Max(0.1f, definition.DamageMultiplier)));
+        AttackPayload payload = BuildSkillPayload(definition);
+        return payload != null
+            ? AttackPayloadBuilder.RollResolvedDamage(payload)
+            : 1;
     }
 
-    private void ApplyHitToEnemy(
+    private bool ApplyHitToEnemy(
         EnemyHealth enemy,
         float impactDuration,
         bool commitDeath = true,
-        PlayerSkillDefinition skillDefinition = null)
+        PlayerSkillDefinition skillDefinition = null,
+        AttackPayload payload = null)
     {
         if (character == null)
-            return;
+            return false;
 
-        hitApplicationService.ApplyHit(
+        return hitApplicationService.ApplyHit(
             enemy,
             character,
             transform.position.x,
@@ -509,73 +725,68 @@ public class PlayerCombatController : MonoBehaviour
             ResolveLocalFallbackDamage(skillDefinition),
             impactDuration,
             commitDeath,
-            skillDefinition != null ? skillDefinition.SkillId : string.Empty);
+            skillDefinition != null ? skillDefinition.SkillId : string.Empty,
+            payload);
     }
 
     private void SpawnSkillProjectile(
         PlayerSkillDefinition definition,
+        int skillLevel,
         Vector3 spawnPosition,
         Vector3 direction,
         EnemyHealth lockedTarget,
-        bool commitDeathOnHit)
+        bool commitDeathOnHit,
+        AttackPayload payload,
+        CommittedEnemyHitPacket? committedHitPacket = null)
     {
         if (definition == null || character == null)
             return;
 
-        GameObject projectilePrefab = bootstrap != null && bootstrap.RuntimePrefabCatalog != null
-            ? bootstrap.RuntimePrefabCatalog.SkillProjectilePrefab
-            : null;
-        bool skipDefaultVisual = false;
-
-        GameObject projectileObject = null;
-        if (projectilePrefab != null)
-        {
-            projectileObject = Instantiate(
-                projectilePrefab,
-                spawnPosition,
-                Quaternion.LookRotation(direction.normalized, Vector3.up));
-            projectileObject.name = $"{definition.SkillId}_Projectile";
-            skipDefaultVisual = HasVisualContent(projectileObject);
-        }
-        else
-        {
-            projectileObject = new GameObject($"{definition.SkillId}_Projectile");
-            projectileObject.transform.position = spawnPosition;
-            projectileObject.transform.rotation = Quaternion.LookRotation(direction.normalized, Vector3.up);
-        }
-
-        PlayerSkillProjectile projectile = projectileObject.GetComponent<PlayerSkillProjectile>();
-        if (projectile == null)
-            projectile = projectileObject.AddComponent<PlayerSkillProjectile>();
-        projectile.Initialize(
-            character,
-            lockedTarget,
-            enemyLayer,
-            MultiplayerPrototypeRuntime.IsEnabled ? 0 : CalculateSkillDamage(definition),
+        int resolvedDamage = payload != null
+            ? AttackPayloadBuilder.RollResolvedDamage(payload)
+            : CalculateSkillDamage(definition);
+        PlayerCombatSnapshot snapshot = character.GetCombatSnapshot();
+        ProjectileProfile projectileProfile = definition.GetResolvedProjectileProfile(skillLevel);
+        PresentationCueSet projectileCueSet = ResolveProjectileCueSet(projectileProfile, definition.PresentationCueSet);
+        float resolvedProjectileSpeed = definition.GetResolvedProjectileSpeed(skillLevel);
+        if (snapshot.ProjectileSpeedModifier > 0f)
+            resolvedProjectileSpeed *= snapshot.ProjectileSpeedModifier;
+        SpawnCombatProjectile(
             definition.SkillId,
+            projectileProfile,
+            spawnPosition,
             direction,
-            definition.ProjectileSpeed,
-            definition.ProjectileRadius,
-            definition.ProjectileLifetime,
-            definition.ProjectileVisualScale,
+            lockedTarget,
             commitDeathOnHit,
-            skipDefaultVisual);
-    }
-
-    private static bool HasVisualContent(GameObject rootObject)
-    {
-        if (rootObject == null)
-            return false;
-
-        return rootObject.GetComponentInChildren<Renderer>(true) != null
-            || rootObject.GetComponentInChildren<TrailRenderer>(true) != null
-            || rootObject.GetComponentInChildren<ParticleSystem>(true) != null;
+            payload,
+            committedHitPacket,
+            resolvedProjectileSpeed,
+            definition.GetResolvedProjectileRadius(skillLevel),
+            definition.GetResolvedProjectileLifetime(skillLevel),
+            payload != null ? Mathf.Max(0f, payload.ResolvedRange) : definition.GetResolvedRange(skillLevel),
+            definition.GetResolvedProjectileVisualScale(skillLevel),
+            MultiplayerPrototypeRuntime.IsEnabled ? 0 : resolvedDamage,
+            ProjectileProfileUtility.ResolveTravelStyle(projectileProfile),
+            ProjectileProfileUtility.ResolveHitMode(projectileProfile),
+            ProjectileProfileUtility.ResolveMaxTargets(projectileProfile, payload),
+            ProjectileProfileUtility.ResolveStopOnFirstHit(projectileProfile, payload),
+            ProjectileProfileUtility.ResolveArcHeight(projectileProfile),
+            ProjectileProfileUtility.ResolveHomingRadius(projectileProfile),
+            ProjectileProfileUtility.ResolveHomingTurnRate(projectileProfile),
+            definition.ProjectileBehaviorKind,
+            ProjectileProfileUtility.ResolveImpactAreaRadius(projectileProfile),
+            ProjectileProfileUtility.ResolveMaxImpactAreaTargets(projectileProfile, payload),
+            projectileCueSet);
     }
 
     private int ResolveLocalFallbackDamage(PlayerSkillDefinition skillDefinition)
     {
         if (skillDefinition != null)
-            return CalculateSkillDamage(skillDefinition);
+        {
+            AttackPayload payload = BuildSkillPayload(skillDefinition);
+            if (payload != null)
+                return AttackPayloadBuilder.RollResolvedDamage(payload);
+        }
 
         if (combatModule == null || character == null)
             return 1;
@@ -583,12 +794,197 @@ public class PlayerCombatController : MonoBehaviour
         return Mathf.Max(1, combatModule.CalculateBasicDamage(character.GetCombatSnapshot()));
     }
 
-    private static bool SupportsAuthoritativeSkillSequence(PlayerSkillDefinition definition)
+    private AttackPayload BuildBasicAttackPayload()
+    {
+        if (character == null || combatModule == null)
+            return null;
+
+        PlayerBasicAttackProfile profile = character.GetBasicAttackProfile();
+        if (profile == null)
+            return null;
+
+        PlayerCombatSnapshot snapshot = character.GetCombatSnapshot();
+        return AttackPayloadBuilder.BuildBasicAttackPayload(
+            character,
+            snapshot,
+            profile,
+            combatModule.CurrentComboCounter);
+    }
+
+    private bool ShouldUseBasicAttackProjectile(PlayerBasicAttackProfile profile)
+    {
+        if (profile == null)
+            return false;
+
+        return profile.ExecutionKind == CombatExecutionKind.Projectile
+            || profile.ExecutionKind == CombatExecutionKind.MagicProjectile
+            || profile.TargetingKind == CombatTargetingKind.ForwardProjectile;
+    }
+
+    private void SpawnBasicAttackProjectile(PlayerBasicAttackProfile profile)
+    {
+        if (profile == null || character == null)
+            return;
+
+        AttackPayload payload = BuildBasicAttackPayload();
+        if (payload == null)
+            return;
+
+        ProjectileProfile projectileProfile = profile.DefaultProjectileProfile;
+        PresentationCueSet projectileCueSet = ResolveProjectileCueSet(projectileProfile, profile.PresentationCueSet);
+        PlayerCombatSnapshot snapshot = character.GetCombatSnapshot();
+        Transform facingTransform = visual != null ? visual : transform;
+        Vector3 direction = facingTransform.forward.sqrMagnitude > 0.0001f
+            ? facingTransform.forward.normalized
+            : transform.forward;
+        Vector3 spawnPosition = facingTransform.position
+            + direction * ProjectileProfileUtility.ResolveSpawnForwardOffset(projectileProfile)
+            + Vector3.up * ProjectileProfileUtility.ResolveSpawnUpOffset(projectileProfile);
+        float resolvedProjectileSpeed = ProjectileProfileUtility.ResolveSpeed(projectileProfile);
+        if (snapshot.ProjectileSpeedModifier > 0f)
+            resolvedProjectileSpeed *= snapshot.ProjectileSpeedModifier;
+
+        SpawnCombatProjectile(
+            payload.ActionId,
+            projectileProfile,
+            spawnPosition,
+            direction,
+            null,
+            true,
+            payload,
+            null,
+            resolvedProjectileSpeed,
+            ProjectileProfileUtility.ResolveRadius(projectileProfile),
+            ProjectileProfileUtility.ResolveLifetime(projectileProfile, payload, resolvedProjectileSpeed),
+            Mathf.Max(0f, payload.ResolvedRange),
+            ProjectileProfileUtility.ResolveVisualScale(projectileProfile),
+            0,
+            ProjectileProfileUtility.ResolveTravelStyle(projectileProfile),
+            ProjectileProfileUtility.ResolveHitMode(projectileProfile),
+            ProjectileProfileUtility.ResolveMaxTargets(projectileProfile, payload),
+            ProjectileProfileUtility.ResolveStopOnFirstHit(projectileProfile, payload),
+            ProjectileProfileUtility.ResolveArcHeight(projectileProfile),
+            ProjectileProfileUtility.ResolveHomingRadius(projectileProfile),
+            ProjectileProfileUtility.ResolveHomingTurnRate(projectileProfile),
+            ProjectileBehaviorKind.Free,
+            ProjectileProfileUtility.ResolveImpactAreaRadius(projectileProfile),
+            ProjectileProfileUtility.ResolveMaxImpactAreaTargets(projectileProfile, payload),
+            projectileCueSet);
+    }
+
+    private void SpawnCombatProjectile(
+        string actionId,
+        ProjectileProfile projectileProfile,
+        Vector3 spawnPosition,
+        Vector3 direction,
+        EnemyHealth lockedTarget,
+        bool commitDeathOnHit,
+        AttackPayload payload,
+        CommittedEnemyHitPacket? committedHitPacket,
+        float travelSpeed,
+        float hitRadius,
+        float maxLifetime,
+        float resolvedTravelDistance,
+        float visualScale,
+        int explicitDamage,
+        ProjectileTravelStyle projectileTravelStyle,
+        ProjectileHitMode projectileHitMode,
+        int maxTargets,
+        bool stopOnFirstValidHit,
+        float arcHeight,
+        float homingRadius,
+        float homingTurnRate,
+        ProjectileBehaviorKind projectileBehaviorKind,
+        float impactAreaRadius,
+        int maxImpactAreaTargets,
+        PresentationCueSet presentationCueSet)
+    {
+        GameObject projectilePrefab = ResolveProjectilePrefab(projectileProfile);
+        projectileSystem ??= GetComponent<ProjectileSystem>();
+        if (projectileSystem == null)
+            projectileSystem = gameObject.AddComponent<ProjectileSystem>();
+
+        projectileSystem.Launch(new ProjectileLaunchRequest
+        {
+            ActionId = actionId,
+            Owner = character,
+            PresentationSource = character != null ? character.transform : transform,
+            ProjectilePrefab = projectilePrefab,
+            LockedTarget = lockedTarget,
+            EnemyLayer = enemyLayer,
+            ExplicitDamage = explicitDamage,
+            SpawnPosition = spawnPosition,
+            Direction = direction,
+            TravelSpeed = travelSpeed,
+            HitRadius = hitRadius,
+            MaxLifetime = maxLifetime,
+            ResolvedTravelDistance = resolvedTravelDistance,
+            VisualScale = visualScale,
+            CommitDeathOnHit = commitDeathOnHit,
+            CommittedHitPacket = committedHitPacket,
+            Payload = payload,
+            TravelStyle = projectileTravelStyle,
+            HitMode = projectileHitMode,
+            MaxTargets = maxTargets,
+            StopOnFirstValidHit = stopOnFirstValidHit,
+            ArcHeight = arcHeight,
+            HomingRadius = homingRadius,
+            HomingTurnRate = homingTurnRate,
+            BehaviorKind = projectileBehaviorKind,
+            ImpactAreaRadius = impactAreaRadius,
+            MaxImpactAreaTargets = maxImpactAreaTargets,
+            PresentationCueSet = presentationCueSet
+        });
+    }
+
+    private static bool SupportsAuthoritativeSkillSequence(PlayerSkillDefinition definition, int skillLevel)
     {
         return MultiplayerPrototypeRuntime.IsEnabled
             && definition != null
-            && definition.HitCount > 1
-            && definition.TargetingMode == PlayerSkillTargetingMode.FrontSingleTarget;
+            && definition.GetResolvedHitCount(skillLevel) > 1
+            && definition.CombatTargetingKind == CombatTargetingKind.SingleTarget;
+    }
+
+    private void PublishPresentationCue(
+        PresentationCueSet cueSet,
+        CombatCuePhase phase,
+        Vector3 worldPosition,
+        Transform target = null)
+    {
+        if (cueSet == null || character == null)
+            return;
+
+        CombatPresentationDispatcher.PublishCuePhase(
+            cueSet,
+            phase,
+            worldPosition,
+            character.transform,
+            target);
+    }
+
+    private static PresentationCueSet ResolveProjectileCueSet(
+        ProjectileProfile projectileProfile,
+        PresentationCueSet fallbackCueSet)
+    {
+        return projectileProfile != null && projectileProfile.PresentationCueSet != null
+            ? projectileProfile.PresentationCueSet
+            : fallbackCueSet;
+    }
+
+    private GameObject ResolveProjectilePrefab(ProjectileProfile projectileProfile)
+    {
+        if (projectileProfile != null && projectileProfile.ProjectilePrefab != null)
+            return projectileProfile.ProjectilePrefab;
+
+        if (projectileProfile != null)
+        {
+            Debug.LogWarning(
+                $"ProjectileProfile '{projectileProfile.name}' does not have a Projectile Prefab assigned. " +
+                "ProjectileSystem will fall back to a runtime-only projectile object.",
+                projectileProfile);
+        }
+
+        return null;
     }
 
     private void NotifySystemMessage(string message)
@@ -612,6 +1008,13 @@ public class PlayerCombatController : MonoBehaviour
 
         if (cancelQueuedHits)
             CancelQueuedSkillHits();
+
+        if (character != null
+            && character.ActionStateController != null
+            && character.ActionStateController.HasPendingSkillCommit)
+        {
+            character.ActionStateController.ResetState();
+        }
     }
 
     private void CancelQueuedSkillHits(bool clearReference = true)
@@ -629,6 +1032,24 @@ public class PlayerCombatController : MonoBehaviour
             return;
 
         progression?.AddExp(e.ExpReward);
+    }
+
+    private void OnPlayerHit(PlayerHitEvent e)
+    {
+        if (character == null
+            || !PlayerRuntimeIdentityUtility.MatchesCharacter(
+                character,
+                character.CharacterId,
+                e.Target,
+                e.CharacterId))
+        {
+            return;
+        }
+
+        if (character.ActionStateController == null || !character.ActionStateController.CanBeInterruptedByHit)
+            return;
+
+        character.ActionStateController.InterruptCurrentAction();
     }
 
     private bool MatchesInputPlayer(PlayerCharacter player, string characterId)
@@ -708,4 +1129,186 @@ public class PlayerCombatController : MonoBehaviour
 
         progression = new PlayerProgressionModule(data, character, bootstrap);
     }
+
+    private AttackPayload BuildSkillPayload(PlayerSkillDefinition definition, int skillLevel = -1)
+    {
+        if (definition == null || character == null)
+            return null;
+
+        PlayerCombatSnapshot snapshot = character.GetCombatSnapshot();
+        if (skillLevel <= 0)
+            skillLevel = ResolveSkillLevel(definition.SkillId);
+
+        return AttackPayloadBuilder.BuildSkillPayload(character, snapshot, definition, skillLevel);
+    }
+
+    private static readonly float DirectSkillImpactDuration = 0.06f;
+    private static readonly float PlayerSkillProjectileImpactDuration = 0.04f;
+
+    private static CommittedEnemyHitPacket[] BuildCommittedHitPackets(
+        AttackPayload payload,
+        EnemyHealth target,
+        int packetCount,
+        float impactDuration,
+        float packetInterval)
+    {
+        if (payload == null || target == null)
+            return null;
+
+        return CombatResolver.ResolveCommittedSequenceAgainstEnemy(
+            payload,
+            target,
+            Mathf.Max(1, packetCount),
+            impactDuration,
+            packetInterval,
+            ResolveEnemyReactionLockTail(impactDuration));
+    }
+
+    private static float ResolveEnemyReactionLockTail(float impactDuration)
+    {
+        return Mathf.Max(0.14f, impactDuration * 2f);
+    }
+
+    private static float GetResolvedProjectileShotInterval(PlayerSkillDefinition definition, int skillLevel)
+    {
+        if (definition == null)
+            return 0.08f;
+
+        return Mathf.Max(0.04f, definition.GetResolvedHitInterval(skillLevel) > 0f
+            ? definition.GetResolvedHitInterval(skillLevel)
+            : 0.08f);
+    }
+
+    private static CommittedEnemyHitPacket? GetCommittedHitPacket(
+        CommittedEnemyHitPacket[] committedPackets,
+        int index)
+    {
+        if (committedPackets == null || index < 0 || index >= committedPackets.Length)
+            return null;
+
+        return committedPackets[index];
+    }
+
+    private bool ApplyCommittedHitPacket(
+        EnemyHealth target,
+        PlayerSkillDefinition definition,
+        CommittedEnemyHitPacket[] committedPackets,
+        int packetIndex)
+    {
+        if (character == null || target == null || committedPackets == null)
+            return false;
+
+        if (packetIndex < 0 || packetIndex >= committedPackets.Length)
+            return false;
+
+        return hitApplicationService.ApplyCommittedHit(
+            target,
+            character,
+            transform.position.x,
+            0f,
+            committedPackets[packetIndex],
+            definition != null ? definition.PresentationCueSet : null);
+    }
+
+    private void GainMomentumFromBasicAttack()
+    {
+        if (character == null)
+            return;
+
+        PlayerBasicAttackProfile profile = character.GetBasicAttackProfile();
+        if (profile == null)
+            return;
+
+        PlayerCombatSnapshot snapshot = character.GetCombatSnapshot();
+        int totalMomentumGain = Mathf.Max(0, profile.MomentumGainOnValidHit + snapshot.MomentumGainBonus);
+        character.GainCombatMomentum(totalMomentumGain);
+    }
+
+    private void GainMomentumFromSkill(PlayerSkillDefinition definition, int skillLevel)
+    {
+        if (character == null || definition == null)
+            return;
+
+        PlayerCombatSnapshot snapshot = character.GetCombatSnapshot();
+        int totalMomentumGain = Mathf.Max(0, definition.GetResolvedMomentumGain(skillLevel) + snapshot.MomentumGainBonus);
+        character.GainCombatMomentum(totalMomentumGain);
+    }
+
+    private void ConsumeMomentumForSkill(AttackPayload payload)
+    {
+        if (character == null || payload == null)
+            return;
+
+        character.ConsumeCombatMomentum(payload.MomentumToConsume);
+    }
+
+    private int ResolveSkillLevel(string skillId)
+    {
+        if (string.IsNullOrWhiteSpace(skillId))
+            return 1;
+
+        PlayerSessionSkillApplicationService skillSession = bootstrap != null ? bootstrap.SkillSession : null;
+        if (skillSession == null)
+            return 1;
+
+        IReadOnlyList<PlayerSkillEntry> unlockedSkills = skillSession.GetUnlockedSkills();
+        for (int index = 0; index < unlockedSkills.Count; index++)
+        {
+            PlayerSkillEntry skillEntry = unlockedSkills[index];
+            if (skillEntry == null || skillEntry.SkillId != skillId)
+                continue;
+
+            return Mathf.Max(1, skillEntry.SkillLevel);
+        }
+
+        return 1;
+    }
+
+    private void CompleteCurrentActionState()
+    {
+        if (character == null
+            || character.ActionStateController == null
+            || pendingSkillCast != null
+            || queuedSkillHitsRoutine != null)
+        {
+            return;
+        }
+
+        character.ActionStateController.CompleteCurrentAction();
+    }
+
+    private float GetBasicAttackRecoveryDuration()
+    {
+        PlayerBasicAttackProfile profile = character != null ? character.GetBasicAttackProfile() : null;
+        return profile != null ? profile.RecoveryTime : 0f;
+    }
+
+    private float GetResolvedBasicAttackRange(PlayerBasicAttackProfile profile, AttackPayload payload)
+    {
+        if (payload != null && payload.ResolvedRange > 0f)
+            return payload.ResolvedRange;
+
+        if (profile != null && profile.BaseRange > 0f)
+            return profile.BaseRange;
+
+        return 0.1f;
+    }
+
+    private static Vector3 GetBasicAttackOrigin(Transform facingTransform, float resolvedRange)
+    {
+        float forwardOffset = Mathf.Clamp(resolvedRange * 0.5f, 0.35f, 1f);
+        return facingTransform.position + facingTransform.forward * forwardOffset;
+    }
+
+    private static float GetBasicAttackImpactDuration(PlayerBasicAttackProfile profile)
+    {
+        if (profile == null)
+            return 0.05f;
+
+        if (profile.ActiveTime > 0f)
+            return Mathf.Clamp(profile.ActiveTime * 0.5f, 0.03f, 0.12f);
+
+        return 0.05f;
+    }
+
 }

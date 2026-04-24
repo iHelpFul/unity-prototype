@@ -2,8 +2,6 @@ using UnityEngine;
 
 public static class PlayerProgressionRules
 {
-    public const int StatPointsAwardedPerLevelUp = 6;
-
     public static void Normalize(PlayerRuntimeData data)
     {
         if (data == null)
@@ -21,6 +19,10 @@ public static class PlayerProgressionRules
         if (data.UnspentStatPoints < 0)
             data.UnspentStatPoints = 0;
 
+        if (data.UnspentSkillPoints < 0)
+            data.UnspentSkillPoints = 0;
+
+        PlayerInputBindingUtility.EnsureDefaultInputData(data);
         RefreshDerivedState(data);
     }
 
@@ -41,26 +43,27 @@ public static class PlayerProgressionRules
 
     public static int GetStatPointsAwardedPerLevelUp()
     {
-        return StatPointsAwardedPerLevelUp;
+        return PlayerProgressionProfiles.Active.GetStatPointsAwardedPerLevelUp();
+    }
+
+    public static int GetSkillPointsAwardedPerLevelUp()
+    {
+        return PlayerProgressionProfiles.Active.GetSkillPointsAwardedPerLevelUp();
+    }
+
+    public static int GetMaxHpGainPerLevel()
+    {
+        return PlayerProgressionProfiles.Active.GetMaxHpGainPerLevel();
+    }
+
+    public static int GetMaxMpGainPerLevel()
+    {
+        return PlayerProgressionProfiles.Active.GetMaxMpGainPerLevel();
     }
 
     public static int GetRequiredExpForLevel(int level)
     {
-        if (level <= 1)
-            return 15;
-
-        float multiplier = 14.5f;
-        float exponent = level < 6 ? 1.4f : 2.25f;
-        float offset = 0f;
-
-        if (level >= 6)
-            offset = -100f;
-
-        if (level >= 10)
-            multiplier = 16.2f;
-
-        int result = Mathf.RoundToInt(multiplier * Mathf.Pow(level, exponent) + offset);
-        return Mathf.Max(result, 15);
+        return PlayerProgressionProfiles.Active.GetRequiredExpForLevel(level);
     }
 }
 

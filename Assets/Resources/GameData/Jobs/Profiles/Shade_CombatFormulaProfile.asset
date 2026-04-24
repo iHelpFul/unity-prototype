@@ -1,0 +1,54 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8e991a0988f8380449cb2536d9bda3b4, type: 3}
+  m_Name: Shade_CombatFormulaProfile
+  m_EditorClassIdentifier: Assembly-CSharp::CombatFormulaProfile
+  profileId: Theif
+  displayName: Shade
+  statContributions:
+    MightWeight: 1
+    PrecisionWeight: 1
+    ArcaneWeight: 1
+    FinesseWeight: 5
+    HitRateWeight: 1
+  derivedStatRules:
+    AvoidanceFromFinesseWeight: 1
+    DefenseFromMightWeight: 1
+    SurgeChanceFromPrecisionWeight: 1
+    SurgePowerFromArcaneWeight: 1
+  hitRules:
+    HitRateWeight: 1
+    AvoidanceWeight: 1
+    LevelDeltaWeight: 0.1
+    MinHitChanceClamp: 0.1
+    MaxHitChanceClamp: 0.95
+  damageRules:
+    BaseVarianceMin: 0.9
+    BaseVarianceMax: 1.1
+    WeaponPowerWeight: 1
+    DamageCoefficientWeight: 1
+    DefenseMitigationWeight: 1
+    MinimumDamageFloor: 1
+  surgeRules:
+    MinSurgeChanceClamp: 0
+    MaxSurgeChanceClamp: 100
+    MinSurgePowerClamp: 1
+    MaxSurgePowerClamp: 5
+  momentumRules:
+    DamageBonusPerStack: 0
+    SurgeChanceBonusPerStack: 0
+    SurgePowerBonusPerStack: 0
+    RangeBonusPerStack: 0
+  elementRules:
+    NeutralMultiplier: 1
+    WeaknessMultiplier: 1.25
+    ResistanceMultiplier: 0.75

@@ -8,6 +8,8 @@ public class EnemyDefinition : ScriptableObject
     [Header("Core Stats")]
     [SerializeField, Min(1)] private int maxHP = 30;
     [SerializeField, Min(0)] private int defense = 1;
+    [Tooltip("Reduces incoming hit chance. 0 means this enemy cannot Evade unless the combat formula disables guaranteed hits.")]
+    [SerializeField, Min(0)] private int avoidance;
     [SerializeField, Min(0)] private int expReward = 10;
     [SerializeField] private Sprite icon;
 
@@ -34,6 +36,7 @@ public class EnemyDefinition : ScriptableObject
     public EnemyType EnemyType => enemyType;
     public int MaxHP => maxHP;
     public int Defense => defense;
+    public int Avoidance => avoidance;
     public int ExpReward => expReward;
     public Sprite Icon => icon;
     public int ContactDamage => contactDamage;
@@ -70,11 +73,13 @@ public class EnemyDefinition : ScriptableObject
         int newCommonEtcDropCount,
         float newCommonEtcDropChance,
         float newCorpseDuration,
-        float newRespawnDelay)
+        float newRespawnDelay,
+        int newAvoidance = 0)
     {
         enemyType = newEnemyType;
         maxHP = newMaxHP;
         defense = newDefense;
+        avoidance = newAvoidance;
         expReward = newExpReward;
         contactDamage = newContactDamage;
         animatedAttackDamage = newAnimatedAttackDamage;
@@ -111,7 +116,8 @@ public class EnemyDefinition : ScriptableObject
         int newCommonEtcDropCount,
         float newCommonEtcDropChance,
         float newCorpseDuration,
-        float newRespawnDelay)
+        float newRespawnDelay,
+        int newAvoidance = 0)
     {
         EnemyDefinition definition = CreateInstance<EnemyDefinition>();
         definition.hideFlags = HideFlags.HideAndDontSave;
@@ -133,7 +139,8 @@ public class EnemyDefinition : ScriptableObject
             newCommonEtcDropCount,
             newCommonEtcDropChance,
             newCorpseDuration,
-            newRespawnDelay);
+            newRespawnDelay,
+            newAvoidance);
         return definition;
     }
 
@@ -146,6 +153,7 @@ public class EnemyDefinition : ScriptableObject
     {
         maxHP = Mathf.Max(1, maxHP);
         defense = Mathf.Max(0, defense);
+        avoidance = Mathf.Max(0, avoidance);
         expReward = Mathf.Max(0, expReward);
         contactDamage = Mathf.Max(0, contactDamage);
         animatedAttackDamage = Mathf.Max(0, animatedAttackDamage);

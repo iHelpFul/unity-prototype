@@ -2,6 +2,9 @@ using UnityEngine;
 
 public class PlayerCombatModule
 {
+    private static readonly PlayerBasicAttackProfile DefaultBasicAttackProfile =
+        PlayerJobCombatProfiles.GetBasicAttackProfile(PlayerJobType.Drifter);
+
     private int currentAnimationIndex;
     private int currentChainCount;
     private bool isAttacking;
@@ -12,8 +15,7 @@ public class PlayerCombatModule
     private float activeAttackAnimationSpeed = 1f;
     private int comboCounter;
     private float comboCounterTimer;
-    private PlayerBasicAttackProfile basicAttackProfile =
-        PlayerJobCombatProfiles.GetBasicAttackProfile(PlayerJobType.Drifter);
+    private PlayerBasicAttackProfile basicAttackProfile = DefaultBasicAttackProfile;
     private float lastAttackTime;
 
     public int ComboIndex => currentAnimationIndex;
@@ -29,22 +31,9 @@ public class PlayerCombatModule
 
     public void SetBasicAttackProfile(PlayerBasicAttackProfile profile)
     {
-        if (profile == null)
-            profile = PlayerJobCombatProfiles.GetBasicAttackProfile(PlayerJobType.Drifter);
+        profile ??= DefaultBasicAttackProfile;
 
-        if (basicAttackProfile.JobType == profile.JobType
-            && basicAttackProfile.AnimationVariantCount == profile.AnimationVariantCount
-            && basicAttackProfile.MaxChainCount == profile.MaxChainCount
-            && basicAttackProfile.SelectionMode == profile.SelectionMode
-            && Mathf.Approximately(basicAttackProfile.AttackCooldown, profile.AttackCooldown)
-            && Mathf.Approximately(basicAttackProfile.MaxAttackDuration, profile.MaxAttackDuration)
-            && Mathf.Approximately(basicAttackProfile.AttackAnimationSpeed, profile.AttackAnimationSpeed)
-            && basicAttackProfile.MaxTargets == profile.MaxTargets
-            && Mathf.Approximately(basicAttackProfile.BasicDamageMultiplier, profile.BasicDamageMultiplier)
-            && basicAttackProfile.MaxComboCounter == profile.MaxComboCounter
-            && Mathf.Approximately(basicAttackProfile.ComboResetDelay, profile.ComboResetDelay)
-            && Mathf.Approximately(basicAttackProfile.ComboDamageBonusPerStack, profile.ComboDamageBonusPerStack)
-            && basicAttackProfile.SupportsComboCounter == profile.SupportsComboCounter)
+        if (ReferenceEquals(basicAttackProfile, profile))
         {
             return;
         }
@@ -147,19 +136,9 @@ public class PlayerCombatModule
         activeAttackAnimationSpeed = 1f;
     }
 
-    public int CalculateDamage(PlayerCombatSnapshot snapshot)
-    {
-        return DamageCalculator.CalculateDamage(snapshot, isSkillDamage: false);
-    }
-
-    public int CalculateDamage(PlayerCombatSnapshot snapshot, bool isSkillDamage)
-    {
-        return DamageCalculator.CalculateDamage(snapshot, isSkillDamage);
-    }
-
     public int CalculateBasicDamage(PlayerCombatSnapshot snapshot)
     {
-        int baseDamage = CalculateDamage(snapshot);
+        int baseDamage = DamageCalculator.CalculateDamage(snapshot, isSkillDamage: false);
         float comboMultiplier = 1f;
 
         if (basicAttackProfile.SupportsComboCounter && comboCounter > 0)

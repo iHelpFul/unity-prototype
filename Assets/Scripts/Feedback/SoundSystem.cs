@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
 
 public class SoundSystem : MonoBehaviour
@@ -30,6 +31,23 @@ public class SoundSystem : MonoBehaviour
     }
 
     private void OnPlaySfx(PlaySfxEvent e)
+    {
+        if (e.Delay > 0f)
+        {
+            StartCoroutine(PlayDelayed(e));
+            return;
+        }
+
+        PlayNow(e);
+    }
+
+    private IEnumerator PlayDelayed(PlaySfxEvent e)
+    {
+        yield return new WaitForSeconds(e.Delay);
+        PlayNow(e);
+    }
+
+    private void PlayNow(PlaySfxEvent e)
     {
         if (!lookup.TryGetValue(e.Type, out var entry))
             return;

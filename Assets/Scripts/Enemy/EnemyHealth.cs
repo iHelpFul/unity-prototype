@@ -7,6 +7,13 @@ public class EnemyHealth : MonoBehaviour
     [SerializeField] private EnemyStats stats;
     [SerializeField] private EnemyAnimationController animationController;
 
+    [Header("Hit Feedback")]
+    [SerializeField] private bool enableHitKnockback;
+    [SerializeField] private float hitKnockbackForce = 0.18f;
+    [SerializeField] private float hitKnockbackDuration = 0.08f;
+    [SerializeField] private int hitKnockbackDamageThreshold = 999999;
+    [SerializeField] private float hitReactionMovementLockDuration = 0.16f;
+
     private int currentHP;
     private bool isDead;
     private Vector3 spawnPosition;
@@ -31,6 +38,10 @@ public class EnemyHealth : MonoBehaviour
     private void OnValidate()
     {
         stats?.Sanitize();
+        hitKnockbackForce = Mathf.Max(0f, hitKnockbackForce);
+        hitKnockbackDuration = Mathf.Max(0f, hitKnockbackDuration);
+        hitKnockbackDamageThreshold = Mathf.Max(0, hitKnockbackDamageThreshold);
+        hitReactionMovementLockDuration = Mathf.Max(0f, hitReactionMovementLockDuration);
 
         if (enemyAI == null)
             enemyAI = GetComponent<EnemyAI>();
@@ -72,7 +83,8 @@ public class EnemyHealth : MonoBehaviour
         float direction,
         PlayerCharacter attacker = null,
         bool commitDeath = true,
-        bool publishDamageFeedback = true)
+        bool publishDamageFeedback = true,
+        bool playHitReaction = true)
     {
         if (isDead || stats == null)
             return;
@@ -82,6 +94,15 @@ public class EnemyHealth : MonoBehaviour
 
         int finalDamage = Mathf.Max(1, amount - stats.Defense);
         currentHP -= finalDamage;
+
+        // Non-finishing hits in multi-hit skills should never leave the enemy in a
+        // "alive but zero/negative HP" state. Clamp them to 1 HP so the final hit
+        // can resolve death cleanly while we still show the full rolled damage.
+        if (!commitDeath && currentHP <= 0)
+            currentHP = 1;
+
+        if (currentHP > 0)
+            NotifyHitReactionLock(hitReactionMovementLockDuration);
 
         if (publishDamageFeedback)
             PlayDamageFeedback(
@@ -94,10 +115,10 @@ public class EnemyHealth : MonoBehaviour
         {
             if (currentHP <= 0)
                 Die();
-            else
+            else if (playHitReaction)
                 animationController?.PlayHit();
         }
-        else
+        else if (playHitReaction)
         {
             animationController?.PlayHit();
         }
@@ -110,6 +131,14 @@ public class EnemyHealth : MonoBehaviour
             direction,
             playImpactFeedback,
             allowHitAnimation: false);
+    }
+
+    public void NotifyHitReactionLock(float duration)
+    {
+        if (duration <= 0f || isDead)
+            return;
+
+        enemyAI?.NotifyHitReactionLock(duration);
     }
 
     private void Die()
@@ -293,20 +322,30 @@ public class EnemyHealth : MonoBehaviour
         if (finalDamage <= 0)
             return;
 
-        if (playImpactFeedback && currentHP > 0)
+        bool shouldApplyKnockback =
+            playImpactFeedback
+            && currentHP > 0
+            && enableHitKnockback
+            && hitKnockbackForce > 0f
+            && hitKnockbackDuration > 0f
+            && finalDamage >= hitKnockbackDamageThreshold;
+
+        if (shouldApplyKnockback)
         {
             EventBus.Publish(new CharacterKnockbackEvent
             {
                 Target = transform,
                 DirectionX = direction,
-                Force = 1.05f,
-                Duration = 0.12f
+                Force = hitKnockbackForce,
+                Duration = hitKnockbackDuration
             });
         }
 
         EventBus.Publish(new DamageNumberEvent
         {
             WorldPosition = transform.position + Vector3.up * 1.2f,
+            Target = transform,
+            Kind = CombatFloatingTextKind.Damage,
             Damage = finalDamage
         });
 

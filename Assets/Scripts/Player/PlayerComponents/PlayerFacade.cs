@@ -14,7 +14,6 @@ public class PlayerFacade : MonoBehaviour
     [SerializeField] private PlayerAnimationController animationController;
     [SerializeField] private float footstepMinInterval = 0.22f;
     [SerializeField] private PlayerCharacter character;
-    [SerializeField] private float attackRange = 1.5f;
     [SerializeField] private LayerMask enemyLayer;
     [SerializeField] private GameBootstrap bootstrap;
 
@@ -102,7 +101,6 @@ public class PlayerFacade : MonoBehaviour
             character,
             visual,
             animationController,
-            attackRange,
             enemyLayer,
             skillFrontDotThreshold,
             skillAreaForwardOffsetFactor,
@@ -269,18 +267,48 @@ public class PlayerFacade : MonoBehaviour
 
     private void DrawBasicAttackGizmo()
     {
-        Transform facingTransform = visual != null ? visual : transform;
-        Gizmos.color = basicAttackGizmoColor;
+        PlayerBasicAttackProfile profile = ResolveBasicAttackProfileForGizmos();
+        if (profile == null)
+            return;
 
-        Vector3 origin = facingTransform.position + facingTransform.forward * 1f;
+        float resolvedRange = Mathf.Max(0.1f, profile.BaseRange);
+        Transform facingTransform = visual != null ? visual : transform;
+        bool isProjectileBasic = profile.ExecutionKind == CombatExecutionKind.Projectile
+            || profile.ExecutionKind == CombatExecutionKind.MagicProjectile
+            || profile.TargetingKind == CombatTargetingKind.ForwardProjectile;
+
+        float forwardOffset = isProjectileBasic
+            ? ProjectileProfileUtility.ResolveSpawnForwardOffset(profile.DefaultProjectileProfile)
+            : Mathf.Clamp(resolvedRange * 0.5f, 0.35f, 1f);
+        float upOffset = isProjectileBasic
+            ? ProjectileProfileUtility.ResolveSpawnUpOffset(profile.DefaultProjectileProfile)
+            : 0f;
+        Vector3 origin = facingTransform.position
+            + facingTransform.forward * forwardOffset
+            + Vector3.up * upOffset;
+
+        Gizmos.color = isProjectileBasic ? rangedSkillGizmoColor : basicAttackGizmoColor;
         Gizmos.DrawLine(transform.position, origin);
 
 #if UNITY_EDITOR
-        DrawUpperHemisphereGizmo(origin, attackRange, new Color(
-            basicAttackGizmoColor.r,
-            basicAttackGizmoColor.g,
-            basicAttackGizmoColor.b,
-            1f));
+        Color wireColor = isProjectileBasic
+            ? new Color(rangedSkillGizmoColor.r, rangedSkillGizmoColor.g, rangedSkillGizmoColor.b, 1f)
+            : new Color(basicAttackGizmoColor.r, basicAttackGizmoColor.g, basicAttackGizmoColor.b, 1f);
+
+        if (isProjectileBasic)
+        {
+            Handles.color = wireColor;
+            float radius = ProjectileProfileUtility.ResolveRadius(profile.DefaultProjectileProfile);
+            Handles.DrawWireDisc(origin, Vector3.up, radius);
+            Handles.DrawLine(origin, origin + facingTransform.forward * resolvedRange);
+        }
+        else
+        {
+            DrawUpperHemisphereGizmo(origin, resolvedRange, wireColor);
+        }
+
+        string label = $"{profile.DisplayName} ({resolvedRange:0.0})";
+        Handles.Label(origin + Vector3.up * (resolvedRange + 0.12f), label);
 #endif
     }
 
@@ -289,13 +317,13 @@ public class PlayerFacade : MonoBehaviour
         if (skill == null || visual == null)
             return;
 
-        switch (skill.TargetingMode)
+        switch (skill.CombatTargetingKind)
         {
-            case PlayerSkillTargetingMode.MeleeArea:
+            case CombatTargetingKind.Area:
                 DrawMeleeSkillGizmo(skill);
                 break;
 
-            case PlayerSkillTargetingMode.ForwardProjectile:
+            case CombatTargetingKind.ForwardProjectile:
                 DrawProjectileSkillGizmo(skill);
                 break;
 
@@ -308,6 +336,7 @@ public class PlayerFacade : MonoBehaviour
     private void DrawMeleeSkillGizmo(PlayerSkillDefinition skill)
     {
         Transform facingTransform = visual != null ? visual : transform;
+        float resolvedRange = Mathf.Max(0.1f, skill.GetResolvedRange(1));
         float searchRadius = GetSkillAreaRadius(skill);
         Vector3 center = GetSkillAreaCenter(facingTransform, skill, searchRadius);
 
@@ -320,7 +349,7 @@ public class PlayerFacade : MonoBehaviour
             meleeSkillGizmoColor.g,
             meleeSkillGizmoColor.b,
             1f));
-        Handles.Label(center + Vector3.up * (searchRadius + 0.15f), $"{skill.DisplayName} ({skill.Range:0.0})");
+        Handles.Label(center + Vector3.up * (searchRadius + 0.15f), $"{skill.DisplayName} ({resolvedRange:0.0})");
 #endif
     }
 
@@ -329,7 +358,7 @@ public class PlayerFacade : MonoBehaviour
         Transform facingTransform = visual != null ? visual : transform;
         Vector3 origin = facingTransform.position;
         Vector3 forward = facingTransform.forward;
-        float range = Mathf.Max(0.1f, skill.Range);
+        float range = Mathf.Max(0.1f, skill.GetResolvedRange(1));
         float halfAngle = Mathf.Acos(Mathf.Clamp(skillFrontDotThreshold, -1f, 1f)) * Mathf.Rad2Deg;
 
         Gizmos.color = rangedSkillGizmoColor;
@@ -349,13 +378,13 @@ public class PlayerFacade : MonoBehaviour
         Transform facingTransform = visual != null ? visual : transform;
         Vector3 origin = facingTransform.position;
         Vector3 forward = facingTransform.forward;
-        float range = Mathf.Max(0.1f, skill.Range);
+        float range = Mathf.Max(0.1f, skill.GetResolvedRange(1));
         int projectileCount = Mathf.Max(1, skill.ProjectileCount);
         float spreadAngle = Mathf.Max(0f, skill.ProjectileSpreadAngle);
         float lateralSpacing = projectileCount > 1 ? 0.16f : 0f;
         Vector3 spawnBasePosition = facingTransform.position
-            + forward * Mathf.Max(0f, skill.ProjectileSpawnForwardOffset)
-            + Vector3.up * skill.ProjectileSpawnUpOffset;
+            + forward * Mathf.Max(0f, skill.GetResolvedProjectileSpawnForwardOffset(1))
+            + Vector3.up * skill.GetResolvedProjectileSpawnUpOffset(1);
 
         Gizmos.color = rangedSkillGizmoColor;
         Gizmos.DrawLine(origin, spawnBasePosition);
@@ -381,7 +410,7 @@ public class PlayerFacade : MonoBehaviour
 
             Vector3 spawnPosition = spawnBasePosition + facingTransform.right * lateralOffset;
             Vector3 direction = Quaternion.AngleAxis(yawOffset, Vector3.up) * forward;
-            Handles.DrawWireDisc(spawnPosition, Vector3.up, Mathf.Max(0.04f, skill.ProjectileRadius));
+            Handles.DrawWireDisc(spawnPosition, Vector3.up, Mathf.Max(0.04f, skill.GetResolvedProjectileRadius(1)));
             Handles.DrawLine(spawnPosition, spawnPosition + direction * range);
         }
 
@@ -393,13 +422,13 @@ public class PlayerFacade : MonoBehaviour
 
     private float GetSkillAreaRadius(PlayerSkillDefinition definition)
     {
-        return Mathf.Max(skillAreaMinRadius, definition.Range * skillAreaRadiusFactor);
+        return Mathf.Max(skillAreaMinRadius, definition.GetResolvedRange(1) * skillAreaRadiusFactor);
     }
 
     private Vector3 GetSkillAreaCenter(Transform facingTransform, PlayerSkillDefinition definition, float radius)
     {
         return facingTransform.position
-            + facingTransform.forward * Mathf.Max(radius * 0.25f, definition.Range * skillAreaForwardOffsetFactor);
+            + facingTransform.forward * Mathf.Max(radius * 0.25f, definition.GetResolvedRange(1) * skillAreaForwardOffsetFactor);
     }
 
     private PlayerJobType GetSkillGizmoJob()
@@ -408,6 +437,14 @@ public class PlayerFacade : MonoBehaviour
             return character.CurrentJob;
 
         return previewJobForSkillGizmos;
+    }
+
+    private PlayerBasicAttackProfile ResolveBasicAttackProfileForGizmos()
+    {
+        if (Application.isPlaying && character != null)
+            return character.GetBasicAttackProfile();
+
+        return PlayerJobCombatProfiles.GetBasicAttackProfile(GetSkillGizmoJob());
     }
 
 #if UNITY_EDITOR

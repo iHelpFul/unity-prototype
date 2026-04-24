@@ -35,6 +35,7 @@ public static class CharacterSaveFactory
             Finesse = 0,
             HitRate = 4,
             UnspentStatPoints = 0,
+            UnspentSkillPoints = 0,
             MaxHP = 100,
             CurrentHP = 100,
             MaxMP = 50,
@@ -50,9 +51,13 @@ public static class CharacterSaveFactory
             Inventory = new List<InventoryEntry>(),
             EquippedItems = new List<EquippedItemEntry>(),
             UnlockedSkills = new List<PlayerSkillEntry>(),
+            UnlockedPassives = new List<PlayerPassiveEntry>(),
+            ActionBarSlots = new List<PlayerActionBarSlotEntry>(),
+            InputBindings = new List<PlayerInputBindingEntry>(),
             QuestProgress = new List<PlayerQuestProgressEntry>()
         };
 
+        PlayerInputBindingUtility.EnsureDefaultInputData(runtimeData);
         PlayerProgressionRules.RefreshDerivedState(runtimeData);
         return runtimeData;
     }

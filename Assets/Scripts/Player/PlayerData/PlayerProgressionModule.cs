@@ -66,7 +66,8 @@ public class PlayerProgressionModule
             CharacterId = characterId,
             CurrentExp = data.CurrentExp,
             RequiredExp = data.RequiredExp,
-            UnspentStatPoints = data.UnspentStatPoints
+            UnspentStatPoints = data.UnspentStatPoints,
+            UnspentSkillPoints = data.UnspentSkillPoints
         });
 
         if (didLevelUp)
@@ -79,7 +80,10 @@ public class PlayerProgressionModule
     {
         data.Level++;
         PlayerProgressionRules.RefreshDerivedState(data);
-        data.UnspentStatPoints += PlayerProgressionRules.StatPointsAwardedPerLevelUp;
+        int awardedStatPoints = PlayerProgressionRules.GetStatPointsAwardedPerLevelUp();
+        int awardedSkillPoints = PlayerProgressionRules.GetSkillPointsAwardedPerLevelUp();
+        data.UnspentStatPoints += awardedStatPoints;
+        data.UnspentSkillPoints += awardedSkillPoints;
 
         ApplyLevelGrowth();
 
@@ -91,7 +95,9 @@ public class PlayerProgressionModule
                 : PlayerRuntimeIdentityUtility.ResolveCharacterId(bootstrap, null),
             NewLevel = data.Level,
             UnspentStatPoints = data.UnspentStatPoints,
-            StatPointsAwarded = PlayerProgressionRules.StatPointsAwardedPerLevelUp
+            UnspentSkillPoints = data.UnspentSkillPoints,
+            StatPointsAwarded = awardedStatPoints,
+            SkillPointsAwarded = awardedSkillPoints
         });
 
         PublishProgressionState();
@@ -99,8 +105,8 @@ public class PlayerProgressionModule
 
     private void ApplyLevelGrowth()
     {
-        data.MaxHP += 20;
-        data.MaxMP += 10;
+        data.MaxHP += PlayerProgressionRules.GetMaxHpGainPerLevel();
+        data.MaxMP += PlayerProgressionRules.GetMaxMpGainPerLevel();
 
         if (bootstrap != null)
         {
@@ -153,6 +159,7 @@ public class PlayerProgressionModule
             Target = owner,
             CharacterId = owner != null ? owner.CharacterId : PlayerRuntimeIdentityUtility.ResolveCharacterId(bootstrap, null),
             UnspentStatPoints = data.UnspentStatPoints,
+            UnspentSkillPoints = data.UnspentSkillPoints,
             CurrentExp = data.CurrentExp,
             RequiredExp = data.RequiredExp
         });

@@ -4,17 +4,20 @@ using UnityEngine;
 public class PlayerSessionJobApplicationService
 {
     private readonly PlayerSessionSkillService skillService;
+    private readonly PlayerSessionPassiveService passiveService;
     private readonly PlayerSessionEventPublisher eventPublisher;
     private readonly Func<PlayerRuntimeData> getPlayerData;
     private readonly Action savePlayer;
 
     public PlayerSessionJobApplicationService(
         PlayerSessionSkillService skillService,
+        PlayerSessionPassiveService passiveService,
         PlayerSessionEventPublisher eventPublisher,
         Func<PlayerRuntimeData> getPlayerData,
         Action savePlayer)
     {
         this.skillService = skillService;
+        this.passiveService = passiveService;
         this.eventPublisher = eventPublisher;
         this.getPlayerData = getPlayerData;
         this.savePlayer = savePlayer;
@@ -33,6 +36,7 @@ public class PlayerSessionJobApplicationService
         playerData.CurrentJob = newJobType;
         PlayerProgressionRules.RefreshDerivedState(playerData);
         skillService.EnsureDefaultSkillsForJob(playerData.CurrentJob);
+        passiveService.EnsureDefaultPassivesForJob(playerData.CurrentJob);
         PublishJobState(player);
         savePlayer?.Invoke();
         return true;

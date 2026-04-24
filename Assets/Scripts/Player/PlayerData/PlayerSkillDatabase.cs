@@ -71,9 +71,16 @@ public static class PlayerSkillDatabase
             return;
 
         asset = Resources.Load<PlayerSkillDatabaseAsset>(ResourcePath);
-        definitions = BuildLookup(asset != null && asset.Definitions != null && asset.Definitions.Count > 0
-            ? asset.Definitions
-            : CreateFallbackDefinitions());
+        definitions = BuildLookup(asset != null ? asset.Definitions : null);
+
+        if (asset == null)
+        {
+            Debug.LogError($"PlayerSkillDatabaseAsset was not found at Resources/{ResourcePath}.");
+            return;
+        }
+
+        if (asset.Definitions == null || asset.Definitions.Count == 0)
+            Debug.LogError("PlayerSkillDatabaseAsset is loaded but does not contain any skill definitions.");
     }
 
     private static Dictionary<string, PlayerSkillDefinition> BuildLookup(IReadOnlyList<PlayerSkillDefinition> skillDefinitions)
@@ -93,120 +100,6 @@ public static class PlayerSkillDatabase
         }
 
         return lookup;
-    }
-
-    private static IReadOnlyList<PlayerSkillDefinition> CreateFallbackDefinitions()
-    {
-        return new[]
-        {
-            PlayerSkillDefinition.CreateTransient(
-                VanguardComboMasteryId,
-                "Combo Mastery",
-                PlayerJobType.Vanguard,
-                PlayerSkillType.Passive,
-                20,
-                -1),
-            PlayerSkillDefinition.CreateTransient(
-                VanguardRageId,
-                "Rage",
-                PlayerJobType.Vanguard,
-                PlayerSkillType.ActiveBuff,
-                20,
-                2),
-            PlayerSkillDefinition.CreateTransient(
-                VanguardPowerStrikeId,
-                "Power Strike",
-                PlayerJobType.Vanguard,
-                PlayerSkillType.ActiveAttack,
-                20,
-                1,
-                newManaCost: 8,
-                newCooldown: 0f,
-                newRange: 1.9f,
-                newDamageMultiplier: 1.85f,
-                newHitCount: 1,
-                newHitInterval: 0f,
-                newAnimationVariantIndex: 4,
-                newAnimatorStateName: "Combo04_InPlace_SingleSword",
-                newAnimationSpeed: 1.08f,
-                newAttackDuration: 0.92f,
-                newTargetingMode: PlayerSkillTargetingMode.MeleeArea,
-                newMaxTargets: 3),
-            PlayerSkillDefinition.CreateTransient(
-                ShadeLuckySevenId,
-                "Lucky Seven",
-                PlayerJobType.Shade,
-                PlayerSkillType.ActiveAttack,
-                20,
-                1,
-                newManaCost: 6,
-                newCooldown: 0f,
-                newRange: 6.25f,
-                newDamageMultiplier: 1.02f,
-                newHitCount: 1,
-                newHitInterval: 0.08f,
-                newAnimationVariantIndex: 2,
-                newAnimatorStateName: "Combo02_InPlace_SingleSword 0",
-                newAnimationSpeed: 0.96f,
-                newAttackDuration: 0.82f,
-                newTargetingMode: PlayerSkillTargetingMode.ForwardProjectile,
-                newMaxTargets: 1,
-                newProjectileCount: 2,
-                newProjectileSpeed: 15f,
-                newProjectileRadius: 0.18f,
-                newProjectileLifetime: 0.65f,
-                newProjectileSpreadAngle: 7f,
-                newProjectileSpawnForwardOffset: 0.95f,
-                newProjectileSpawnUpOffset: 1.05f,
-                newProjectileVisualScale: 0.16f),
-            PlayerSkillDefinition.CreateTransient(
-                ShadeHasteId,
-                "Haste",
-                PlayerJobType.Shade,
-                PlayerSkillType.ActiveBuff,
-                20,
-                2),
-            PlayerSkillDefinition.CreateTransient(
-                ShadeNimbleBodyId,
-                "Nimble Body",
-                PlayerJobType.Shade,
-                PlayerSkillType.Passive,
-                20,
-                -1),
-            PlayerSkillDefinition.CreateTransient(
-                ArcanistMagicClawId,
-                "Magic Claw",
-                PlayerJobType.Arcanist,
-                PlayerSkillType.ActiveAttack,
-                20,
-                1,
-                newManaCost: 10,
-                newCooldown: 0f,
-                newRange: 6.5f,
-                newDamageMultiplier: 0.92f,
-                newHitCount: 2,
-                newHitInterval: 0.14f,
-                newAnimationVariantIndex: 1,
-                newAnimatorStateName: "Combo03_InPlace_SingleSword 0",
-                newAnimationSpeed: 0.92f,
-                newAttackDuration: 0.9f,
-                newTargetingMode: PlayerSkillTargetingMode.FrontSingleTarget,
-                newMaxTargets: 1),
-            PlayerSkillDefinition.CreateTransient(
-                ArcanistMagicGuardId,
-                "Magic Guard",
-                PlayerJobType.Arcanist,
-                PlayerSkillType.ActiveBuff,
-                20,
-                2),
-            PlayerSkillDefinition.CreateTransient(
-                ArcanistMpBoostId,
-                "MP Boost",
-                PlayerJobType.Arcanist,
-                PlayerSkillType.Passive,
-                20,
-                -1)
-        };
     }
 }
 
