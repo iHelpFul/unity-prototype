@@ -1,9 +1,29 @@
-public enum SfxType
+﻿public enum SfxType
 {
     SwordSwing,
     SwordHit,
     Jump,
     Land,
     Footstep,
-    PlayerHit
+    PlayerHit,
+    Novice_BasicAttack,
+    Novice_Signature_Charge,
+    Novice_Signature_Release,
+    Novice_Signature_Hit,
+    Vanguard_BasicAttack,
+    Vanguard_Breaker_Charge,
+    Vanguard_Breaker_Release,
+    Vanguard_Breaker_Hit,
+    Vanguard_OverheadCrush_Charge,
+    Vanguard_OverheadCrush_Release,
+    Vanguard_OverheadCrush_Hit,
+    Vanguard_Brace,
+    Shade_BasicAttack,
+    Shade_TwinFang_Charge,
+    Shade_TwinFang_Release,
+    Shade_TwinFang_Hit,
+    Shade_Signature_Charge,
+    Shade_Signature_Release,
+    Shade_Signature_Hit,
+    Shade_Haste
 }

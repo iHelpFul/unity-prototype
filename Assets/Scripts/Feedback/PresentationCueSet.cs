@@ -23,10 +23,14 @@ public class CombatPresentationCue
     [Header("VFX")]
     [SerializeField] private bool playVfx = true;
     [SerializeField] private VfxType vfxType = VfxType.EnemyHit;
+    [SerializeField] private bool persistVfxUntilStopped;
+    [SerializeField] private bool overrideVfxLifetime;
+    [SerializeField] private float vfxLifetime = 3f;
 
     [Header("SFX")]
     [SerializeField] private bool playSfx;
     [SerializeField] private SfxType sfxType = SfxType.SwordHit;
+    [SerializeField] private bool persistSfxUntilStopped;
 
     public CombatCuePhase Phase => phase;
     public CombatPresentationCueCondition Condition => condition;
@@ -36,12 +40,17 @@ public class CombatPresentationCue
     public bool FollowTarget => followTarget;
     public bool PlayVfx => playVfx;
     public VfxType VfxType => vfxType;
+    public bool PersistVfxUntilStopped => persistVfxUntilStopped;
+    public bool OverrideVfxLifetime => overrideVfxLifetime;
+    public float VfxLifetime => vfxLifetime;
     public bool PlaySfx => playSfx;
     public SfxType SfxType => sfxType;
+    public bool PersistSfxUntilStopped => persistSfxUntilStopped;
 
     public void Sanitize()
     {
         delay = Mathf.Max(0f, delay);
+        vfxLifetime = Mathf.Max(0f, vfxLifetime);
     }
 }
 

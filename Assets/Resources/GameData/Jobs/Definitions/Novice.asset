@@ -13,7 +13,17 @@ MonoBehaviour:
   m_Name: Novice
   m_EditorClassIdentifier: Assembly-CSharp::PlayerJobDefinition
   jobType: 0
-  displayName: Drifter
-  advancementLevelRequirement: 10
+  displayName: Novice
+  description: 
+  icon: {fileID: 0}
+  coreStat: 0
+  secondaryStat: 1
+  allowedWeaponTypes: 
+  advancementLevelRequirement: 12
   basicAttackProfile: {fileID: 11400000, guid: 2602b5fd04bedd344a02114140b402bd, type: 2}
-  defaultSkills: []
+  animationProfile: {fileID: 11400000, guid: 60f48ed9643dae84e932d4533f2da706, type: 2}
+  combatFormulaProfile: {fileID: 11400000, guid: 91177298a4c7e414eb36e274a65bb4cb, type: 2}
+  baseMaxGauge: 10
+  defaultSkills:
+  - {fileID: 11400000, guid: 0e36e2f39b93d804aa056fa671da83a1, type: 2}
+  defaultPassives: []

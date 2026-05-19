@@ -8,6 +8,7 @@ public class EnemyAnimationController : MonoBehaviour
     private readonly int speedHash = Animator.StringToHash("Speed");
     private readonly int attackHash = Animator.StringToHash("Attack");
     private readonly int hitHash = Animator.StringToHash("Hit");
+    private readonly int breakHash = Animator.StringToHash("Break");
     private readonly int dieHash = Animator.StringToHash("Die");
 
     private void Awake()
@@ -37,6 +38,20 @@ public class EnemyAnimationController : MonoBehaviour
             animator.SetTrigger(hitHash);
     }
 
+    public void PlayBreak()
+    {
+        if (animator == null)
+            return;
+
+        if (HasTriggerParameter(breakHash))
+        {
+            animator.SetTrigger(breakHash);
+            return;
+        }
+
+        animator.SetTrigger(hitHash);
+    }
+
     public void PlayDie()
     {
         if (animator != null)
@@ -60,5 +75,24 @@ public class EnemyAnimationController : MonoBehaviour
     public void OnAttackAnimationComplete()
     {
         enemyAI?.OnAttackAnimationComplete();
+    }
+
+    private bool HasTriggerParameter(int parameterHash)
+    {
+        if (animator == null)
+            return false;
+
+        AnimatorControllerParameter[] parameters = animator.parameters;
+        for (int index = 0; index < parameters.Length; index++)
+        {
+            AnimatorControllerParameter parameter = parameters[index];
+            if (parameter.type == AnimatorControllerParameterType.Trigger
+                && parameter.nameHash == parameterHash)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

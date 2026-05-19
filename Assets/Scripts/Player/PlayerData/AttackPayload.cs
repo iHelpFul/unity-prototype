@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using UnityEngine;
 
 public enum AttackPayloadActionKind
@@ -7,7 +6,8 @@ public enum AttackPayloadActionKind
     BasicAttack = 1,
     Skill = 2,
     ProjectileImpact = 3,
-    PassiveProc = 4
+    PassiveProc = 4,
+    BurstLinkedSkill = 5
 }
 
 [System.Serializable]
@@ -18,7 +18,7 @@ public sealed class AttackPayload
     [SerializeField] private string actionId = string.Empty;
     [SerializeField] private CombatAttackFamily attackFamily = CombatAttackFamily.None;
     [SerializeField] private CombatExecutionKind executionKind = CombatExecutionKind.None;
-    [SerializeField] private PlayerJobType sourceJobType = PlayerJobType.Drifter;
+    [SerializeField] private PlayerJobType sourceJobType = PlayerJobType.Novice;
     [SerializeField] private int sourceLevel = 1;
     [SerializeField] private Vector3 sourcePositionAtRelease;
     [SerializeField] private int skillLevel = 1;
@@ -30,17 +30,24 @@ public sealed class AttackPayload
     [SerializeField] private int resolvedWeaponPower;
     [SerializeField] private int resolvedHitRate;
     [SerializeField] private int resolvedHitCount = 1;
+    [SerializeField] private int resolvedProjectileCount = 1;
     [SerializeField] private float resolvedRange = 1f;
+    [SerializeField] private CombatHitBoxDefinition resolvedHitBox;
+    [SerializeField] private float resolvedBreakPower;
+
+    [Header("Gauge / Release Context")]
+    [SerializeField] private float gaugeSpentAtRelease;
+    [SerializeField] private float gaugeSpendNormalized;
+    [SerializeField] private int flowStacksAtRelease;
+    [SerializeField] private float holdDurationAtRelease;
+    [SerializeField] private bool aerialRelease;
 
     [Header("Momentum / States")]
     [SerializeField] private int momentumBefore;
     [SerializeField] private int momentumToConsume;
-    [SerializeField] private string[] requiredSelfStateIds = new string[0];
-    [SerializeField] private string[] requiredTargetStateIds = new string[0];
-    [SerializeField] private string[] consumedSelfStateIds = new string[0];
-    [SerializeField] private string[] consumedTargetStateIds = new string[0];
-    [SerializeField] private string[] appliedSelfStateIds = new string[0];
-    [SerializeField] private string[] appliedTargetStateIds = new string[0];
+    [SerializeField] private PlayerReadyStateType pendingReadyStateType = PlayerReadyStateType.None;
+    [SerializeField] private ReadyStateEmpowerDefinition readyStateEmpower;
+    [SerializeField] private bool readyStateEmpowerActivated;
 
     [Header("Surge")]
     [SerializeField] private float baseSurgeChance;
@@ -81,15 +88,23 @@ public sealed class AttackPayload
     public int ResolvedWeaponPower => resolvedWeaponPower;
     public int ResolvedHitRate => resolvedHitRate;
     public int ResolvedHitCount => resolvedHitCount;
+    public int ResolvedProjectileCount => resolvedProjectileCount;
     public float ResolvedRange => resolvedRange;
+    public CombatHitBoxDefinition ResolvedHitBox => resolvedHitBox.GetSanitized();
+    public float ResolvedBreakPower => resolvedBreakPower;
+    public float GaugeSpentAtRelease => gaugeSpentAtRelease;
+    public float GaugeSpendNormalized => gaugeSpendNormalized;
+    public int FlowStacksAtRelease => flowStacksAtRelease;
+    public float HoldDurationAtRelease => holdDurationAtRelease;
+    public bool AerialRelease => aerialRelease;
     public int MomentumBefore => momentumBefore;
     public int MomentumToConsume => momentumToConsume;
-    public IReadOnlyList<string> RequiredSelfStateIds => requiredSelfStateIds;
-    public IReadOnlyList<string> RequiredTargetStateIds => requiredTargetStateIds;
-    public IReadOnlyList<string> ConsumedSelfStateIds => consumedSelfStateIds;
-    public IReadOnlyList<string> ConsumedTargetStateIds => consumedTargetStateIds;
-    public IReadOnlyList<string> AppliedSelfStateIds => appliedSelfStateIds;
-    public IReadOnlyList<string> AppliedTargetStateIds => appliedTargetStateIds;
+    public PlayerReadyStateType PendingReadyStateType => pendingReadyStateType;
+    public ReadyStateEmpowerDefinition ReadyStateEmpower => readyStateEmpower.GetSanitized();
+    public bool IsReadyStateEmpowerActive => readyStateEmpowerActivated && readyStateEmpower.GetSanitized().IsConfigured;
+    public bool CanAttemptReadyStateEmpower => !IsReadyStateEmpowerActive
+        && PendingReadyStateType != PlayerReadyStateType.None
+        && ReadyStateEmpower.IsConfigured;
     public float BaseSurgeChance => baseSurgeChance;
     public float ContextSurgeChanceBonus => contextSurgeChanceBonus;
     public float SkillSurgeChanceBonus => skillSurgeChanceBonus;
@@ -125,15 +140,20 @@ public sealed class AttackPayload
         int newResolvedWeaponPower,
         int newResolvedHitRate,
         int newResolvedHitCount,
+        int newResolvedProjectileCount,
         float newResolvedRange,
+        CombatHitBoxDefinition newResolvedHitBox = default,
+        float newResolvedBreakPower = 0f,
+        float newGaugeSpentAtRelease = 0f,
+        float newGaugeSpendNormalized = 0f,
+        int newFlowStacksAtRelease = 0,
+        float newHoldDurationAtRelease = 0f,
+        bool newAerialRelease = false,
         int newMomentumBefore = 0,
         int newMomentumToConsume = 0,
-        IEnumerable<string> newRequiredSelfStateIds = null,
-        IEnumerable<string> newRequiredTargetStateIds = null,
-        IEnumerable<string> newConsumedSelfStateIds = null,
-        IEnumerable<string> newConsumedTargetStateIds = null,
-        IEnumerable<string> newAppliedSelfStateIds = null,
-        IEnumerable<string> newAppliedTargetStateIds = null,
+        PlayerReadyStateType newPendingReadyStateType = PlayerReadyStateType.None,
+        ReadyStateEmpowerDefinition newReadyStateEmpower = default,
+        bool newReadyStateEmpowerActivated = false,
         float newBaseSurgeChance = 0f,
         float newContextSurgeChanceBonus = 0f,
         float newSkillSurgeChanceBonus = 0f,
@@ -168,15 +188,20 @@ public sealed class AttackPayload
         resolvedWeaponPower = newResolvedWeaponPower;
         resolvedHitRate = newResolvedHitRate;
         resolvedHitCount = newResolvedHitCount;
+        resolvedProjectileCount = newResolvedProjectileCount;
         resolvedRange = newResolvedRange;
+        resolvedHitBox = newResolvedHitBox.GetSanitized();
+        resolvedBreakPower = newResolvedBreakPower;
+        gaugeSpentAtRelease = newGaugeSpentAtRelease;
+        gaugeSpendNormalized = newGaugeSpendNormalized;
+        flowStacksAtRelease = newFlowStacksAtRelease;
+        holdDurationAtRelease = newHoldDurationAtRelease;
+        aerialRelease = newAerialRelease;
         momentumBefore = newMomentumBefore;
         momentumToConsume = newMomentumToConsume;
-        requiredSelfStateIds = ToStateArray(newRequiredSelfStateIds);
-        requiredTargetStateIds = ToStateArray(newRequiredTargetStateIds);
-        consumedSelfStateIds = ToStateArray(newConsumedSelfStateIds);
-        consumedTargetStateIds = ToStateArray(newConsumedTargetStateIds);
-        appliedSelfStateIds = ToStateArray(newAppliedSelfStateIds);
-        appliedTargetStateIds = ToStateArray(newAppliedTargetStateIds);
+        pendingReadyStateType = newPendingReadyStateType;
+        readyStateEmpower = newReadyStateEmpower.GetSanitized();
+        readyStateEmpowerActivated = newReadyStateEmpowerActivated;
         baseSurgeChance = newBaseSurgeChance;
         contextSurgeChanceBonus = newContextSurgeChanceBonus;
         skillSurgeChanceBonus = newSkillSurgeChanceBonus;
@@ -214,15 +239,20 @@ public sealed class AttackPayload
         int newResolvedWeaponPower,
         int newResolvedHitRate,
         int newResolvedHitCount,
+        int newResolvedProjectileCount,
         float newResolvedRange,
+        CombatHitBoxDefinition newResolvedHitBox = default,
+        float newResolvedBreakPower = 0f,
+        float newGaugeSpentAtRelease = 0f,
+        float newGaugeSpendNormalized = 0f,
+        int newFlowStacksAtRelease = 0,
+        float newHoldDurationAtRelease = 0f,
+        bool newAerialRelease = false,
         int newMomentumBefore = 0,
         int newMomentumToConsume = 0,
-        IEnumerable<string> newRequiredSelfStateIds = null,
-        IEnumerable<string> newRequiredTargetStateIds = null,
-        IEnumerable<string> newConsumedSelfStateIds = null,
-        IEnumerable<string> newConsumedTargetStateIds = null,
-        IEnumerable<string> newAppliedSelfStateIds = null,
-        IEnumerable<string> newAppliedTargetStateIds = null,
+        PlayerReadyStateType newPendingReadyStateType = PlayerReadyStateType.None,
+        ReadyStateEmpowerDefinition newReadyStateEmpower = default,
+        bool newReadyStateEmpowerActivated = false,
         float newBaseSurgeChance = 0f,
         float newContextSurgeChanceBonus = 0f,
         float newSkillSurgeChanceBonus = 0f,
@@ -259,15 +289,20 @@ public sealed class AttackPayload
             newResolvedWeaponPower,
             newResolvedHitRate,
             newResolvedHitCount,
+            newResolvedProjectileCount,
             newResolvedRange,
+            newResolvedHitBox,
+            newResolvedBreakPower,
+            newGaugeSpentAtRelease,
+            newGaugeSpendNormalized,
+            newFlowStacksAtRelease,
+            newHoldDurationAtRelease,
+            newAerialRelease,
             newMomentumBefore,
             newMomentumToConsume,
-            newRequiredSelfStateIds,
-            newRequiredTargetStateIds,
-            newConsumedSelfStateIds,
-            newConsumedTargetStateIds,
-            newAppliedSelfStateIds,
-            newAppliedTargetStateIds,
+            newPendingReadyStateType,
+            newReadyStateEmpower,
+            newReadyStateEmpowerActivated,
             newBaseSurgeChance,
             newContextSurgeChanceBonus,
             newSkillSurgeChanceBonus,
@@ -301,9 +336,20 @@ public sealed class AttackPayload
         resolvedWeaponPower = Mathf.Max(0, resolvedWeaponPower);
         resolvedHitRate = Mathf.Max(0, resolvedHitRate);
         resolvedHitCount = Mathf.Max(1, resolvedHitCount);
+        resolvedProjectileCount = Mathf.Max(1, resolvedProjectileCount);
         resolvedRange = Mathf.Max(0f, resolvedRange);
+        resolvedHitBox = resolvedHitBox.GetSanitized();
+        resolvedBreakPower = Mathf.Max(0f, resolvedBreakPower);
+        gaugeSpentAtRelease = Mathf.Max(0f, gaugeSpentAtRelease);
+        gaugeSpendNormalized = Mathf.Clamp01(gaugeSpendNormalized);
+        flowStacksAtRelease = Mathf.Max(0, flowStacksAtRelease);
+        holdDurationAtRelease = Mathf.Max(0f, holdDurationAtRelease);
         momentumBefore = Mathf.Max(0, momentumBefore);
         momentumToConsume = Mathf.Max(0, momentumToConsume);
+        if (!System.Enum.IsDefined(typeof(PlayerReadyStateType), pendingReadyStateType))
+            pendingReadyStateType = PlayerReadyStateType.None;
+        readyStateEmpower = readyStateEmpower.GetSanitized();
+        readyStateEmpowerActivated = readyStateEmpowerActivated && readyStateEmpower.IsConfigured;
         baseSurgeChance = Mathf.Max(0f, baseSurgeChance);
         contextSurgeChanceBonus = Mathf.Max(0f, contextSurgeChanceBonus);
         skillSurgeChanceBonus = Mathf.Max(0f, skillSurgeChanceBonus);
@@ -314,46 +360,75 @@ public sealed class AttackPayload
         finalSurgePower = Mathf.Max(0f, finalSurgePower);
         elementPower = Mathf.Max(0f, elementPower);
         maxTargets = Mathf.Max(1, maxTargets);
-        requiredSelfStateIds = NormalizeStateIds(requiredSelfStateIds);
-        requiredTargetStateIds = NormalizeStateIds(requiredTargetStateIds);
-        consumedSelfStateIds = NormalizeStateIds(consumedSelfStateIds);
-        consumedTargetStateIds = NormalizeStateIds(consumedTargetStateIds);
-        appliedSelfStateIds = NormalizeStateIds(appliedSelfStateIds);
-        appliedTargetStateIds = NormalizeStateIds(appliedTargetStateIds);
     }
 
-    private static string[] NormalizeStateIds(string[] stateIds)
+    public bool TryActivateReadyStateEmpower()
     {
-        if (stateIds == null || stateIds.Length == 0)
-            return new string[0];
+        if (!CanAttemptReadyStateEmpower)
+            return false;
 
-        List<string> normalized = new List<string>();
-        HashSet<string> uniqueIds = new HashSet<string>();
-
-        for (int index = 0; index < stateIds.Length; index++)
-        {
-            string stateId = string.IsNullOrWhiteSpace(stateIds[index]) ? string.Empty : stateIds[index].Trim();
-            if (string.IsNullOrWhiteSpace(stateId))
-                continue;
-
-            if (!uniqueIds.Add(stateId))
-                continue;
-
-            normalized.Add(stateId);
-        }
-
-        return normalized.ToArray();
+        readyStateEmpowerActivated = true;
+        return true;
     }
 
-    private static string[] ToStateArray(IEnumerable<string> stateIds)
+    public AttackPayload CreateTriggeredAreaBonusPayload(ReadyStateAreaBonusDefinition areaBonus)
     {
-        if (stateIds == null)
-            return new string[0];
+        ReadyStateAreaBonusDefinition sanitizedAreaBonus = areaBonus.GetSanitized();
+        if (!sanitizedAreaBonus.IsConfigured)
+            return null;
 
-        List<string> collectedIds = new List<string>();
-        foreach (string stateId in stateIds)
-            collectedIds.Add(stateId);
+        int scaledMinDamage = Mathf.Max(1, Mathf.RoundToInt(ResolvedMinDamage * sanitizedAreaBonus.DamageMultiplier));
+        int scaledMaxDamage = Mathf.Max(scaledMinDamage, Mathf.RoundToInt(ResolvedMaxDamage * sanitizedAreaBonus.DamageMultiplier));
+        float scaledDamageCoefficient = Mathf.Max(0.05f, ResolvedDamageCoefficient * sanitizedAreaBonus.DamageMultiplier);
+        float scaledBreakPower = Mathf.Max(0f, ResolvedBreakPower * sanitizedAreaBonus.BreakPowerMultiplier);
 
-        return collectedIds.ToArray();
+        return CreateTransient(
+            newPayloadId: $"{PayloadId}_state_bonus_{System.Guid.NewGuid():N}",
+            newActionKind: AttackPayloadActionKind.PassiveProc,
+            newActionId: $"{ActionId}_state_bonus",
+            newAttackFamily: AttackFamily,
+            newExecutionKind: CombatExecutionKind.Direct,
+            newSourceJobType: SourceJobType,
+            newSourceLevel: SourceLevel,
+            newSourcePositionAtRelease: SourcePositionAtRelease,
+            newSkillLevel: SkillLevel,
+            newResolvedMinDamage: scaledMinDamage,
+            newResolvedMaxDamage: scaledMaxDamage,
+            newResolvedDamageCoefficient: scaledDamageCoefficient,
+            newResolvedWeaponPower: ResolvedWeaponPower,
+            newResolvedHitRate: ResolvedHitRate,
+            newResolvedHitCount: 1,
+            newResolvedProjectileCount: 1,
+            newResolvedRange: sanitizedAreaBonus.Range,
+            newResolvedHitBox: sanitizedAreaBonus.HitBox,
+            newResolvedBreakPower: scaledBreakPower,
+            newGaugeSpentAtRelease: 0f,
+            newGaugeSpendNormalized: 0f,
+            newFlowStacksAtRelease: FlowStacksAtRelease,
+            newHoldDurationAtRelease: 0f,
+            newAerialRelease: false,
+            newMomentumBefore: MomentumBefore,
+            newMomentumToConsume: 0,
+            newPendingReadyStateType: PlayerReadyStateType.None,
+            newReadyStateEmpower: default,
+            newReadyStateEmpowerActivated: false,
+            newBaseSurgeChance: BaseSurgeChance,
+            newContextSurgeChanceBonus: ContextSurgeChanceBonus,
+            newSkillSurgeChanceBonus: SkillSurgeChanceBonus,
+            newFinalSurgeChance: FinalSurgeChance,
+            newBaseSurgePower: BaseSurgePower,
+            newContextSurgePowerBonus: ContextSurgePowerBonus,
+            newSkillSurgePowerBonus: SkillSurgePowerBonus,
+            newFinalSurgePower: FinalSurgePower,
+            newHasElement: HasElement,
+            newElementType: ElementType,
+            newElementPower: ElementPower,
+            newCanMiss: CanMiss,
+            newCanSurge: CanSurge,
+            newCanApplyStates: false,
+            newCanTriggerOnHitEffects: CanTriggerOnHitEffects,
+            newCanTriggerOnKillEffects: CanTriggerOnKillEffects,
+            newMaxTargets: sanitizedAreaBonus.MaxTargets,
+            newStopOnFirstValidHit: false);
     }
 }

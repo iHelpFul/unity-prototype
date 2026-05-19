@@ -66,13 +66,6 @@ MonoBehaviour:
     MaxVolume: 0.1
     MinPitch: 1.1
     MaxPitch: 1.25
-  - Type: 1
-    Clips:
-    - {fileID: 8300000, guid: 5f5adf9a27b773d44b88d350dd647852, type: 3}
-    MinVolume: 0.5
-    MaxVolume: 0.65
-    MinPitch: 0.9
-    MaxPitch: 1
   - Type: 5
     Clips:
     - {fileID: 8300000, guid: 5f5adf9a27b773d44b88d350dd647852, type: 3}
@@ -80,3 +73,89 @@ MonoBehaviour:
     MaxVolume: 0.65
     MinPitch: 0.9
     MaxPitch: 1
+  - Type: 6
+    Clips:
+    - {fileID: 8300000, guid: b013a2c121b73894cba95e15ab84b0e1, type: 3}
+    MinVolume: 0.5
+    MaxVolume: 0.65
+    MinPitch: 0.9
+    MaxPitch: 1
+  - Type: 8
+    Clips:
+    - {fileID: 8300000, guid: e354edf2516f59d44b7deb2e58061f3b, type: 3}
+    MinVolume: 0.5
+    MaxVolume: 0.65
+    MinPitch: 0.9
+    MaxPitch: 1
+  - Type: 9
+    Clips:
+    - {fileID: 8300000, guid: 71edecf670ce60e4c8a6d72ff68d2f6d, type: 3}
+    MinVolume: 0.5
+    MaxVolume: 0.65
+    MinPitch: 0.9
+    MaxPitch: 1
+  - Type: 11
+    Clips:
+    - {fileID: 8300000, guid: b013a2c121b73894cba95e15ab84b0e1, type: 3}
+    MinVolume: 0.5
+    MaxVolume: 0.65
+    MinPitch: 0.9
+    MaxPitch: 1
+  - Type: 12
+    Clips:
+    - {fileID: 8300000, guid: 9ed4573abd1465749b538474846f4995, type: 3}
+    MinVolume: 0.5
+    MaxVolume: 0.65
+    MinPitch: 0.9
+    MaxPitch: 1
+  - Type: 13
+    Clips:
+    - {fileID: 8300000, guid: 495cf15e3eea75a4ab09b559c1c7bd7f, type: 3}
+    MinVolume: 0.5
+    MaxVolume: 0.65
+    MinPitch: 0.9
+    MaxPitch: 1
+  - Type: 15
+    Clips:
+    - {fileID: 8300000, guid: b013a2c121b73894cba95e15ab84b0e1, type: 3}
+    MinVolume: 0.5
+    MaxVolume: 0.65
+    MinPitch: 0.9
+    MaxPitch: 1
+  - Type: 16
+    Clips:
+    - {fileID: 8300000, guid: 9ed4573abd1465749b538474846f4995, type: 3}
+    MinVolume: 0.5
+    MaxVolume: 0.65
+    MinPitch: 0.9
+    MaxPitch: 1
+  - Type: 17
+    Clips:
+    - {fileID: 8300000, guid: 495cf15e3eea75a4ab09b559c1c7bd7f, type: 3}
+    MinVolume: 0.5
+    MaxVolume: 0.65
+    MinPitch: 0.9
+    MaxPitch: 1
+  - Type: 18
+    Clips:
+    - {fileID: 8300000, guid: 0594f86f76c8df14caf73629192aab26, type: 3}
+    MinVolume: 0.4
+    MaxVolume: 0.4
+    MinPitch: 1
+    MaxPitch: 1.08
+  - Type: 25
+    Clips:
+    - {fileID: 8300000, guid: fb276463bd6b0464ab1822cc7937587d, type: 3}
+    MinVolume: 0.25
+    MaxVolume: 0.25
+    MinPitch: 1
+    MaxPitch: 1.07
+  - Type: 20
+    Clips:
+    - {fileID: 8300000, guid: 9a0d7e3d781535340b8c0daa2e6de610, type: 3}
+    - {fileID: 8300000, guid: 343bffa4873000a49a824934f95c357a, type: 3}
+    - {fileID: 8300000, guid: 1e75ae2416e604a4392fa8a891af1043, type: 3}
+    MinVolume: 0.9
+    MaxVolume: 0.9
+    MinPitch: 0.8
+    MaxPitch: 0.9

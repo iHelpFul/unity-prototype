@@ -9,7 +9,8 @@ public class PlayerHitFlashController : MonoBehaviour
     private float flashTimer;
     private float flashDuration;
 
-    private static readonly int ColorID = Shader.PropertyToID("_BaseColor");
+    private static readonly int BaseColorID = Shader.PropertyToID("_BaseColor");
+    private static readonly int ColorID = Shader.PropertyToID("_Color");
 
     private void Awake()
     {
@@ -65,7 +66,9 @@ public class PlayerHitFlashController : MonoBehaviour
                 continue;
 
             block.Clear();
-            block.SetColor(ColorID, Color.white * multiplier);
+            Color flashColor = Color.white * multiplier;
+            block.SetColor(BaseColorID, flashColor);
+            block.SetColor(ColorID, flashColor);
             r.SetPropertyBlock(block);
         }
     }

@@ -10269,6 +10269,7 @@ GameObject:
   - component: {fileID: 234209129628156931}
   - component: {fileID: 6292599982916083836}
   - component: {fileID: 5173061284607984382}
+  - component: {fileID: 6889092620137941051}
   m_Layer: 3
   m_Name: PlayerNetworkPrototype
   m_TagString: Player
@@ -10305,6 +10306,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerInputAdapter
   playerCharacter: {fileID: 2111853801034255378}
+  inputRouter: {fileID: 0}
 --- !u!114 &2111853801034255378
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10356,7 +10358,6 @@ MonoBehaviour:
   animationController: {fileID: 2627151599857388162}
   footstepMinInterval: 0.22
   character: {fileID: 2111853801034255378}
-  attackRange: 1
   enemyLayer:
     serializedVersion: 2
     m_Bits: 64
@@ -10367,11 +10368,6 @@ MonoBehaviour:
   skillAreaMinRadius: 0.01
   lockedSkillTargetGraceRange: 1.05
   attackLowerHeightAllowance: 0.6
-  drawSkillRangeGizmos: 1
-  previewJobForSkillGizmos: 2
-  basicAttackGizmoColor: {r: 1, g: 0.25, b: 0.25, a: 0.3}
-  meleeSkillGizmoColor: {r: 1, g: 0.78, b: 0.2, a: 0.35}
-  rangedSkillGizmoColor: {r: 0.3, g: 0.85, b: 1, a: 0.35}
 --- !u!114 &4436733183499579118
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10586,15 +10582,51 @@ MonoBehaviour:
     m_ActionId: 5518bb42-a339-4c35-a528-3ccc695cf9c7
     m_ActionName: 'Player/SkillSlot2[/Keyboard/f]'
   - m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 8372885736269628600}
+        m_TargetAssemblyTypeName: PlayerInputAdapter, Assembly-CSharp
+        m_MethodName: OnSkillSlot3
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
     m_ActionId: c9297cd4-bfb5-433f-96f1-239cc067465a
     m_ActionName: 'Player/SkillSlot3[/Keyboard/v]'
   - m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 8372885736269628600}
+        m_TargetAssemblyTypeName: PlayerInputAdapter, Assembly-CSharp
+        m_MethodName: OnSkillSlot4
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
     m_ActionId: 4c7c5433-4980-41c7-9360-59880c7d9d5e
     m_ActionName: 'Player/SkillSlot4[/Keyboard/q]'
   - m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 8372885736269628600}
+        m_TargetAssemblyTypeName: PlayerInputAdapter, Assembly-CSharp
+        m_MethodName: OnSkillSlot5
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
     m_ActionId: f0fda079-dd87-4eca-94d7-6bc460f37594
     m_ActionName: 'Player/SkillSlot5[/Keyboard/w]'
   - m_PersistentCalls:
@@ -11501,6 +11533,37 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerInteractionController
   manualPickupRange: 1.6
+--- !u!114 &6889092620137941051
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3631378362000504220}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7cb494526ca5aa2449acb1bd9561ae7c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerCombatGizmoDrawer
+  facade: {fileID: 3159505403990584363}
+  character: {fileID: 2111853801034255378}
+  visual: {fileID: 8762550192443552275}
+  useRuntimeJobWhilePlaying: 1
+  previewJob: 2
+  previewSkillLevel: 1
+  previewChargeRatio: 1
+  drawLabels: 1
+  previewTapSkillIndex: 0
+  previewBurstSkillIndex: 0
+  previewTapSkillOverride: {fileID: 0}
+  previewBurstSkillOverride: {fileID: 0}
+  drawBasicAttack: 1
+  drawRegularSkills: 0
+  drawBurstTapVariant: 0
+  drawBurstChargedVariant: 0
+  basicAttackColor: {r: 1, g: 0.25, b: 0.25, a: 0.3}
+  skillTapColor: {r: 1, g: 0.78, b: 0.2, a: 0.35}
+  burstColor: {r: 1, g: 0.45, b: 0.2, a: 0.38}
 --- !u!1 &3642777236025289917
 GameObject:
   m_ObjectHideFlags: 0
@@ -11563,7 +11626,7 @@ Transform:
   m_Children:
   - {fileID: 8360728192367648820}
   m_Father: {fileID: 4284095761375360632}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: -12.155469, y: -179.88165, z: -29.177292}
 --- !u!1 &3678922533393195463
 GameObject:
   m_ObjectHideFlags: 0
@@ -12625,7 +12688,7 @@ Transform:
   - {fileID: 6352924843934178540}
   - {fileID: 2268102841176959541}
   m_Father: {fileID: 3707722366954937113}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
 --- !u!1 &4062393059990761321
 GameObject:
   m_ObjectHideFlags: 0
@@ -13064,7 +13127,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 8360728192367648820}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 4.825152}
 --- !u!1 &4312675176870232491
 GameObject:
   m_ObjectHideFlags: 0
@@ -13455,7 +13518,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 2858192462095636157}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 2.9715595, y: 10.34236, z: -17.767912}
 --- !u!1 &4542540908011566186
 GameObject:
   m_ObjectHideFlags: 0
@@ -14764,7 +14827,7 @@ Transform:
   m_Children:
   - {fileID: 4027748185767711274}
   m_Father: {fileID: 5568544646322609113}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: -4.7075524, y: -5.0349545, z: 7.9001193}
 --- !u!1 &5303018621223243302
 GameObject:
   m_ObjectHideFlags: 0
@@ -15764,7 +15827,7 @@ Transform:
   - {fileID: 2279915831774530190}
   - {fileID: 126077965357460120}
   m_Father: {fileID: 3187748971655125090}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
 --- !u!1 &5815769663749885913
 GameObject:
   m_ObjectHideFlags: 0
@@ -20403,7 +20466,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 840060102023688003}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 11.64349, y: -163.65125, z: 159.0252}
 --- !u!1 &8029480930934399637
 GameObject:
   m_ObjectHideFlags: 0
@@ -21075,7 +21138,7 @@ Transform:
   - {fileID: 3340949635998534811}
   - {fileID: 6838149159692770464}
   m_Father: {fileID: 4284095761375360632}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 4.773009, y: -90, z: 0}
 --- !u!1 &8281133220683733138
 GameObject:
   m_ObjectHideFlags: 0

@@ -34,7 +34,7 @@ public class PlayerCharacter : MonoBehaviour
     public bool IsDead => runtimeStateController != null && runtimeStateController.IsDead;
     public PlayerJobType CurrentJob => runtimeStateController != null
         ? runtimeStateController.CurrentJob
-        : PlayerJobType.Drifter;
+        : PlayerJobType.Novice;
     public int UnspentStatPoints => runtimeStateController != null
         ? runtimeStateController.UnspentStatPoints
         : 0;
@@ -43,9 +43,55 @@ public class PlayerCharacter : MonoBehaviour
     public int CurrentMomentumStacks => combatStateController != null
         ? combatStateController.CurrentMomentumStacks
         : 0;
+    public float CurrentGauge => combatStateController != null
+        ? combatStateController.CurrentGauge
+        : 0f;
+    public float MaxGauge => combatStateController != null
+        ? combatStateController.MaxGauge
+        : 0f;
+    public float GaugeNormalized => combatStateController != null
+        ? combatStateController.GaugeNormalized
+        : 0f;
+    public int CurrentFlowStacks => combatStateController != null
+        ? combatStateController.CurrentFlowStacks
+        : 0;
+    public float CurrentFlowStackTimer => combatStateController != null
+        ? combatStateController.CurrentFlowStackTimer
+        : 0f;
+    public float CurrentHoldChargeTime => combatStateController != null
+        ? combatStateController.CurrentHoldChargeTime
+        : 0f;
+    public float LockedGaugeSpend => combatStateController != null
+        ? combatStateController.LockedGaugeSpend
+        : 0f;
+    public bool HasEmpoweredBasicReady => combatStateController != null
+        && combatStateController.HasEmpoweredBasicReady;
+    public float EmpoweredBasicTimer => combatStateController != null
+        ? combatStateController.EmpoweredBasicTimer
+        : 0f;
+    public float EmpoweredBasicWindowDuration => combatStateController != null
+        ? combatStateController.EmpoweredBasicWindowDuration
+        : 0f;
+    public bool HasReadyStateActive => combatStateController != null
+        && combatStateController.HasReadyStateActive;
+    public PlayerReadyStateType ActiveReadyStateType => combatStateController != null
+        ? combatStateController.ActiveReadyStateType
+        : PlayerReadyStateType.None;
+    public float ReadyStateTimer => combatStateController != null
+        ? combatStateController.ReadyStateTimer
+        : 0f;
+    public float ReadyStateWindowDuration => combatStateController != null
+        ? combatStateController.ReadyStateWindowDuration
+        : 0f;
     public PlayerActionStateType CurrentActionState => actionStateController != null
         ? actionStateController.CurrentActionState
         : PlayerActionStateType.None;
+    public bool IsBurstSkillChargeActive => actionStateController != null
+        && actionStateController.IsBurstSkillChargeActive;
+    public bool IsUtilityActive => actionStateController != null
+        && actionStateController.IsUtilityActive;
+    public bool IsAnyChargeActive => actionStateController != null
+        && actionStateController.IsAnyChargeActive;
     public bool HasPendingSkillCommit => actionStateController != null && actionStateController.HasPendingSkillCommit;
     public bool ShouldSuppressInterruptingAnimation => actionStateController != null
         && actionStateController.ShouldSuppressInterruptingAnimation;
@@ -146,7 +192,7 @@ public class PlayerCharacter : MonoBehaviour
     {
         return runtimeStateController != null
             ? runtimeStateController.GetBasicAttackProfile()
-            : PlayerJobCombatProfiles.GetBasicAttackProfile(PlayerJobType.Drifter);
+            : PlayerJobCombatProfiles.GetBasicAttackProfile(PlayerJobType.Novice);
     }
 
     public bool TrySpendStatPoints(PlayerProgressionStatType statType, int points)
@@ -183,6 +229,109 @@ public class PlayerCharacter : MonoBehaviour
     public void GainCombatMomentum(int amount)
     {
         combatStateController?.GainMomentum(amount);
+    }
+
+    public void RefreshCombatGaugeCapacity(bool fillToMax = false)
+    {
+        combatStateController?.RefreshGaugeCapacity(fillToMax);
+    }
+
+    public float GainCombatGauge(float amount)
+    {
+        return combatStateController != null ? combatStateController.AddGauge(amount) : 0f;
+    }
+
+    public bool TryConsumeCombatGauge(float amount)
+    {
+        return combatStateController != null && combatStateController.TryConsumeGauge(amount);
+    }
+
+    public float LockCombatGaugeSpend(float requestedAmount)
+    {
+        return combatStateController != null ? combatStateController.LockGaugeSpend(requestedAmount) : 0f;
+    }
+
+    public float CommitLockedCombatGaugeSpend()
+    {
+        return combatStateController != null ? combatStateController.CommitLockedGaugeSpend() : 0f;
+    }
+
+    public void ClearLockedCombatGaugeSpend()
+    {
+        combatStateController?.ClearLockedGaugeSpend();
+    }
+
+    public void SetCombatHoldChargeTime(float holdChargeTime)
+    {
+        combatStateController?.SetHoldChargeTime(holdChargeTime);
+    }
+
+    public void ClearCombatHoldChargeTime()
+    {
+        combatStateController?.ClearHoldChargeTime();
+    }
+
+    public EmpoweredBasicDefinition GetActiveEmpoweredBasic()
+    {
+        return combatStateController != null ? combatStateController.ActiveEmpoweredBasic : default;
+    }
+
+    public bool TryConsumeEmpoweredBasic(out EmpoweredBasicDefinition empoweredBasicDefinition)
+    {
+        if (combatStateController == null)
+        {
+            empoweredBasicDefinition = default;
+            return false;
+        }
+
+        return combatStateController.TryConsumeEmpoweredBasic(out empoweredBasicDefinition);
+    }
+
+    public bool HasMatchingReadyState(PlayerReadyStateType readyStateType)
+    {
+        return combatStateController != null && combatStateController.HasMatchingReadyState(readyStateType);
+    }
+
+    public bool TryConsumeReadyState(PlayerReadyStateType readyStateType)
+    {
+        return combatStateController != null && combatStateController.TryConsumeReadyState(readyStateType);
+    }
+
+    public bool TryActivateReadyState(PlayerReadyStateType readyStateType, float duration)
+    {
+        return combatStateController != null
+            && combatStateController.TryActivateReadyState(readyStateType, duration);
+    }
+
+    public bool TryActivateGrantedReadyState(EmpoweredBasicDefinition empoweredBasicDefinition)
+    {
+        return combatStateController != null
+            && combatStateController.TryActivateGrantedReadyState(empoweredBasicDefinition);
+    }
+
+    public float RegisterBasicAttackBuilderHit(
+        PlayerBasicAttackProfile basicAttackProfile,
+        bool isChainFinisher,
+        bool isAerial,
+        bool wasValidHit = true)
+    {
+        return combatStateController != null
+            ? combatStateController.RegisterBuilderHit(
+                basicAttackProfile,
+                isChainFinisher,
+                isAerial,
+                wasValidHit)
+            : 0f;
+    }
+
+    public void RefreshCombatFlowTimer()
+    {
+        combatStateController?.RefreshFlowTimer();
+    }
+
+    public void ResetCombatFlow()
+    {
+        combatStateController?.ResetFlowStacks();
     }
 
     public void ConsumeCombatMomentum(int amount)

@@ -13,11 +13,47 @@ MonoBehaviour:
   m_Name: BlueTurtle
   m_EditorClassIdentifier: Assembly-CSharp::EnemyDefinition
   enemyType: 1
-  maxHP: 30
-  defense: 1
+  role: 3
+  icon: {fileID: 0}
+  elementType: 2
+  eliteProfile:
+    isElite: 0
+    maxHpMultiplier: 1.6
+    defenseBonus: 0
+    contactDamageMultiplier: 1.25
+    animatedAttackDamageMultiplier: 1.35
+    expRewardMultiplier: 1.75
+    poiseThresholdMultiplier: 1.35
+  maxHP: 1200
+  defense: 40
+  avoidance: 0
   expReward: 14
+  gaugeReward: 0.1
   contactDamage: 7
   animatedAttackDamage: 10
+  hitReactionDamageThreshold: 600
+  enableHitKnockback: 0
+  hitKnockbackForce: 0.18
+  hitKnockbackDuration: 0.08
+  hitKnockbackDamageThreshold: 999999
+  hitReactionMovementLockDuration: 0.3
+  cadenceProfile:
+    attackType: 1
+    moveSpeed: 1
+    detectionRange: 8
+    loseAggroDelay: 2.25
+    chaseBoundsPadding: 0
+    contactDamageCooldown: 1
+    attackCooldown: 1.2
+    attackRecoveryDuration: 0.3
+  poiseProfile:
+    poiseThreshold: 12
+    pressureDecayDelay: 0.9
+    pressureDecayPerSecond: 0.85
+    baseBreakDuration: 6.1
+    extraDurationPerBreakPower: 0
+    minimumBreakDuration: 0.15
+    pressureTakenMultiplier: 1
   minMesoDrop: 9
   maxMesoDrop: 18
   mesoDropChance: 0.9

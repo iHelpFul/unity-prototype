@@ -5,5 +5,6 @@ public enum PlayerActionStateType
     SkillPreCommit = 2,
     SkillCommitted = 3,
     Recovery = 4,
-    Interrupted = 5
+    Interrupted = 5,
+    BurstSkillCommitted = 6
 }

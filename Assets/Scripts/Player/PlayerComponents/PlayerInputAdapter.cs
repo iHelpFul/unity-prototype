@@ -126,9 +126,13 @@ public class PlayerInputAdapter : MonoBehaviour
 
     private void PublishSkillSlot(InputAction.CallbackContext context, int slotIndex)
     {
-        if (!ShouldPublishInput() || !context.performed || slotIndex <= 0)
+        if (!ShouldPublishInput() || slotIndex <= 0)
             return;
 
-        inputRouter.RouteActionBarSlot(slotIndex);
+        if (context.started)
+            inputRouter.RouteActionBarSlot(slotIndex);
+
+        if (context.canceled)
+            inputRouter.RouteActionBarSlotReleased(slotIndex);
     }
 }

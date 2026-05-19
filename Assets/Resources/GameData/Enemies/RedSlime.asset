@@ -13,13 +13,42 @@ MonoBehaviour:
   m_Name: RedSlime
   m_EditorClassIdentifier: Assembly-CSharp::EnemyDefinition
   enemyType: 0
-  maxHP: 3977
-  defense: 0
-  avoidance: 0
-  expReward: 15
+  role: 1
   icon: {fileID: 21300000, guid: b0658407979f34d4ea639564b65c5fa7, type: 3}
+  elementType: 1
+  eliteProfile:
+    isElite: 0
+    maxHpMultiplier: 1.6
+    defenseBonus: 0
+    contactDamageMultiplier: 1.25
+    animatedAttackDamageMultiplier: 1.35
+    expRewardMultiplier: 1.75
+    poiseThresholdMultiplier: 1.35
+  maxHP: 1500
+  defense: 1
+  avoidance: 1
+  expReward: 1000
+  gaugeReward: 0.75
   contactDamage: 4
   animatedAttackDamage: 12
+  hitReactionDamageThreshold: 0
+  cadenceProfile:
+    attackType: 1
+    moveSpeed: 2
+    detectionRange: 8
+    loseAggroDelay: 2.25
+    chaseBoundsPadding: 0
+    contactDamageCooldown: 1
+    attackCooldown: 1.2
+    attackRecoveryDuration: 0.3
+  poiseProfile:
+    poiseThreshold: 12
+    pressureDecayDelay: 0.9
+    pressureDecayPerSecond: 0.85
+    baseBreakDuration: 6.25
+    extraDurationPerBreakPower: 0
+    minimumBreakDuration: 0.15
+    pressureTakenMultiplier: 1
   minMesoDrop: 30000
   maxMesoDrop: 500000
   mesoDropChance: 0.8

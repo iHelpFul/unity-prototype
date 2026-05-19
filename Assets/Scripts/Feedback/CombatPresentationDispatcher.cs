@@ -70,6 +70,12 @@ public static class CombatPresentationDispatcher
                 PlayerSkillDefinition skillDefinition = PlayerSkillDatabase.GetDefinition(payload.ActionId);
                 return skillDefinition != null ? skillDefinition.PresentationCueSet : null;
 
+            case AttackPayloadActionKind.BurstLinkedSkill:
+                PlayerSkillDefinition burstSkillDefinition = PlayerSkillDatabase.GetDefinition(payload.ActionId);
+                return burstSkillDefinition != null
+                    ? burstSkillDefinition.BurstPresentationCueSet
+                    : null;
+
             case AttackPayloadActionKind.BasicAttack:
                 PlayerJobDefinition jobDefinition = PlayerJobCombatProfiles.GetJobDefinition(payload.SourceJobType);
                 return jobDefinition != null && jobDefinition.BasicAttackProfile != null
@@ -96,12 +102,36 @@ public static class CombatPresentationDispatcher
             didHit,
             didSurge,
             damage,
-            0f,
+            impactDuration: 0f,
             cueSet,
             playImpactFeedback: true,
             playDamageNumber: false);
 
         return PublishCuePhase(request, phase);
+    }
+
+    public static int StopCuePhase(
+        PresentationCueSet cueSet,
+        CombatCuePhase phase,
+        Vector3 worldPosition,
+        Transform source = null,
+        Transform target = null,
+        Transform projectile = null,
+        bool didHit = true,
+        bool didSurge = false,
+        int damage = 0)
+    {
+        CombatPresentationRequest request = new CombatPresentationRequest(
+            new CombatPresentationContext(worldPosition, source, target, projectile),
+            didHit,
+            didSurge,
+            damage,
+            impactDuration: 0f,
+            cueSet,
+            playImpactFeedback: false,
+            playDamageNumber: false);
+
+        return StopCuePhase(request, phase);
     }
 
     public static void PublishEnemyResult(CombatPresentationRequest request)
@@ -159,6 +189,31 @@ public static class CombatPresentationDispatcher
         return cuesPlayed;
     }
 
+    private static int StopCuePhase(CombatPresentationRequest request, CombatCuePhase phase)
+    {
+        if (request.CueSet == null || request.CueSet.Cues == null)
+            return 0;
+
+        int cuesStopped = 0;
+        IReadOnlyList<CombatPresentationCue> cues = request.CueSet.Cues;
+        for (int index = 0; index < cues.Count; index++)
+        {
+            CombatPresentationCue cue = cues[index];
+            if (cue == null
+                || cue.Phase != phase
+                || (!cue.PersistVfxUntilStopped && !cue.PersistSfxUntilStopped)
+                || !ShouldPlayCue(cue, request))
+            {
+                continue;
+            }
+
+            StopCue(cue, request);
+            cuesStopped++;
+        }
+
+        return cuesStopped;
+    }
+
     private static bool ShouldPlayCue(CombatPresentationCue cue, CombatPresentationRequest request)
     {
         switch (cue.Condition)
@@ -191,7 +246,11 @@ public static class CombatPresentationDispatcher
             {
                 Type = cue.SfxType,
                 Position = position,
-                Delay = cue.Delay
+                Delay = cue.Delay,
+                FollowTarget = cue.FollowTarget ? anchor : null,
+                FollowOffset = cue.PositionOffset,
+                Persistent = cue.PersistSfxUntilStopped,
+                TrackingTarget = ResolveTrackingTarget(cue, request, anchor, cue.PersistSfxUntilStopped)
             });
         }
 
@@ -204,7 +263,11 @@ public static class CombatPresentationDispatcher
                 Rotation = Quaternion.identity,
                 Delay = cue.Delay,
                 FollowTarget = cue.FollowTarget ? anchor : null,
-                FollowOffset = cue.PositionOffset
+                FollowOffset = cue.PositionOffset,
+                Persistent = cue.PersistVfxUntilStopped,
+                TrackingTarget = ResolveTrackingTarget(cue, request, anchor, cue.PersistVfxUntilStopped),
+                OverrideLifetime = cue.OverrideVfxLifetime,
+                Lifetime = cue.VfxLifetime
             });
         }
     }
@@ -237,6 +300,48 @@ public static class CombatPresentationDispatcher
             return anchor.position + cue.PositionOffset;
 
         return request.WorldPosition + cue.PositionOffset;
+    }
+
+    private static Transform ResolveTrackingTarget(
+        CombatPresentationCue cue,
+        CombatPresentationRequest request,
+        Transform anchor,
+        bool isPersistent)
+    {
+        if (!isPersistent)
+            return null;
+
+        return anchor != null ? anchor : request.Source;
+    }
+
+    private static void StopCue(CombatPresentationCue cue, CombatPresentationRequest request)
+    {
+        Transform anchor = ResolveAnchor(cue.SpawnTarget, request);
+        Transform trackingTarget = ResolveTrackingTarget(
+            cue,
+            request,
+            anchor,
+            cue.PersistVfxUntilStopped || cue.PersistSfxUntilStopped);
+        if (trackingTarget == null)
+            return;
+
+        if (cue.PlayVfx && cue.PersistVfxUntilStopped)
+        {
+            EventBus.Publish(new StopVfxEvent
+            {
+                Type = cue.VfxType,
+                TrackingTarget = trackingTarget
+            });
+        }
+
+        if (cue.PlaySfx && cue.PersistSfxUntilStopped)
+        {
+            EventBus.Publish(new StopSfxEvent
+            {
+                Type = cue.SfxType,
+                TrackingTarget = trackingTarget
+            });
+        }
     }
 
     private static void PublishMissNumber(CombatPresentationRequest request)

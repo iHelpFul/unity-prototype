@@ -25,6 +25,7 @@ public class PlayerHUDController : MonoBehaviour
     [SerializeField] private GameObject hpRoot;
     [SerializeField] private GameObject mpRoot;
     [SerializeField] private GameObject expRoot;
+    [SerializeField] private PlayerGaugeHudPresenter gaugeHudPresenter;
     [SerializeField] private PlayerCharacter trackedPlayer;
     [SerializeField] private GameBootstrap bootstrap;
 
@@ -42,7 +43,14 @@ public class PlayerHUDController : MonoBehaviour
         if (player != null && player.IsLocalPlayer)
             trackedPlayer = player;
 
+        gaugeHudPresenter?.BindTrackedPlayer(trackedPlayer);
         RefreshFromRuntimeData();
+    }
+
+    private void Awake()
+    {
+        if (gaugeHudPresenter == null)
+            gaugeHudPresenter = GetComponentInChildren<PlayerGaugeHudPresenter>(true);
     }
 
     private void Start()
@@ -170,6 +178,7 @@ public class PlayerHUDController : MonoBehaviour
         else if (!IsTrackedPlayer(e.Player, e.CharacterId))
             return;
 
+        gaugeHudPresenter?.BindTrackedPlayer(trackedPlayer);
         RefreshFromRuntimeData();
     }
 

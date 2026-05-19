@@ -6,13 +6,7 @@ public class EnemyHealth : MonoBehaviour
 {
     [SerializeField] private EnemyStats stats;
     [SerializeField] private EnemyAnimationController animationController;
-
-    [Header("Hit Feedback")]
-    [SerializeField] private bool enableHitKnockback;
-    [SerializeField] private float hitKnockbackForce = 0.18f;
-    [SerializeField] private float hitKnockbackDuration = 0.08f;
-    [SerializeField] private int hitKnockbackDamageThreshold = 999999;
-    [SerializeField] private float hitReactionMovementLockDuration = 0.16f;
+    [SerializeField] private EnemyBreakController breakController;
 
     private int currentHP;
     private bool isDead;
@@ -31,17 +25,22 @@ public class EnemyHealth : MonoBehaviour
     public EnemyStats Stats => stats;
     public bool IsDead => isDead;
     public int CurrentHP => Mathf.Max(0, currentHP);
+    public int MaxHP => Mathf.Max(1, stats != null ? stats.MaxHP : 1);
     public bool IsVisible => isVisible;
     public Vector3 SpawnPosition => spawnPosition;
     public bool HasSpawnIdentity => hasSpawnIdentity;
+    public EnemyBreakController BreakController => breakController;
+    public EnemyRole Role => stats != null ? stats.Role : EnemyRole.None;
+    public bool IsElite => stats != null && stats.EliteProfile.IsElite;
+
+    public int PreviewDisplayedDamage(int incomingDamage)
+    {
+        return ResolveMitigatedDamageAmount(incomingDamage);
+    }
 
     private void OnValidate()
     {
         stats?.Sanitize();
-        hitKnockbackForce = Mathf.Max(0f, hitKnockbackForce);
-        hitKnockbackDuration = Mathf.Max(0f, hitKnockbackDuration);
-        hitKnockbackDamageThreshold = Mathf.Max(0, hitKnockbackDamageThreshold);
-        hitReactionMovementLockDuration = Mathf.Max(0f, hitReactionMovementLockDuration);
 
         if (enemyAI == null)
             enemyAI = GetComponent<EnemyAI>();
@@ -49,8 +48,12 @@ public class EnemyHealth : MonoBehaviour
         if (enemyTouchDamage == null)
             enemyTouchDamage = GetComponent<EnemyTouchDamage>();
 
+        if (breakController == null)
+            breakController = GetComponent<EnemyBreakController>();
+
         enemyAI?.RefreshConfiguredStats();
         enemyTouchDamage?.RefreshConfiguredStats();
+        breakController?.RefreshConfiguredStats();
     }
 
     private void Awake()
@@ -59,6 +62,11 @@ public class EnemyHealth : MonoBehaviour
         characterController = GetComponent<CharacterController>();
         enemyAI = GetComponent<EnemyAI>();
         enemyTouchDamage = GetComponent<EnemyTouchDamage>();
+        breakController = GetComponent<EnemyBreakController>();
+        if (breakController == null)
+            breakController = gameObject.AddComponent<EnemyBreakController>();
+
+        breakController.Initialize(this, enemyAI, animationController);
         cachedRenderers = GetComponentsInChildren<Renderer>(true);
         spawnPosition = transform.position;
         spawnRotation = transform.rotation;
@@ -92,8 +100,9 @@ public class EnemyHealth : MonoBehaviour
         lastAttacker = attacker;
         enemyAI?.NotifyProvoked(attacker);
 
-        int finalDamage = Mathf.Max(1, amount - stats.Defense);
-        currentHP -= finalDamage;
+        int previousHp = currentHP;
+        int displayedDamage = ResolveMitigatedDamageAmount(amount);
+        currentHP -= displayedDamage;
 
         // Non-finishing hits in multi-hit skills should never leave the enemy in a
         // "alive but zero/negative HP" state. Clamp them to 1 HP so the final hit
@@ -101,36 +110,46 @@ public class EnemyHealth : MonoBehaviour
         if (!commitDeath && currentHP <= 0)
             currentHP = 1;
 
-        if (currentHP > 0)
-            NotifyHitReactionLock(hitReactionMovementLockDuration);
+        int appliedHealthLoss = Mathf.Max(0, previousHp - currentHP);
+        bool shouldPlayHitReactionAnimation = playHitReaction && ShouldPlayHitReactionAnimation(appliedHealthLoss);
+
+        if (currentHP > 0 && shouldPlayHitReactionAnimation)
+            NotifyHitReactionLock(stats != null ? stats.HitReactionMovementLockDuration : 0.16f);
 
         if (publishDamageFeedback)
             PlayDamageFeedback(
-                finalDamage,
+                displayedDamage,
                 direction,
                 playImpactFeedback: true,
-                allowHitAnimation: false);
+                allowHitAnimation: false,
+                appliedHealthLoss: appliedHealthLoss);
 
         if (commitDeath)
         {
             if (currentHP <= 0)
                 Die();
-            else if (playHitReaction)
+            else if (shouldPlayHitReactionAnimation)
                 animationController?.PlayHit();
         }
-        else if (playHitReaction)
+        else if (shouldPlayHitReactionAnimation)
         {
             animationController?.PlayHit();
         }
+
+        PublishHealthChangedEvent(
+            changeAmount: appliedHealthLoss,
+            wasDamaged: true,
+            revealOverhead: true);
     }
 
-    public void PlayAuthoritativeDamageFeedback(int finalDamage, float direction, bool playImpactFeedback = true)
+    public void PlayAuthoritativeDamageFeedback(int finalDamage, float direction, bool playImpactFeedback = true, int appliedHealthLoss = -1)
     {
         PlayDamageFeedback(
             finalDamage,
             direction,
             playImpactFeedback,
-            allowHitAnimation: false);
+            allowHitAnimation: false,
+            appliedHealthLoss: appliedHealthLoss);
     }
 
     public void NotifyHitReactionLock(float duration)
@@ -139,6 +158,14 @@ public class EnemyHealth : MonoBehaviour
             return;
 
         enemyAI?.NotifyHitReactionLock(duration);
+    }
+
+    public bool ApplyBreakFromPower(float breakPower, PlayerCharacter sourceCharacter = null)
+    {
+        if (breakController == null)
+            return false;
+
+        return breakController.ApplyBreakFromPower(breakPower, sourceCharacter);
     }
 
     private void Die()
@@ -225,6 +252,7 @@ public class EnemyHealth : MonoBehaviour
         bool playImpactFeedback)
     {
         bool wasDead = isDead;
+        int previousHp = currentHP;
         Vector3 previousPosition = transform.position;
 
         if (authoritativeDead)
@@ -269,6 +297,10 @@ public class EnemyHealth : MonoBehaviour
                 SetVisible(authoritativeVisible);
 
             animationController?.SetSpeed(0f);
+            PublishHealthChangedEvent(
+                changeAmount: playDamageNumber ? Mathf.Max(0, previousHp - currentHP) : 0,
+                wasDamaged: playDamageNumber && displayDamage > 0,
+                revealOverhead: playDamageNumber && displayDamage > 0);
 
             return !wasDead;
         }
@@ -289,6 +321,11 @@ public class EnemyHealth : MonoBehaviour
         ApplyTransformFromAuthority(authoritativePosition, authoritativeRotation);
         currentHP = Mathf.Max(0, authoritativeHp);
 
+        PublishHealthChangedEvent(
+            changeAmount: playDamageNumber ? Mathf.Max(0, previousHp - currentHP) : 0,
+            wasDamaged: playDamageNumber && displayDamage > 0,
+            revealOverhead: playDamageNumber && displayDamage > 0);
+
         if (isVisible != authoritativeVisible)
             SetVisible(authoritativeVisible);
 
@@ -298,7 +335,8 @@ public class EnemyHealth : MonoBehaviour
                 displayDamage,
                 direction,
                 playImpactFeedback,
-                allowHitAnimation: playImpactFeedback);
+                allowHitAnimation: playImpactFeedback,
+                appliedHealthLoss: Mathf.Max(0, previousHp - currentHP));
         }
 
         if (MultiplayerPrototypeRuntime.IsEnabled
@@ -317,7 +355,8 @@ public class EnemyHealth : MonoBehaviour
         int finalDamage,
         float direction,
         bool playImpactFeedback,
-        bool allowHitAnimation)
+        bool allowHitAnimation,
+        int appliedHealthLoss = -1)
     {
         if (finalDamage <= 0)
             return;
@@ -325,10 +364,11 @@ public class EnemyHealth : MonoBehaviour
         bool shouldApplyKnockback =
             playImpactFeedback
             && currentHP > 0
-            && enableHitKnockback
-            && hitKnockbackForce > 0f
-            && hitKnockbackDuration > 0f
-            && finalDamage >= hitKnockbackDamageThreshold;
+            && stats != null
+            && stats.EnableHitKnockback
+            && stats.HitKnockbackForce > 0f
+            && stats.HitKnockbackDuration > 0f
+            && finalDamage >= stats.HitKnockbackDamageThreshold;
 
         if (shouldApplyKnockback)
         {
@@ -336,8 +376,8 @@ public class EnemyHealth : MonoBehaviour
             {
                 Target = transform,
                 DirectionX = direction,
-                Force = hitKnockbackForce,
-                Duration = hitKnockbackDuration
+                Force = stats.HitKnockbackForce,
+                Duration = stats.HitKnockbackDuration
             });
         }
 
@@ -366,7 +406,28 @@ public class EnemyHealth : MonoBehaviour
         }
 
         if (playImpactFeedback && allowHitAnimation && currentHP > 0)
+        {
+            int resolvedAppliedHealthLoss = appliedHealthLoss >= 0 ? appliedHealthLoss : finalDamage;
+            if (!ShouldPlayHitReactionAnimation(resolvedAppliedHealthLoss))
+                return;
+
             animationController?.PlayHit();
+        }
+    }
+
+    private bool ShouldPlayHitReactionAnimation(int appliedHealthLoss)
+    {
+        int threshold = stats != null ? Mathf.Max(0, stats.HitReactionDamageThreshold) : 0;
+        return appliedHealthLoss > 0 && appliedHealthLoss >= threshold;
+    }
+
+    private int ResolveMitigatedDamageAmount(int incomingDamage)
+    {
+        if (incomingDamage <= 0)
+            return 0;
+
+        int defense = stats != null ? Mathf.Max(0, stats.Defense) : 0;
+        return Mathf.Max(1, incomingDamage - defense);
     }
 
     private void EnterDeadState(
@@ -392,7 +453,8 @@ public class EnemyHealth : MonoBehaviour
                 Enemy = transform,
                 Killer = lastAttacker,
                 Type = stats.EnemyType,
-                ExpReward = stats.ExpReward
+                ExpReward = stats.ExpReward,
+                GaugeReward = stats.GaugeReward
             });
         }
 
@@ -413,6 +475,7 @@ public class EnemyHealth : MonoBehaviour
             SetVisible(true);
 
         animationController?.PlayDie();
+        breakController?.ClearBreak();
         DisableLivingComponents();
 
         if (respawnRoutine != null)
@@ -447,8 +510,11 @@ public class EnemyHealth : MonoBehaviour
         }
 
         animationController?.ResetToIdle();
+        breakController?.RefreshConfiguredStats();
+        breakController?.ClearBreak();
         isDead = false;
         respawnRoutine = null;
+        PublishRespawnedEvent();
     }
 
     private void ApplyTransformFromAuthority(Vector3 position, Quaternion rotation)
@@ -604,5 +670,29 @@ public class EnemyHealth : MonoBehaviour
 
         spawnDirector = null;
         return null;
+    }
+
+    private void PublishHealthChangedEvent(int changeAmount, bool wasDamaged, bool revealOverhead)
+    {
+        EventBus.Publish(new EnemyHealthChangedEvent
+        {
+            Enemy = this,
+            CurrentHP = CurrentHP,
+            MaxHP = MaxHP,
+            ChangeAmount = Mathf.Max(0, changeAmount),
+            WasDamaged = wasDamaged,
+            IsDead = isDead,
+            RevealOverhead = revealOverhead && !isDead
+        });
+    }
+
+    private void PublishRespawnedEvent()
+    {
+        EventBus.Publish(new EnemyRespawnedEvent
+        {
+            Enemy = this,
+            CurrentHP = CurrentHP,
+            MaxHP = MaxHP
+        });
     }
 }

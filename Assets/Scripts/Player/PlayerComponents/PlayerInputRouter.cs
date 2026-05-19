@@ -100,7 +100,9 @@ public class PlayerInputRouter : MonoBehaviour
                 Player = playerCharacter,
                 CharacterId = ResolveCharacterId()
             });
+            return;
         }
+
     }
 
     public void RouteActionBarSlot(int slotIndex)
@@ -143,9 +145,43 @@ public class PlayerInputRouter : MonoBehaviour
         }
     }
 
+    public void RouteActionBarSlotReleased(int slotIndex)
+    {
+        if (!ShouldRouteInput() || slotIndex <= 0)
+            return;
+
+        PlayerActionBarSlotEntry slot = PlayerInputBindingUtility.GetActionBarSlot(
+            playerCharacter.RuntimeData,
+            slotIndex);
+
+        EventBus.Publish(new ActionBarSlotReleasedEvent
+        {
+            Player = playerCharacter,
+            CharacterId = ResolveCharacterId(),
+            SlotIndex = slotIndex,
+            AssignmentKind = slot != null ? slot.AssignmentKind : PlayerActionBarAssignmentKind.None,
+            AssignedId = slot != null ? slot.AssignedId : string.Empty
+        });
+
+        if (slot == null || slot.AssignmentKind != PlayerActionBarAssignmentKind.ActiveSkill)
+            return;
+
+        PublishSkillSlotReleased(slotIndex);
+    }
+
     private void PublishSkillSlot(int slotIndex)
     {
         EventBus.Publish(new SkillSlotPressedEvent
+        {
+            Player = playerCharacter,
+            CharacterId = ResolveCharacterId(),
+            SlotIndex = slotIndex
+        });
+    }
+
+    private void PublishSkillSlotReleased(int slotIndex)
+    {
+        EventBus.Publish(new SkillSlotReleasedEvent
         {
             Player = playerCharacter,
             CharacterId = ResolveCharacterId(),

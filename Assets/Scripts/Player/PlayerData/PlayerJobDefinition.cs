@@ -4,8 +4,8 @@ using UnityEngine;
 [CreateAssetMenu(menuName = "Game Data/Jobs/Player Job Definition")]
 public class PlayerJobDefinition : ScriptableObject
 {
-    [SerializeField] private PlayerJobType jobType = PlayerJobType.Drifter;
-    [SerializeField] private string displayName = "Drifter";
+    [SerializeField] private PlayerJobType jobType = PlayerJobType.Novice;
+    [SerializeField] private string displayName = "Novice";
     [SerializeField] private string description = string.Empty;
     [SerializeField] private Sprite icon;
     [SerializeField] private PlayerProgressionStatType coreStat = PlayerProgressionStatType.Might;
@@ -15,6 +15,7 @@ public class PlayerJobDefinition : ScriptableObject
     [SerializeField] private PlayerBasicAttackProfile basicAttackProfile;
     [SerializeField] private AnimationProfile animationProfile;
     [SerializeField] private CombatFormulaProfile combatFormulaProfile;
+    [SerializeField] private int baseMaxGauge = 10;
     [SerializeField] private List<PlayerSkillDefinition> defaultSkills = new List<PlayerSkillDefinition>();
     [SerializeField] private List<PassiveDefinition> defaultPassives = new List<PassiveDefinition>();
 
@@ -29,6 +30,7 @@ public class PlayerJobDefinition : ScriptableObject
     public PlayerBasicAttackProfile BasicAttackProfile => basicAttackProfile;
     public AnimationProfile AnimationProfile => animationProfile;
     public CombatFormulaProfile CombatFormulaProfile => combatFormulaProfile;
+    public int BaseMaxGauge => baseMaxGauge;
     public IReadOnlyList<PlayerSkillDefinition> DefaultSkills => defaultSkills;
     public IReadOnlyList<PassiveDefinition> DefaultPassives => defaultPassives;
 
@@ -86,6 +88,7 @@ public class PlayerJobDefinition : ScriptableObject
         displayName = string.IsNullOrWhiteSpace(displayName) ? jobType.ToString() : displayName.Trim();
         description = string.IsNullOrWhiteSpace(description) ? string.Empty : description.Trim();
         advancementLevelRequirement = Mathf.Max(0, advancementLevelRequirement);
+        baseMaxGauge = Mathf.Max(0, baseMaxGauge);
         allowedWeaponTypes ??= new WeaponType[0];
         defaultSkills ??= new List<PlayerSkillDefinition>();
         defaultPassives ??= new List<PassiveDefinition>();

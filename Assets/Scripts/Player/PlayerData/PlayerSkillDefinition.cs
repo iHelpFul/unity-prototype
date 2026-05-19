@@ -1,12 +1,13 @@
 using UnityEngine;
 using System.Collections.Generic;
+using UnityEngine.Serialization;
 
 [System.Serializable]
 public enum PlayerSkillType
 {
     Passive = 0,
-    ActiveBuff = 1,
-    ActiveAttack = 2
+    Utility = 1,
+    Attack = 2
 }
 
 [System.Serializable]
@@ -15,7 +16,6 @@ public class PlayerSkillLevelDefinition
     [SerializeField] private int level = 1;
     [SerializeField] private int manaCost;
     [SerializeField] private float cooldown;
-    [SerializeField] private float castTime;
     [SerializeField] private float recoveryTime = 0.2f;
     [SerializeField] private float range = 1f;
     [SerializeField] private int hitCount = 1;
@@ -25,17 +25,10 @@ public class PlayerSkillLevelDefinition
     [SerializeField] private int momentumGain;
     [SerializeField] private int momentumCost;
     [SerializeField] private ProjectileProfile projectileProfile;
-    [SerializeField] private string[] requiredSelfStateIds = new string[0];
-    [SerializeField] private string[] requiredTargetStateIds = new string[0];
-    [SerializeField] private string[] consumedSelfStateIds = new string[0];
-    [SerializeField] private string[] consumedTargetStateIds = new string[0];
-    [SerializeField] private string[] appliedSelfStateIds = new string[0];
-    [SerializeField] private string[] appliedTargetStateIds = new string[0];
 
     public int Level => level;
     public int ManaCost => manaCost;
     public float Cooldown => cooldown;
-    public float CastTime => castTime;
     public float RecoveryTime => recoveryTime;
     public float Range => range;
     public int HitCount => hitCount;
@@ -45,19 +38,12 @@ public class PlayerSkillLevelDefinition
     public int MomentumGain => momentumGain;
     public int MomentumCost => momentumCost;
     public ProjectileProfile ProjectileProfile => projectileProfile;
-    public IReadOnlyList<string> RequiredSelfStateIds => requiredSelfStateIds;
-    public IReadOnlyList<string> RequiredTargetStateIds => requiredTargetStateIds;
-    public IReadOnlyList<string> ConsumedSelfStateIds => consumedSelfStateIds;
-    public IReadOnlyList<string> ConsumedTargetStateIds => consumedTargetStateIds;
-    public IReadOnlyList<string> AppliedSelfStateIds => appliedSelfStateIds;
-    public IReadOnlyList<string> AppliedTargetStateIds => appliedTargetStateIds;
 
     public void Sanitize()
     {
         level = Mathf.Max(1, level);
         manaCost = Mathf.Max(0, manaCost);
         cooldown = Mathf.Max(0f, cooldown);
-        castTime = Mathf.Max(0f, castTime);
         recoveryTime = Mathf.Max(0f, recoveryTime);
         range = Mathf.Max(0f, range);
         hitCount = Mathf.Max(1, hitCount);
@@ -66,35 +52,6 @@ public class PlayerSkillLevelDefinition
         extraSurgePower = Mathf.Max(0f, extraSurgePower);
         momentumGain = Mathf.Max(0, momentumGain);
         momentumCost = Mathf.Max(0, momentumCost);
-        requiredSelfStateIds = NormalizeStateIds(requiredSelfStateIds);
-        requiredTargetStateIds = NormalizeStateIds(requiredTargetStateIds);
-        consumedSelfStateIds = NormalizeStateIds(consumedSelfStateIds);
-        consumedTargetStateIds = NormalizeStateIds(consumedTargetStateIds);
-        appliedSelfStateIds = NormalizeStateIds(appliedSelfStateIds);
-        appliedTargetStateIds = NormalizeStateIds(appliedTargetStateIds);
-    }
-
-    private static string[] NormalizeStateIds(string[] stateIds)
-    {
-        if (stateIds == null || stateIds.Length == 0)
-            return new string[0];
-
-        List<string> normalized = new List<string>();
-        HashSet<string> uniqueIds = new HashSet<string>();
-
-        for (int index = 0; index < stateIds.Length; index++)
-        {
-            string stateId = string.IsNullOrWhiteSpace(stateIds[index]) ? string.Empty : stateIds[index].Trim();
-            if (string.IsNullOrWhiteSpace(stateId))
-                continue;
-
-            if (!uniqueIds.Add(stateId))
-                continue;
-
-            normalized.Add(stateId);
-        }
-
-        return normalized.ToArray();
     }
 }
 
@@ -105,15 +62,23 @@ public class PlayerSkillDefinition : ScriptableObject
     [SerializeField] private string displayName = "New Skill";
     [SerializeField] private string description = string.Empty;
     [SerializeField] private Sprite icon;
-    [SerializeField] private PlayerJobType jobType = PlayerJobType.Drifter;
-    [SerializeField] private PlayerSkillType skillType = PlayerSkillType.ActiveAttack;
+    [SerializeField] private PlayerJobType jobType = PlayerJobType.Novice;
+    [SerializeField] private PlayerSkillType skillType = PlayerSkillType.Attack;
     [SerializeField] private CombatAttackFamily attackFamily = CombatAttackFamily.None;
-    [SerializeField] private CombatExecutionKind executionKind = CombatExecutionKind.Melee;
+    [SerializeField] private CombatExecutionKind executionKind = CombatExecutionKind.Direct;
     [SerializeField] private CombatTargetingKind combatTargetingKind = CombatTargetingKind.SingleTarget;
+    [SerializeField] private CombatHitBoxDefinition hitBox;
+    [FormerlySerializedAs("enemyCombatStateInteraction")]
+    [SerializeField] private ReadyStateEmpowerDefinition readyStateEmpower;
+    [SerializeField] private UtilitySkillProfile utilitySkillProfile;
+    [SerializeField] private BurstLinkedSkillProfile burstLinkedSkillProfile;
     [SerializeField] private PresentationCueSet presentationCueSet;
+    [SerializeField] private PresentationCueSet burstPresentationCueSet;
     [SerializeField] private ProjectileProfile defaultProjectileProfile;
+    [SerializeField] private ProjectileLaunchMode projectileLaunchMode = ProjectileLaunchMode.Locked;
     [SerializeField] private int baseMomentumGain;
     [SerializeField] private int baseMomentumCost;
+    [SerializeField] private float baseBreakPower;
     [SerializeField] private float baseSurgeChanceBonus;
     [SerializeField] private float baseSurgePowerBonus;
     [SerializeField] private CombatElementType defaultElement = CombatElementType.None;
@@ -126,7 +91,6 @@ public class PlayerSkillDefinition : ScriptableObject
     [SerializeField] private string animatorStateName = string.Empty;
     [SerializeField] private float animationSpeed = 1f;
     [SerializeField] private float attackDuration = 0.9f;
-    [SerializeField] private ProjectileBehaviorKind projectileBehaviorKind = ProjectileBehaviorKind.SequenceLocked;
     [SerializeField] private int maxTargets = 1;
     [SerializeField] private int projectileCount = 1;
     [SerializeField] private float projectileSpreadAngle;
@@ -140,10 +104,19 @@ public class PlayerSkillDefinition : ScriptableObject
     public CombatAttackFamily AttackFamily => attackFamily;
     public CombatExecutionKind ExecutionKind => executionKind;
     public CombatTargetingKind CombatTargetingKind => combatTargetingKind;
+    public CombatHitBoxDefinition HitBox => hitBox.GetSanitized();
+    public ReadyStateEmpowerDefinition ReadyStateEmpower => readyStateEmpower.GetSanitized();
+    public UtilitySkillProfile UtilitySkillProfile => utilitySkillProfile;
+    public BurstLinkedSkillProfile BurstLinkedSkillProfile => burstLinkedSkillProfile;
     public PresentationCueSet PresentationCueSet => presentationCueSet;
+    public PresentationCueSet BurstPresentationCueSet => burstPresentationCueSet != null
+        ? burstPresentationCueSet
+        : presentationCueSet;
     public ProjectileProfile DefaultProjectileProfile => defaultProjectileProfile;
+    public ProjectileLaunchMode ProjectileLaunchMode => projectileLaunchMode;
     public int BaseMomentumGain => baseMomentumGain;
     public int BaseMomentumCost => baseMomentumCost;
+    public float BaseBreakPower => baseBreakPower;
     public float BaseSurgeChanceBonus => baseSurgeChanceBonus;
     public float BaseSurgePowerBonus => baseSurgePowerBonus;
     public CombatElementType DefaultElement => defaultElement;
@@ -160,16 +133,24 @@ public class PlayerSkillDefinition : ScriptableObject
     public string AnimatorStateName => animatorStateName;
     public float AnimationSpeed => animationSpeed;
     public float AttackDuration => attackDuration;
-    public ProjectileBehaviorKind ProjectileBehaviorKind => projectileBehaviorKind;
     public int MaxTargets => maxTargets;
     public int ProjectileCount => projectileCount;
     public float ProjectileSpeed => GetResolvedProjectileSpeed(1);
-    public float ProjectileRadius => GetResolvedProjectileRadius(1);
+    public float ProjectileHitBoxRange => GetResolvedProjectileHitBoxRange(1);
     public float ProjectileLifetime => GetResolvedProjectileLifetime(1);
     public float ProjectileSpreadAngle => projectileSpreadAngle;
     public float ProjectileSpawnForwardOffset => GetResolvedProjectileSpawnForwardOffset(1);
     public float ProjectileSpawnUpOffset => GetResolvedProjectileSpawnUpOffset(1);
     public float ProjectileVisualScale => GetResolvedProjectileVisualScale(1);
+    public bool HasUtilitySkillProfile => utilitySkillProfile != null;
+    public bool HasBurstLinkedSkillProfile => burstLinkedSkillProfile != null;
+
+    public PresentationCueSet ResolvePresentationCueSet(AttackPayloadActionKind actionKind)
+    {
+        return actionKind == AttackPayloadActionKind.BurstLinkedSkill
+            ? BurstPresentationCueSet
+            : PresentationCueSet;
+    }
 
     public PlayerSkillLevelDefinition GetLevelDefinition(int skillLevel)
     {
@@ -294,13 +275,19 @@ public class PlayerSkillDefinition : ScriptableObject
         return 0f;
     }
 
-    public float GetResolvedProjectileRadius(int skillLevel)
+    public float GetResolvedProjectileHitBoxRange(int skillLevel)
     {
         ProjectileProfile profile = GetResolvedProjectileProfile(skillLevel);
         if (profile != null)
-            return Mathf.Max(0.01f, profile.CollisionRadius);
+            return Mathf.Max(0.05f, profile.CollisionRange);
 
-        return 0.2f;
+        return ProjectileProfileUtility.DefaultCollisionRange;
+    }
+
+    public CombatHitBoxDefinition GetResolvedProjectileHitBox(int skillLevel)
+    {
+        ProjectileProfile profile = GetResolvedProjectileProfile(skillLevel);
+        return ProjectileProfileUtility.ResolveCollisionHitBox(profile);
     }
 
     public float GetResolvedProjectileLifetime(int skillLevel)
@@ -351,8 +338,11 @@ public class PlayerSkillDefinition : ScriptableObject
         description = string.IsNullOrWhiteSpace(description) ? string.Empty : description.Trim();
         baseMomentumGain = Mathf.Max(0, baseMomentumGain);
         baseMomentumCost = Mathf.Max(0, baseMomentumCost);
+        baseBreakPower = Mathf.Max(0f, baseBreakPower);
         baseSurgeChanceBonus = Mathf.Max(0f, baseSurgeChanceBonus);
         baseSurgePowerBonus = Mathf.Max(0f, baseSurgePowerBonus);
+        hitBox = hitBox.GetSanitized();
+        readyStateEmpower = readyStateEmpower.GetSanitized();
         maxLevel = Mathf.Max(1, maxLevel);
         damageMultiplier = Mathf.Max(0f, damageMultiplier);
         hitInterval = Mathf.Max(0f, hitInterval);

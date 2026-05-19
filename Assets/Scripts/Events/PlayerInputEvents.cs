@@ -45,7 +45,23 @@ public struct SkillSlotPressedEvent
     public int SlotIndex;
 }
 
+public struct SkillSlotReleasedEvent
+{
+    public PlayerCharacter Player;
+    public string CharacterId;
+    public int SlotIndex;
+}
+
 public struct ActionBarSlotPressedEvent
+{
+    public PlayerCharacter Player;
+    public string CharacterId;
+    public int SlotIndex;
+    public PlayerActionBarAssignmentKind AssignmentKind;
+    public string AssignedId;
+}
+
+public struct ActionBarSlotReleasedEvent
 {
     public PlayerCharacter Player;
     public string CharacterId;

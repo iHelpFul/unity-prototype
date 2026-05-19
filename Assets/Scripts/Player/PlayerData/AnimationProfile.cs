@@ -12,12 +12,14 @@ public class AnimationProfile : ScriptableObject
 
     [Header("Skill Playback")]
     [SerializeField] private int skillAnimationLayerIndex = 1;
+    [SerializeField] private string actionIdleStateName = "Combat_Empty";
     [SerializeField] private float skillCrossFadeDuration = 0.04f;
     [SerializeField] private float skillStartNormalizedTime;
 
     public string RespawnStateName => respawnStateName;
     public string DeathStateName => deathStateName;
     public int SkillAnimationLayerIndex => skillAnimationLayerIndex;
+    public string ActionIdleStateName => actionIdleStateName;
     public float SkillCrossFadeDuration => skillCrossFadeDuration;
     public float SkillStartNormalizedTime => skillStartNormalizedTime;
 
@@ -30,6 +32,9 @@ public class AnimationProfile : ScriptableObject
             ? DefaultDeathStateName
             : deathStateName.Trim();
         skillAnimationLayerIndex = Mathf.Max(0, skillAnimationLayerIndex);
+        actionIdleStateName = string.IsNullOrWhiteSpace(actionIdleStateName)
+            ? "Combat_Empty"
+            : actionIdleStateName.Trim();
         skillCrossFadeDuration = Mathf.Max(0f, skillCrossFadeDuration);
         skillStartNormalizedTime = Mathf.Clamp01(skillStartNormalizedTime);
     }

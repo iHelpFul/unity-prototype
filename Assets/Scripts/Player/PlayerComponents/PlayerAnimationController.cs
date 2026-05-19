@@ -16,7 +16,8 @@ public class PlayerAnimationController : MonoBehaviour
     private readonly int hitHash = Animator.StringToHash("Hit");
     private readonly int diedHash = Animator.StringToHash("IsDead");
     [SerializeField] private ParticleSystem slashVfx;
-    private string activeSkillStateName;
+    private string activeActionStateName;
+    private bool suppressLegacyCombatParameters;
 
     private void Awake()
     {
@@ -63,9 +64,17 @@ public class PlayerAnimationController : MonoBehaviour
         animator.SetFloat(speedHash, horizontalSpeed);
         animator.SetBool(groundedHash, isGrounded);
         animator.SetFloat(verticalHash, verticalVelocity);
-        if (string.IsNullOrWhiteSpace(activeSkillStateName))
-        animator.SetInteger(comboHash, comboIndex);
-        animator.SetBool(attackingHash, isAttacking);
+        if (!suppressLegacyCombatParameters || string.IsNullOrWhiteSpace(activeActionStateName))
+        {
+            animator.SetInteger(comboHash, comboIndex);
+            animator.SetBool(attackingHash, isAttacking);
+        }
+        else
+        {
+            animator.SetInteger(comboHash, 0);
+            animator.SetBool(attackingHash, false);
+        }
+
         animator.speed = isAttacking ? Mathf.Max(0.1f, attackAnimationSpeed) : 1f;
 
         bool suppressInterruptingMovementTriggers =
@@ -76,11 +85,9 @@ public class PlayerAnimationController : MonoBehaviour
 
         if (landedThisFrame && !suppressInterruptingMovementTriggers)
             animator.SetTrigger(landHash);
-        if (!isAttacking && !string.IsNullOrWhiteSpace(activeSkillStateName))
-            activeSkillStateName = string.Empty;
     }
 
-        // ===== Animation Events =====
+    // ===== Animation Events =====
 
     public void OnHitFrame()
     {
@@ -104,6 +111,14 @@ public class PlayerAnimationController : MonoBehaviour
             return;
 
         playerFacade.OnAttackEnd();
+    }
+
+    public void OnBurstChargeLoopReady()
+    {
+        if (!ShouldProcessGameplayAnimationEvents())
+            return;
+
+        playerFacade.OnBurstChargeLoopReady();
     }
 
     public void OnSwingStart()
@@ -143,6 +158,7 @@ public class PlayerAnimationController : MonoBehaviour
 
         playerFacade.OnJumpSound();
     }
+
     public void EnableSlashVfx()
     {
         if (slashVfx == null)
@@ -154,24 +170,75 @@ public class PlayerAnimationController : MonoBehaviour
 
     public void PlaySkillAnimation(PlayerSkillDefinition definition)
     {
-        if (animator == null || definition == null)
+        if (definition == null)
             return;
 
-        activeSkillStateName = definition.AnimatorStateName;
-        if (string.IsNullOrWhiteSpace(activeSkillStateName))
-            return;
-
-        AnimationProfile animationProfile = ResolveAnimationProfile();
-        int layerIndex = animationProfile != null ? animationProfile.SkillAnimationLayerIndex : 1;
-        float crossFadeDuration = animationProfile != null ? animationProfile.SkillCrossFadeDuration : 0.04f;
-        float startNormalizedTime = animationProfile != null ? animationProfile.SkillStartNormalizedTime : 0f;
-
-        animator.CrossFadeInFixedTime(activeSkillStateName, crossFadeDuration, layerIndex, startNormalizedTime);
+        PlayNamedActionAnimation(definition.AnimatorStateName);
     }
 
-    public void ClearSkillAnimationOverride()
+    public void PlayBasicAttackAnimation(PlayerBasicAttackProfile profile, int animationVariantIndex)
     {
-        activeSkillStateName = string.Empty;
+        if (profile == null)
+            return;
+
+        string animatorStateName = profile.GetAnimatorStateName(animationVariantIndex);
+        if (string.IsNullOrWhiteSpace(animatorStateName))
+        {
+            ClearActionAnimationOverride(false);
+            return;
+        }
+
+        PlayNamedActionAnimation(animatorStateName);
+    }
+
+    public void PlayBurstSkillChargeAnimation(BurstLinkedSkillProfile profile)
+    {
+        if (profile == null)
+            return;
+
+        string entryStateName = profile.ChargeEntryAnimatorStateName;
+        if (!string.IsNullOrWhiteSpace(entryStateName))
+        {
+            PlayNamedActionAnimation(entryStateName);
+            return;
+        }
+
+        PlayNamedActionAnimation(profile.ChargeAnimatorStateName);
+    }
+
+    public void PlayBurstSkillChargeLoopAnimation(BurstLinkedSkillProfile profile)
+    {
+        if (profile == null)
+            return;
+
+        PlayNamedActionAnimation(profile.ChargeAnimatorStateName);
+    }
+
+    public void PlayBurstSkillReleaseAnimation(BurstLinkedSkillProfile profile)
+    {
+        if (profile == null)
+            return;
+
+        PlayNamedActionAnimation(profile.ReleaseAnimatorStateName);
+    }
+
+    public void ClearActionAnimationOverride(bool returnToActionIdle = true)
+    {
+        if (returnToActionIdle)
+            ExitActionLayerToIdle();
+
+        activeActionStateName = string.Empty;
+        suppressLegacyCombatParameters = false;
+    }
+
+    public void PlayHitReaction()
+    {
+        if (animator == null)
+            return;
+
+        ClearActionAnimationOverride();
+        animator.ResetTrigger(hitHash);
+        animator.SetTrigger(hitHash);
     }
 
     private void OnPlayerHit(PlayerHitEvent e)
@@ -182,6 +249,7 @@ public class PlayerAnimationController : MonoBehaviour
         if (playerCharacter != null && playerCharacter.ShouldSuppressHitReactionAnimation)
             return;
 
+        animator.ResetTrigger(hitHash);
         animator.SetTrigger(hitHash);
     }
 
@@ -197,7 +265,7 @@ public class PlayerAnimationController : MonoBehaviour
         animator.speed = 1f;
         animator.SetInteger(comboHash, 0);
         animator.SetBool(diedHash, true);
-        activeSkillStateName = string.Empty;
+        ClearActionAnimationOverride(false);
         animator.Play(ResolveDeathStateName(), 0, 0f);
     }
 
@@ -214,9 +282,31 @@ public class PlayerAnimationController : MonoBehaviour
         animator.speed = 1f;
         animator.SetInteger(comboHash, 0);
         animator.SetBool(diedHash, false);
-        activeSkillStateName = string.Empty;
+        ClearActionAnimationOverride(false);
 
         animator.Play(ResolveRespawnStateName(), 0, 0f);
+    }
+
+    private void PlayNamedActionAnimation(string animatorStateName)
+    {
+        if (animator == null)
+            return;
+
+        string resolvedStateName = string.IsNullOrWhiteSpace(animatorStateName)
+            ? string.Empty
+            : animatorStateName.Trim();
+        if (string.IsNullOrWhiteSpace(resolvedStateName))
+            return;
+
+        activeActionStateName = resolvedStateName;
+        suppressLegacyCombatParameters = true;
+
+        AnimationProfile animationProfile = ResolveAnimationProfile();
+        int layerIndex = animationProfile != null ? animationProfile.SkillAnimationLayerIndex : 1;
+        float crossFadeDuration = animationProfile != null ? animationProfile.SkillCrossFadeDuration : 0.04f;
+        float startNormalizedTime = animationProfile != null ? animationProfile.SkillStartNormalizedTime : 0f;
+
+        animator.CrossFadeInFixedTime(activeActionStateName, crossFadeDuration, layerIndex, startNormalizedTime);
     }
 
     private AnimationProfile ResolveAnimationProfile()
@@ -257,5 +347,28 @@ public class PlayerAnimationController : MonoBehaviour
     private bool ShouldProcessGameplayAnimationEvents()
     {
         return playerCharacter != null && playerCharacter.IsLocalPlayer;
+    }
+
+    private void ExitActionLayerToIdle()
+    {
+        if (animator == null)
+            return;
+
+        if (string.IsNullOrWhiteSpace(activeActionStateName))
+            return;
+
+        AnimationProfile animationProfile = ResolveAnimationProfile();
+        if (animationProfile == null)
+            return;
+
+        string idleStateName = animationProfile.ActionIdleStateName;
+        if (string.IsNullOrWhiteSpace(idleStateName))
+            return;
+
+        animator.CrossFadeInFixedTime(
+            idleStateName,
+            animationProfile.SkillCrossFadeDuration,
+            animationProfile.SkillAnimationLayerIndex,
+            0f);
     }
 }

@@ -3,7 +3,7 @@ using UnityEngine;
 public class PlayerCombatModule
 {
     private static readonly PlayerBasicAttackProfile DefaultBasicAttackProfile =
-        PlayerJobCombatProfiles.GetBasicAttackProfile(PlayerJobType.Drifter);
+        PlayerJobCombatProfiles.GetBasicAttackProfile(PlayerJobType.Novice);
 
     private int currentAnimationIndex;
     private int currentChainCount;
@@ -13,6 +13,7 @@ public class PlayerCombatModule
     private float attackTimer;
     private float activeAttackDuration;
     private float activeAttackAnimationSpeed = 1f;
+    private float activeBasicAttackAnimationSpeedMultiplier = 1f;
     private int comboCounter;
     private float comboCounterTimer;
     private PlayerBasicAttackProfile basicAttackProfile = DefaultBasicAttackProfile;
@@ -26,7 +27,7 @@ public class PlayerCombatModule
     public int MaxBasicTargets => Mathf.Max(1, basicAttackProfile.MaxTargets);
     public float AttackAnimationSpeed => isSkillAttack
         ? activeAttackAnimationSpeed
-        : basicAttackProfile.AttackAnimationSpeed;
+        : basicAttackProfile.AttackAnimationSpeed * Mathf.Max(0.05f, activeBasicAttackAnimationSpeedMultiplier);
     public bool SupportsComboCounter => basicAttackProfile.SupportsComboCounter;
 
     public void SetBasicAttackProfile(PlayerBasicAttackProfile profile)
@@ -61,7 +62,7 @@ public class PlayerCombatModule
             ForceReset();
     }
 
-    public void RequestAttack()
+    public void RequestAttack(float basicAttackAnimationSpeedMultiplier = 1f)
     {
         if (!isAttacking)
         {
@@ -75,6 +76,7 @@ public class PlayerCombatModule
             currentAnimationIndex = ResolveNextAnimationIndex(0);
             attackBuffered = false;
             attackTimer = 0f;
+            activeBasicAttackAnimationSpeedMultiplier = Mathf.Max(0.05f, basicAttackAnimationSpeedMultiplier);
         }
         else
         {
@@ -134,6 +136,7 @@ public class PlayerCombatModule
         attackTimer = 0f;
         activeAttackDuration = 0f;
         activeAttackAnimationSpeed = 1f;
+        activeBasicAttackAnimationSpeedMultiplier = 1f;
     }
 
     public int CalculateBasicDamage(PlayerCombatSnapshot snapshot)
@@ -172,7 +175,9 @@ public class PlayerCombatModule
 
     private int ResolveNextAnimationIndex(int previousAnimationIndex)
     {
-        int variantCount = Mathf.Max(1, basicAttackProfile.AnimationVariantCount);
+        int variantCount = basicAttackProfile.HasAnimatorStateOverrides
+            ? Mathf.Max(1, basicAttackProfile.ResolvedAnimationVariantCount)
+            : Mathf.Max(1, basicAttackProfile.AnimationVariantCount);
 
         if (variantCount == 1)
             return 1;

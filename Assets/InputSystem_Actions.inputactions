@@ -690,7 +690,7 @@
                 {
                     "name": "",
                     "id": "4194e1c0-5dee-4e76-8f25-32b5978113ee",
-                    "path": "<Keyboard>/q",
+                    "path": "<Keyboard>/w",
                     "interactions": "",
                     "processors": "",
                     "groups": ";Keyboard&Mouse",
@@ -701,10 +701,10 @@
                 {
                     "name": "",
                     "id": "55a86a08-3ba3-4a20-a926-a6c1144e4aa2",
-                    "path": "<Keyboard>/w",
+                    "path": "<Keyboard>/q",
                     "interactions": "",
                     "processors": "",
-                    "groups": "",
+                    "groups": ";Keyboard&Mouse",
                     "action": "SkillSlot5",
                     "isComposite": false,
                     "isPartOfComposite": false
@@ -726,7 +726,7 @@
                     "path": "<Keyboard>/s",
                     "interactions": "",
                     "processors": "",
-                    "groups": "",
+                    "groups": ";Keyboard&Mouse",
                     "action": "SkillSlot7",
                     "isComposite": false,
                     "isPartOfComposite": false

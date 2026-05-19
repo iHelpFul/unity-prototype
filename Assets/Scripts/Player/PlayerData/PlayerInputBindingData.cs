@@ -7,14 +7,15 @@ public enum PlayerInputActionId
     Move = 1,
     Jump = 2,
     BasicAttack = 3,
-    Interact = 4,
-    ActionBarSlot = 5,
-    UseRedPotion = 6,
-    UseBluePotion = 7,
-    InventoryToggle = 8,
-    ProgressionToggle = 9,
-    QuestLogToggle = 10,
-    SkillAndPassiveWindowToggle = 11
+    SkillSlot3Shortcut = 4,
+    Interact = 5,
+    ActionBarSlot = 6,
+    UseRedPotion = 7,
+    UseBluePotion = 8,
+    InventoryToggle = 9,
+    ProgressionToggle = 10,
+    QuestLogToggle = 11,
+    SkillAndPassiveWindowToggle = 12
 }
 
 public enum PlayerActionBarAssignmentKind

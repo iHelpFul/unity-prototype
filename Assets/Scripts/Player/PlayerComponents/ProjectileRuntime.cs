@@ -14,7 +14,8 @@ public class ProjectileRuntime : MonoBehaviour
     private string skillId;
     private AttackPayload attackPayload;
     private float speed;
-    private float radius;
+    private float collisionRange;
+    private CombatHitBoxDefinition collisionHitBox;
     private float lifetime;
     private float elapsedTime;
     private float maxTravelDistance;
@@ -29,12 +30,13 @@ public class ProjectileRuntime : MonoBehaviour
     private float arcHeight;
     private float homingRadius;
     private float homingTurnRate;
-    private ProjectileBehaviorKind projectileBehaviorKind = ProjectileBehaviorKind.Free;
     private PresentationCueSet presentationCueSet;
     private float impactAreaRadius;
     private int maxImpactAreaTargets = 1;
     private int resolvedHitCount;
     private CommittedEnemyHitPacket? committedHitPacket;
+    private System.Action onFirstSuccessfulHit;
+    private bool didInvokeFirstSuccessfulHit;
     private bool allowDefaultVisual;
     private Transform visualRoot;
     private Material runtimeMaterial;
@@ -50,7 +52,8 @@ public class ProjectileRuntime : MonoBehaviour
         string sourceSkillId,
         Vector3 travelDirection,
         float travelSpeed,
-        float hitRadius,
+        float projectileCollisionRange,
+        CombatHitBoxDefinition projectileCollisionHitBox,
         float maxLifetime,
         float resolvedTravelDistance,
         float visualScale,
@@ -65,10 +68,10 @@ public class ProjectileRuntime : MonoBehaviour
         float projectileArcHeight = 0f,
         float projectileHomingRadius = 0f,
         float projectileHomingTurnRate = 0f,
-        ProjectileBehaviorKind behaviorKind = ProjectileBehaviorKind.Free,
         float projectileImpactAreaRadius = 0f,
         int projectileMaxImpactAreaTargets = 1,
-        PresentationCueSet cueSet = null)
+        PresentationCueSet cueSet = null,
+        System.Action firstSuccessfulHitCallback = null)
     {
         owner = ownerCharacter;
         lockedTarget = lockedEnemy;
@@ -80,7 +83,8 @@ public class ProjectileRuntime : MonoBehaviour
             ? travelDirection.normalized
             : Vector3.forward;
         speed = Mathf.Max(0.1f, travelSpeed);
-        radius = Mathf.Max(0.05f, hitRadius);
+        collisionRange = Mathf.Max(0.05f, projectileCollisionRange);
+        collisionHitBox = projectileCollisionHitBox.GetSanitized();
         maxTravelDistance = Mathf.Max(0f, resolvedTravelDistance);
         traveledDistance = 0f;
         didResolveHit = false;
@@ -93,12 +97,13 @@ public class ProjectileRuntime : MonoBehaviour
         arcHeight = Mathf.Max(0f, projectileArcHeight);
         homingRadius = Mathf.Max(0f, projectileHomingRadius);
         homingTurnRate = Mathf.Max(0f, projectileHomingTurnRate);
-        projectileBehaviorKind = behaviorKind;
         presentationCueSet = cueSet;
         impactAreaRadius = Mathf.Max(0f, projectileImpactAreaRadius);
         maxImpactAreaTargets = Mathf.Max(1, projectileMaxImpactAreaTargets);
         resolvedHitCount = 0;
         committedHitPacket = packet;
+        onFirstSuccessfulHit = firstSuccessfulHitCallback;
+        didInvokeFirstSuccessfulHit = false;
         allowDefaultVisual = !shouldSkipDefaultVisual;
         homingTarget = null;
         hitEnemies.Clear();
@@ -152,6 +157,7 @@ public class ProjectileRuntime : MonoBehaviour
         Vector3 nextPosition = ResolveFreeProjectileNextPosition(startPosition, travelDistance, deltaTime);
         if (TryHitEnemy(startPosition, nextPosition, out EnemyHealth enemy, out Vector3 freeImpactPosition))
         {
+            Vector3 continuedPosition = nextPosition;
             transform.position = freeImpactPosition;
             if (ShouldResolveImpactArea())
             {
@@ -169,7 +175,7 @@ public class ProjectileRuntime : MonoBehaviour
                 return;
             }
 
-            transform.position += direction * Mathf.Max(radius * 0.5f, 0.05f);
+            transform.position = continuedPosition + direction * Mathf.Max(collisionRange * 0.25f, 0.05f);
             homingTarget = null;
             return;
         }
@@ -202,15 +208,13 @@ public class ProjectileRuntime : MonoBehaviour
 
         desiredDirection.Normalize();
         direction = desiredDirection;
-        transform.rotation = Quaternion.LookRotation(direction, Vector3.up);
 
         Vector3 nextPosition = Vector3.MoveTowards(startPosition, targetPoint, travelDistance);
         transform.position = nextPosition;
 
-        if ((targetPoint - nextPosition).sqrMagnitude <= radius * radius * 4f)
+        if (TryHitSpecificEnemy(startPosition, nextPosition, lockedTarget, out impactPosition))
         {
             enemy = lockedTarget;
-            impactPosition = targetPoint;
             return true;
         }
 
@@ -276,7 +280,7 @@ public class ProjectileRuntime : MonoBehaviour
 
     private EnemyHealth FindNearestHomingTarget()
     {
-        float searchRadius = Mathf.Max(homingRadius, radius);
+        float searchRadius = Mathf.Max(homingRadius, collisionRange);
         if (searchRadius <= 0f)
             return null;
 
@@ -315,67 +319,16 @@ public class ProjectileRuntime : MonoBehaviour
         Vector3 castDirection = segmentDistance > 0.0001f
             ? segment / segmentDistance
             : direction;
-
-        float castDistance = Mathf.Max(segmentDistance, radius * 0.5f);
-        RaycastHit[] hits = Physics.SphereCastAll(
-            startPosition,
-            radius,
-            castDirection,
-            castDistance,
-            enemyLayer,
-            QueryTriggerInteraction.Collide);
-
-        float bestDistance = float.MaxValue;
-
-        for (int index = 0; index < hits.Length; index++)
-        {
-            RaycastHit hit = hits[index];
-            EnemyHealth candidate = hit.collider.GetComponentInParent<EnemyHealth>();
-            if (candidate == null || candidate.IsDead || hitEnemies.Contains(candidate))
-                continue;
-
-            if (hit.distance >= bestDistance)
-                continue;
-
-            bestDistance = hit.distance;
-            enemy = candidate;
-            impactPosition = hit.point;
-        }
-
-        if (enemy != null)
+        CombatHitBoxWorldQuery sweepQuery = BuildSweepHitBoxQuery(startPosition, endPosition);
+        if (TryResolveEnemyFromQuery(sweepQuery, startPosition, castDirection, null, out enemy, out impactPosition))
             return true;
 
-        if (TryFindOverlapEnemy(startPosition, out enemy))
-        {
-            impactPosition = enemy.transform.position;
+        CombatHitBoxWorldQuery startQuery = BuildBodyHitBoxQuery(startPosition);
+        if (TryResolveEnemyFromQuery(startQuery, startPosition, castDirection, null, out enemy, out impactPosition))
             return true;
-        }
 
-        if (TryFindOverlapEnemy(endPosition, out enemy))
-        {
-            impactPosition = enemy.transform.position;
-            return true;
-        }
-
-        return false;
-    }
-
-    private bool TryFindOverlapEnemy(Vector3 position, out EnemyHealth enemy)
-    {
-        enemy = null;
-
-        Collider[] overlaps = Physics.OverlapSphere(position, radius, enemyLayer, QueryTriggerInteraction.Collide);
-        for (int index = 0; index < overlaps.Length; index++)
-        {
-            EnemyHealth candidate = overlaps[index].GetComponentInParent<EnemyHealth>();
-            if (candidate == null || candidate.IsDead || hitEnemies.Contains(candidate))
-                continue;
-
-            enemy = candidate;
-            return true;
-        }
-
-        return false;
+        CombatHitBoxWorldQuery endQuery = BuildBodyHitBoxQuery(endPosition);
+        return TryResolveEnemyFromQuery(endQuery, startPosition, castDirection, null, out enemy, out impactPosition);
     }
 
     private bool ApplyHit(EnemyHealth enemy)
@@ -392,6 +345,7 @@ public class ProjectileRuntime : MonoBehaviour
                 transform.position.x,
                 direction.x,
                 committedHitPacket.Value,
+                attackPayload,
                 presentationCueSet,
                 transform);
         }
@@ -415,6 +369,7 @@ public class ProjectileRuntime : MonoBehaviour
         {
             hitEnemies.Add(enemy);
             resolvedHitCount++;
+            NotifyFirstSuccessfulHit();
             if (ShouldFinalizeProjectileAfterHit())
                 didResolveHit = true;
         }
@@ -442,7 +397,7 @@ public class ProjectileRuntime : MonoBehaviour
         if (!ShouldResolveImpactArea() || didResolveHit)
             return false;
 
-        float resolvedRadius = Mathf.Max(impactAreaRadius, radius);
+        float resolvedRadius = Mathf.Max(impactAreaRadius, collisionRange);
         Collider[] overlaps = Physics.OverlapSphere(impactPosition, resolvedRadius, enemyLayer, QueryTriggerInteraction.Collide);
         if (overlaps.Length == 0)
             return false;
@@ -600,10 +555,8 @@ public class ProjectileRuntime : MonoBehaviour
 
     private void FaceTravelDirection(Vector3 travelDelta)
     {
-        if (travelDelta.sqrMagnitude <= 0.0001f)
-            return;
-
-        transform.rotation = Quaternion.LookRotation(travelDelta.normalized, Vector3.up);
+        // Projectile travel is resolved from its movement vector and hit queries,
+        // not from the root transform rotation. Keep authored prefab rotation intact.
     }
 
     private static float ResolveLifetime(float configuredLifetime, float resolvedTravelDistance, float travelSpeed)
@@ -635,7 +588,103 @@ public class ProjectileRuntime : MonoBehaviour
 
     private bool ShouldResolveImpactArea()
     {
-        return projectileBehaviorKind == ProjectileBehaviorKind.ImpactAoE;
+        return impactAreaRadius > 0f && maxImpactAreaTargets > 0;
+    }
+
+    private bool TryHitSpecificEnemy(
+        Vector3 startPosition,
+        Vector3 endPosition,
+        EnemyHealth requiredTarget,
+        out Vector3 impactPosition)
+    {
+        impactPosition = endPosition;
+        if (requiredTarget == null || requiredTarget.IsDead)
+            return false;
+
+        Vector3 segment = endPosition - startPosition;
+        Vector3 castDirection = segment.sqrMagnitude > 0.0001f
+            ? segment.normalized
+            : direction;
+
+        CombatHitBoxWorldQuery sweepQuery = BuildSweepHitBoxQuery(startPosition, endPosition);
+        return TryResolveEnemyFromQuery(sweepQuery, startPosition, castDirection, requiredTarget, out _, out impactPosition);
+    }
+
+    private CombatHitBoxWorldQuery BuildSweepHitBoxQuery(Vector3 startPosition, Vector3 endPosition)
+    {
+        Vector3 segment = endPosition - startPosition;
+        float segmentDistance = segment.magnitude;
+        Vector3 castDirection = segmentDistance > 0.0001f
+            ? segment / segmentDistance
+            : direction;
+        Quaternion rotation = Quaternion.LookRotation(
+            castDirection.sqrMagnitude > 0.0001f ? castDirection : Vector3.forward,
+            Vector3.up);
+        float effectiveRange = Mathf.Max(collisionRange, segmentDistance + collisionRange);
+        return collisionHitBox.BuildWorldQuery(startPosition, rotation, effectiveRange);
+    }
+
+    private CombatHitBoxWorldQuery BuildBodyHitBoxQuery(Vector3 worldPosition)
+    {
+        Quaternion rotation = Quaternion.LookRotation(
+            direction.sqrMagnitude > 0.0001f ? direction : Vector3.forward,
+            Vector3.up);
+        return collisionHitBox.BuildWorldQuery(worldPosition, rotation, collisionRange);
+    }
+
+    private bool TryResolveEnemyFromQuery(
+        CombatHitBoxWorldQuery query,
+        Vector3 referencePoint,
+        Vector3 travelDirection,
+        EnemyHealth requiredTarget,
+        out EnemyHealth enemy,
+        out Vector3 impactPosition)
+    {
+        enemy = null;
+        impactPosition = query.Center;
+
+        Collider[] overlaps = Physics.OverlapBox(
+            query.Center,
+            query.HalfExtents,
+            query.Rotation,
+            enemyLayer,
+            QueryTriggerInteraction.Collide);
+
+        if (overlaps == null || overlaps.Length == 0)
+            return false;
+
+        Vector3 normalizedDirection = travelDirection.sqrMagnitude > 0.0001f
+            ? travelDirection.normalized
+            : direction.sqrMagnitude > 0.0001f ? direction.normalized : Vector3.forward;
+        float bestDistance = float.MaxValue;
+
+        for (int index = 0; index < overlaps.Length; index++)
+        {
+            Collider overlap = overlaps[index];
+            EnemyHealth candidate = overlap != null ? overlap.GetComponentInParent<EnemyHealth>() : null;
+            if (candidate == null || candidate.IsDead || hitEnemies.Contains(candidate))
+                continue;
+
+            if (requiredTarget != null && candidate != requiredTarget)
+                continue;
+
+            Vector3 candidatePoint = GetEnemyTargetPoint(candidate);
+            float projectedDistance = Vector3.Dot(candidatePoint - referencePoint, normalizedDirection);
+            if (requiredTarget == null && projectedDistance < -0.05f)
+                continue;
+
+            float resolvedDistance = requiredTarget != null
+                ? (candidatePoint - referencePoint).sqrMagnitude
+                : Mathf.Max(0f, projectedDistance);
+            if (resolvedDistance >= bestDistance)
+                continue;
+
+            bestDistance = resolvedDistance;
+            enemy = candidate;
+            impactPosition = candidatePoint;
+        }
+
+        return enemy != null;
     }
 
     private static Vector3 GetEnemyTargetPoint(EnemyHealth enemy)
@@ -657,5 +706,14 @@ public class ProjectileRuntime : MonoBehaviour
 
         if (runtimeTrailMaterial != null)
             Destroy(runtimeTrailMaterial);
+    }
+
+    private void NotifyFirstSuccessfulHit()
+    {
+        if (didInvokeFirstSuccessfulHit || onFirstSuccessfulHit == null)
+            return;
+
+        didInvokeFirstSuccessfulHit = true;
+        onFirstSuccessfulHit.Invoke();
     }
 }

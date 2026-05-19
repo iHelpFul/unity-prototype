@@ -38,6 +38,16 @@ public struct PlaySfxEvent
     public SfxType Type;
     public Vector3 Position;
     public float Delay;
+    public Transform FollowTarget;
+    public Vector3 FollowOffset;
+    public bool Persistent;
+    public Transform TrackingTarget;
+}
+
+public struct StopSfxEvent
+{
+    public SfxType Type;
+    public Transform TrackingTarget;
 }
 
 public struct PlayVfxEvent
@@ -48,6 +58,16 @@ public struct PlayVfxEvent
     public float Delay;
     public Transform FollowTarget;
     public Vector3 FollowOffset;
+    public bool OverrideLifetime;
+    public float Lifetime;
+    public bool Persistent;
+    public Transform TrackingTarget;
+}
+
+public struct StopVfxEvent
+{
+    public VfxType Type;
+    public Transform TrackingTarget;
 }
 
 
