@@ -17,7 +17,7 @@ public class NpcJobAdvancement : MonoBehaviour
 
     public bool OffersJob(PlayerJobType jobType)
     {
-        if (jobType == PlayerJobType.Drifter)
+        if (jobType == PlayerJobType.Novice)
             return false;
 
         for (int index = 0; index < offeredJobs.Count; index++)
@@ -42,7 +42,7 @@ public class NpcJobAdvancement : MonoBehaviour
         for (int index = 0; index < offeredJobs.Count; index++)
         {
             PlayerJobType jobType = offeredJobs[index];
-            if (jobType == PlayerJobType.Drifter || !seenJobs.Add(jobType))
+            if (jobType == PlayerJobType.Novice || !seenJobs.Add(jobType))
                 continue;
 
             normalizedJobs.Add(jobType);

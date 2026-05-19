@@ -12,10 +12,14 @@ public sealed class ProjectileLaunchRequest
     public Vector3 SpawnPosition;
     public Vector3 Direction = Vector3.forward;
     public float TravelSpeed;
-    public float HitRadius;
+    public float CollisionRange;
+    public CombatHitBoxDefinition CollisionHitBox;
     public float MaxLifetime;
     public float ResolvedTravelDistance;
     public float VisualScale;
+    public ProjectileVisualRotationMode VisualRotationMode = ProjectileVisualRotationMode.FlipYOnHorizontalDirection;
+    public bool InvertVisualRotationOffsetWhenFacingOppositeSide;
+    public Vector3 VisualRotationOffsetEuler;
     public bool CommitDeathOnHit;
     public CommittedEnemyHitPacket? CommittedHitPacket;
     public AttackPayload Payload;
@@ -26,8 +30,8 @@ public sealed class ProjectileLaunchRequest
     public float ArcHeight;
     public float HomingRadius;
     public float HomingTurnRate;
-    public ProjectileBehaviorKind BehaviorKind = ProjectileBehaviorKind.Free;
     public float ImpactAreaRadius;
     public int MaxImpactAreaTargets = 1;
     public PresentationCueSet PresentationCueSet;
+    public System.Action OnFirstSuccessfulHit;
 }

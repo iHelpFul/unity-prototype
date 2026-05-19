@@ -24,7 +24,8 @@ public class ProjectileSystem : MonoBehaviour
             request.ActionId,
             direction,
             request.TravelSpeed,
-            request.HitRadius,
+            request.CollisionRange,
+            request.CollisionHitBox,
             request.MaxLifetime,
             request.ResolvedTravelDistance,
             request.VisualScale,
@@ -39,10 +40,10 @@ public class ProjectileSystem : MonoBehaviour
             request.ArcHeight,
             request.HomingRadius,
             request.HomingTurnRate,
-            request.BehaviorKind,
             request.ImpactAreaRadius,
             request.MaxImpactAreaTargets,
-            request.PresentationCueSet);
+            request.PresentationCueSet,
+            request.OnFirstSuccessfulHit);
 
         PublishProjectileSpawnCue(request, projectile.transform);
         return projectile;
@@ -54,22 +55,68 @@ public class ProjectileSystem : MonoBehaviour
         out bool skipDefaultVisual)
     {
         skipDefaultVisual = false;
-        Quaternion rotation = Quaternion.LookRotation(direction, Vector3.up);
-
+        Quaternion spawnRotation = ResolveSpawnRotation(request, direction);
         GameObject projectileObject;
         if (request.ProjectilePrefab != null)
         {
-            projectileObject = Instantiate(request.ProjectilePrefab, request.SpawnPosition, rotation);
+            projectileObject = Instantiate(request.ProjectilePrefab, request.SpawnPosition, spawnRotation);
             skipDefaultVisual = HasVisualContent(projectileObject);
         }
         else
         {
             projectileObject = new GameObject();
-            projectileObject.transform.SetPositionAndRotation(request.SpawnPosition, rotation);
+            projectileObject.transform.SetPositionAndRotation(request.SpawnPosition, spawnRotation);
         }
 
         projectileObject.name = $"{ResolveActionName(request.ActionId)}_Projectile";
         return projectileObject;
+    }
+
+    private static Quaternion ResolveSpawnRotation(ProjectileLaunchRequest request, Vector3 direction)
+    {
+        Quaternion baseRotation = request != null && request.ProjectilePrefab != null
+            ? request.ProjectilePrefab.transform.rotation
+            : Quaternion.identity;
+        Vector3 visualOffsetEuler = request != null ? request.VisualRotationOffsetEuler : Vector3.zero;
+        ProjectileVisualRotationMode rotationMode = request != null
+            ? request.VisualRotationMode
+            : ProjectileVisualRotationMode.FlipYOnHorizontalDirection;
+        Vector3 planarDirection = Vector3.ProjectOnPlane(direction, Vector3.up);
+        bool isFacingOppositeHorizontalSide = planarDirection.sqrMagnitude > 0.0001f
+            && Vector3.Dot(planarDirection.normalized, Vector3.right) < 0f;
+        if (request != null
+            && request.InvertVisualRotationOffsetWhenFacingOppositeSide
+            && isFacingOppositeHorizontalSide)
+        {
+            visualOffsetEuler = -visualOffsetEuler;
+        }
+
+        Quaternion offsetRotation = Quaternion.Euler(visualOffsetEuler);
+
+        switch (rotationMode)
+        {
+            case ProjectileVisualRotationMode.KeepPrefabRotation:
+                return baseRotation * offsetRotation;
+
+            case ProjectileVisualRotationMode.AlignToTravelDirection:
+            {
+                if (planarDirection.sqrMagnitude <= 0.0001f)
+                    return baseRotation * offsetRotation;
+
+                return Quaternion.LookRotation(planarDirection.normalized, Vector3.up) * offsetRotation;
+            }
+
+            default:
+            {
+                if (planarDirection.sqrMagnitude <= 0.0001f)
+                    return baseRotation * offsetRotation;
+
+                Quaternion facingRotation = isFacingOppositeHorizontalSide
+                    ? Quaternion.AngleAxis(180f, Vector3.up)
+                    : Quaternion.identity;
+                return facingRotation * baseRotation * offsetRotation;
+            }
+        }
     }
 
     private static void PublishProjectileSpawnCue(ProjectileLaunchRequest request, Transform projectileTransform)

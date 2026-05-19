@@ -15,7 +15,7 @@ public static class CombatSnapshotBuilder
         CombatElementType currentElement = CombatElementType.None)
     {
         ItemStatModifierData resolvedEquipmentBonuses = equipmentBonuses ?? new ItemStatModifierData();
-        PlayerJobType currentJob = runtimeData != null ? runtimeData.CurrentJob : PlayerJobType.Drifter;
+        PlayerJobType currentJob = runtimeData != null ? runtimeData.CurrentJob : PlayerJobType.Novice;
         PlayerJobDefinition resolvedJobDefinition = jobDefinition ?? PlayerJobCombatProfiles.GetJobDefinition(currentJob);
 
         int might = ResolveStat(runtimeData != null ? runtimeData.Might : 0, baseStats != null ? baseStats.Might : 0);

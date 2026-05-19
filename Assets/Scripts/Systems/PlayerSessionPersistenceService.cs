@@ -98,7 +98,7 @@ public class PlayerSessionPersistenceService
         if (slot == null || slot.IsOccupied)
             return false;
 
-        createdCharacter = CharacterSaveFactory.CreateDefaultDrifterCharacter(
+        createdCharacter = CharacterSaveFactory.CreateDefaultNoviceCharacter(
             nickname,
             appearance,
             startMapId,

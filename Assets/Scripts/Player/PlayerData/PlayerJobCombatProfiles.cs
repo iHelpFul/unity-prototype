@@ -55,10 +55,10 @@ public static class PlayerJobCombatProfiles
 
     public static bool IsJobAdvancementAvailable(PlayerRuntimeData data)
     {
-        if (data == null || data.CurrentJob != PlayerJobType.Drifter)
+        if (data == null || data.CurrentJob != PlayerJobType.Novice)
             return false;
 
-        PlayerJobDefinition noviceDefinition = GetJobDefinition(PlayerJobType.Drifter);
+        PlayerJobDefinition noviceDefinition = GetJobDefinition(PlayerJobType.Novice);
         if (noviceDefinition == null)
             return false;
 

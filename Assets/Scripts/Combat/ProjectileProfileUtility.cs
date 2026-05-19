@@ -3,7 +3,7 @@ using UnityEngine;
 public static class ProjectileProfileUtility
 {
     public const float DefaultSpeed = 12f;
-    public const float DefaultRadius = 0.2f;
+    public const float DefaultCollisionRange = 0.4f;
     public const float DefaultLifetime = 0.5f;
     public const float DefaultSpawnForwardOffset = 0.8f;
     public const float DefaultSpawnUpOffset = 1f;
@@ -16,11 +16,18 @@ public static class ProjectileProfileUtility
             : DefaultSpeed;
     }
 
-    public static float ResolveRadius(ProjectileProfile projectileProfile)
+    public static float ResolveCollisionRange(ProjectileProfile projectileProfile)
     {
         return projectileProfile != null
-            ? Mathf.Max(0.05f, projectileProfile.CollisionRadius)
-            : DefaultRadius;
+            ? Mathf.Max(0.05f, projectileProfile.CollisionRange)
+            : DefaultCollisionRange;
+    }
+
+    public static CombatHitBoxDefinition ResolveCollisionHitBox(ProjectileProfile projectileProfile)
+    {
+        return projectileProfile != null
+            ? projectileProfile.CollisionHitBox
+            : default;
     }
 
     public static float ResolveLifetime(ProjectileProfile projectileProfile, AttackPayload payload, float resolvedSpeed)
@@ -55,6 +62,26 @@ public static class ProjectileProfileUtility
             : DefaultVisualScale;
     }
 
+    public static ProjectileVisualRotationMode ResolveVisualRotationMode(ProjectileProfile projectileProfile)
+    {
+        return projectileProfile != null
+            ? projectileProfile.VisualRotationMode
+            : ProjectileVisualRotationMode.FlipYOnHorizontalDirection;
+    }
+
+    public static bool ResolveInvertVisualRotationOffsetWhenFacingOppositeSide(ProjectileProfile projectileProfile)
+    {
+        return projectileProfile != null
+            && projectileProfile.InvertVisualRotationOffsetWhenFacingOppositeSide;
+    }
+
+    public static Vector3 ResolveVisualRotationOffsetEuler(ProjectileProfile projectileProfile)
+    {
+        return projectileProfile != null
+            ? projectileProfile.VisualRotationOffsetEuler
+            : Vector3.zero;
+    }
+
     public static ProjectileHitMode ResolveHitMode(ProjectileProfile projectileProfile)
     {
         return projectileProfile != null
@@ -71,12 +98,14 @@ public static class ProjectileProfileUtility
 
     public static int ResolveMaxTargets(ProjectileProfile projectileProfile, AttackPayload payload)
     {
-        if (projectileProfile != null)
-            return Mathf.Max(1, projectileProfile.MaxTargets);
-
-        return payload != null
+        int profileTargets = projectileProfile != null
+            ? Mathf.Max(1, projectileProfile.MaxTargets)
+            : 1;
+        int payloadTargets = payload != null
             ? Mathf.Max(1, payload.MaxTargets)
             : 1;
+
+        return Mathf.Max(profileTargets, payloadTargets);
     }
 
     public static bool ResolveStopOnFirstHit(ProjectileProfile projectileProfile, AttackPayload payload)
@@ -117,11 +146,13 @@ public static class ProjectileProfileUtility
 
     public static int ResolveMaxImpactAreaTargets(ProjectileProfile projectileProfile, AttackPayload payload)
     {
-        if (projectileProfile != null)
-            return Mathf.Max(1, projectileProfile.MaxImpactAreaTargets);
-
-        return payload != null
+        int profileTargets = projectileProfile != null
+            ? Mathf.Max(1, projectileProfile.MaxImpactAreaTargets)
+            : 1;
+        int payloadTargets = payload != null
             ? Mathf.Max(1, payload.MaxTargets)
             : 1;
+
+        return Mathf.Max(profileTargets, payloadTargets);
     }
 }

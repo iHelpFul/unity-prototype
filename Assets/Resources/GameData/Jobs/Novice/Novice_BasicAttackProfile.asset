@@ -1,0 +1,106 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 61f9975f809c25f4fbf1c89c9d479653, type: 3}
+  m_Name: Novice_BasicAttackProfile
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerBasicAttackProfile
+  jobType: 0
+  attackId: novice_basic
+  displayName: Novice Basic Attack
+  attackFamily: 1
+  executionKind: 1
+  targetingKind: 2
+  presentationCueSet: {fileID: 0}
+  defaultProjectileProfile: {fileID: 0}
+  projectileLaunchMode: 1
+  baseRange: 5
+  hitBox:
+    localOffset: {x: 0, y: 0, z: 0}
+    forwardRangeScale: 1
+    backwardRangeScale: 0
+    upExtent: 0.9
+    downExtent: 0.35
+    depthExtent: 0.75
+  hitCount: 1
+  damageCoefficient: 1
+  windupTime: 0.15
+  activeTime: 0.1
+  recoveryTime: 0.3
+  hasTimingWindow: 0
+  timingWindowStart: 0.1
+  timingWindowEnd: 0.2
+  momentumGainOnValidHit: 1
+  baseBreakPower: 0
+  baseSurgeChanceBonus: 0
+  baseSurgePowerBonus: 0
+  defaultElement: 1
+  buildsGauge: 1
+  flowStacksRequireValidHit: 1
+  resetAllFlowStacksOnTimeout: 1
+  resetFlowStacksOnMaxReached: 1
+  maxFlowStacks: 3
+  firstFlowWindowDuration: 3
+  chainedFlowWindowDuration: 2
+  gaugeGainOnValidHit: 5
+  gaugeGainOnChainFinisher: 0
+  gaugeGainMultiplierByFlowStack:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0.25
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 3
+      value: 1.75
+      inSlope: 0.25
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  aerialGaugeGainMultiplier: 0.75
+  empoweredBasic:
+    windowDuration: 7
+    animationSpeedMultiplier: 1.5
+    damageMultiplier: 1.1
+    surgeChanceBonus: 100
+    surgePowerBonus: 1.5
+    grantedReadyStateType: 0
+    grantedReadyStateDuration: 0
+  animationVariantCount: 7
+  maxChainCount: 1
+  selectionMode: 1
+  attackCooldown: 0.7
+  maxAttackDuration: 1.1
+  attackAnimationSpeed: 0.9
+  maxTargets: 1
+  basicDamageMultiplier: 1
+  maxComboCounter: 0
+  comboResetDelay: 0
+  comboDamageBonusPerStack: 0
+  supportsComboCounter: 0
+  animatorStateNames:
+  - Novice_Basic_01
+  - Novice_Basic_02
+  - Novice_Basic_03
+  - Novice_Basic_04
+  - Novice_Basic_05
+  - Novice_Basic_06
+  - Novice_Basic_07

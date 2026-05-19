@@ -1,0 +1,88 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fa856fa0726af624e8f3c4baaa180a9e, type: 3}
+  m_Name: Shade_MarkAndCollapse_Skill
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerSkillDefinition
+  skillId: shade_mark_and_collapse
+  displayName: Mark and Collapse
+  description: 
+  icon: {fileID: 0}
+  jobType: 2
+  skillType: 2
+  attackFamily: 4
+  executionKind: 2
+  combatTargetingKind: 2
+  hitBox:
+    localOffset: {x: 0, y: 0, z: 0}
+    forwardRangeScale: 1
+    backwardRangeScale: 0
+    upExtent: 0.9
+    downExtent: 0.35
+    depthExtent: 0.75
+  readyStateEmpower:
+    requiredReadyStateType: 0
+    consumeReadyStateOnSuccessfulHit: 0
+    damageMultiplier: 1
+    breakPowerMultiplier: 1
+    surgeChanceBonus: 0
+    surgePowerBonus: 0
+    bonusAreaOnSuccessfulHit:
+      range: 0
+      hitBox:
+        localOffset: {x: 0, y: 0, z: 0}
+        forwardRangeScale: 1
+        backwardRangeScale: 0
+        upExtent: 0.9
+        downExtent: 0.35
+        depthExtent: 0.75
+      damageMultiplier: 0
+      breakPowerMultiplier: 0
+      pulseCount: 1
+      pulseInterval: 0
+      maxTargets: 1
+      includePrimaryTarget: 0
+  utilitySkillProfile: {fileID: 0}
+  burstLinkedSkillProfile: {fileID: 11400000, guid: ce15f0997dfb4a8b8619b1353e797b30, type: 2}
+  presentationCueSet: {fileID: 11400000, guid: efb8e8030e220324eb13f3a814f91e75, type: 2}
+  burstPresentationCueSet: {fileID: 11400000, guid: efb8e8030e220324eb13f3a814f91e75, type: 2}
+  defaultProjectileProfile: {fileID: 11400000, guid: 97a458d0fabcc254f8e0ccf53ec1ba64, type: 2}
+  projectileLaunchMode: 1
+  baseMomentumGain: 0
+  baseMomentumCost: 0
+  baseBreakPower: 0
+  baseSurgeChanceBonus: 0
+  baseSurgePowerBonus: 0
+  defaultElement: 0
+  levels:
+  - level: 1
+    manaCost: 0
+    cooldown: 0
+    recoveryTime: 0.5
+    range: 5
+    hitCount: 1
+    damageCoefficient: 1
+    extraSurgeChance: 0
+    extraSurgePower: 0
+    momentumGain: 0
+    momentumCost: 0
+    projectileProfile: {fileID: 0}
+  maxLevel: 1
+  defaultSlotIndex: 3
+  damageMultiplier: 1
+  hitInterval: 0.08
+  animationVariantIndex: 1
+  animatorStateName: Shade_MarkAndCollapse_Tap
+  animationSpeed: 1
+  attackDuration: 1.5
+  maxTargets: 1
+  projectileCount: 1
+  projectileSpreadAngle: 0

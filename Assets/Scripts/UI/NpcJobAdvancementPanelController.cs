@@ -113,7 +113,7 @@ public class NpcJobAdvancementPanelController : MonoBehaviour
         if (currentJobText != null)
             currentJobText.text = activeSnapshot != null
                 ? $"Current Job: {GameBootstrap.FormatJobName(activeSnapshot.CurrentJob)}"
-                : $"Current Job: {GameBootstrap.FormatJobName(PlayerJobType.Drifter)}";
+                : $"Current Job: {GameBootstrap.FormatJobName(PlayerJobType.Novice)}";
 
         if (requirementText != null)
             requirementText.text = activeSnapshot != null

@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 99f66d4581bde8b4ca7232f4ccce0ecb, type: 3}
+  m_Name: CombatElementRuleProfile
+  m_EditorClassIdentifier: Assembly-CSharp::CombatElementRuleProfile
+  profileId: GlobalElements
+  displayName: Global Element Rules
+  neutralMultiplier: 1
+  weaknessMultiplier: 1.25
+  resistanceMultiplier: 0.75
+  affinities:
+  - sourceElement: 1
+    advantagedAgainst: 2
+    disadvantagedAgainst: 4
+  - sourceElement: 2
+    advantagedAgainst: 3
+    disadvantagedAgainst: 1
+  - sourceElement: 3
+    advantagedAgainst: 4
+    disadvantagedAgainst: 2
+  - sourceElement: 4
+    advantagedAgainst: 1
+    disadvantagedAgainst: 3

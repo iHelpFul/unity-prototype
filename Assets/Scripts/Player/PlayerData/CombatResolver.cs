@@ -60,25 +60,34 @@ public readonly struct CommittedEnemyHitPacket
 
 public static class CombatResolver
 {
-    public static CombatResolutionResult ResolveAgainstEnemy(AttackPayload payload, EnemyHealth enemy)
+    public static CombatResolutionResult ResolveAgainstEnemy(
+        AttackPayload payload,
+        EnemyHealth enemy,
+        bool previewPendingReadyEmpower = false)
     {
         if (payload == null)
             return new CombatResolutionResult(false, false, 0, 0f, 0f, 1f);
 
         CombatFormulaProfile formulaProfile = ResolveFormulaProfile(payload.SourceJobType);
+        ReadyStateEmpowerDefinition readyStateEmpower = ResolveReadyStateEmpower(payload, previewPendingReadyEmpower);
         float hitChance = CalculateHitChance(payload, enemy, formulaProfile);
         bool didHit = !payload.CanMiss || Random.value <= hitChance;
         if (!didHit)
             return new CombatResolutionResult(false, false, 0, hitChance, 0f, 1f);
 
         int rolledDamage = AttackPayloadBuilder.RollResolvedDamage(payload);
-        float surgeChance = CalculateSurgeChance(payload, formulaProfile);
-        float surgePower = CalculateSurgePower(payload, formulaProfile);
+        float elementMultiplier = CalculateElementMultiplier(payload, enemy);
+        int resolvedBaseDamage = Mathf.Max(1, Mathf.RoundToInt(
+            rolledDamage
+            * readyStateEmpower.DamageMultiplier
+            * elementMultiplier));
+        float surgeChance = CalculateSurgeChance(payload, formulaProfile, readyStateEmpower);
+        float surgePower = CalculateSurgePower(payload, formulaProfile, readyStateEmpower);
         bool didSurge = payload.CanSurge && Random.value <= surgeChance;
 
         int finalDamage = didSurge
-            ? Mathf.Max(1, Mathf.RoundToInt(rolledDamage * Mathf.Max(1f, surgePower)))
-            : Mathf.Max(1, rolledDamage);
+            ? Mathf.Max(1, Mathf.RoundToInt(resolvedBaseDamage * Mathf.Max(1f, surgePower)))
+            : Mathf.Max(1, resolvedBaseDamage);
 
         return new CombatResolutionResult(
             didHit: true,
@@ -95,7 +104,8 @@ public static class CombatResolver
         int packetCount,
         float baseImpactDuration,
         float packetInterval = 0f,
-        float reactionTailDuration = 0.12f)
+        float reactionTailDuration = 0.12f,
+        bool previewPendingReadyEmpower = false)
     {
         int resolvedPacketCount = Mathf.Max(1, packetCount);
         CommittedEnemyHitPacket[] packets = new CommittedEnemyHitPacket[resolvedPacketCount];
@@ -107,7 +117,10 @@ public static class CombatResolver
 
         for (int packetIndex = 0; packetIndex < resolvedPacketCount; packetIndex++)
         {
-            CombatResolutionResult result = ResolveAgainstEnemy(payload, enemy);
+            CombatResolutionResult result = ResolveAgainstEnemy(
+                payload,
+                enemy,
+                previewPendingReadyEmpower);
             bool playHitReaction = result.DidHit && !assignedReactionPacket;
 
             if (playHitReaction)
@@ -197,7 +210,10 @@ public static class CombatResolver
         return Mathf.Clamp(rawChance, minimumHitChance, maximumHitChance);
     }
 
-    private static float CalculateSurgeChance(AttackPayload payload, CombatFormulaProfile formulaProfile)
+    private static float CalculateSurgeChance(
+        AttackPayload payload,
+        CombatFormulaProfile formulaProfile,
+        ReadyStateEmpowerDefinition readyStateEmpower)
     {
         float minimumSurgeChance = formulaProfile != null
             ? formulaProfile.SurgeRules.MinSurgeChanceClamp
@@ -205,11 +221,17 @@ public static class CombatResolver
         float maximumSurgeChance = formulaProfile != null
             ? formulaProfile.SurgeRules.MaxSurgeChanceClamp
             : 100f;
-        float resolvedChance = Mathf.Clamp(payload.FinalSurgeChance, minimumSurgeChance, maximumSurgeChance);
+        float resolvedChance = Mathf.Clamp(
+            payload.FinalSurgeChance + readyStateEmpower.SurgeChanceBonus,
+            minimumSurgeChance,
+            maximumSurgeChance);
         return Mathf.Clamp01(resolvedChance / 100f);
     }
 
-    private static float CalculateSurgePower(AttackPayload payload, CombatFormulaProfile formulaProfile)
+    private static float CalculateSurgePower(
+        AttackPayload payload,
+        CombatFormulaProfile formulaProfile,
+        ReadyStateEmpowerDefinition readyStateEmpower)
     {
         float minimumSurgePower = formulaProfile != null
             ? Mathf.Max(0f, formulaProfile.SurgeRules.MinSurgePowerClamp)
@@ -217,7 +239,45 @@ public static class CombatResolver
         float maximumSurgePower = formulaProfile != null
             ? Mathf.Max(minimumSurgePower, formulaProfile.SurgeRules.MaxSurgePowerClamp)
             : 5f;
-        return Mathf.Clamp(payload.FinalSurgePower, minimumSurgePower, maximumSurgePower);
+        return Mathf.Clamp(payload.FinalSurgePower + readyStateEmpower.SurgePowerBonus, minimumSurgePower, maximumSurgePower);
+    }
+
+    private static float CalculateElementMultiplier(
+        AttackPayload payload,
+        EnemyHealth enemy)
+    {
+        if (payload == null || !payload.HasElement || payload.ElementType == CombatElementType.None)
+            return 1f;
+
+        CombatElementType targetElement = enemy != null && enemy.Stats != null
+            ? enemy.Stats.ElementType
+            : CombatElementType.None;
+        if (targetElement == CombatElementType.None)
+            return 1f;
+
+        CombatElementRuleProfile elementRules = CombatElementRuleDatabase.GetProfile();
+        float relationshipMultiplier = elementRules != null
+            ? elementRules.ResolveMultiplier(payload.ElementType, targetElement)
+            : 1f;
+        float elementPowerMultiplier = Mathf.Max(0f, payload.ElementPower);
+
+        if (Mathf.Approximately(elementPowerMultiplier, 0f))
+            elementPowerMultiplier = 1f;
+
+        return Mathf.Max(0f, relationshipMultiplier * elementPowerMultiplier);
+    }
+
+    private static ReadyStateEmpowerDefinition ResolveReadyStateEmpower(
+        AttackPayload payload,
+        bool previewPendingReadyEmpower)
+    {
+        if (payload == null || !payload.ReadyStateEmpower.IsConfigured)
+            return default;
+
+        if (payload.IsReadyStateEmpowerActive || previewPendingReadyEmpower)
+            return payload.ReadyStateEmpower;
+
+        return default;
     }
 
     private static float ResolveTargetAvoidance(EnemyHealth enemy)

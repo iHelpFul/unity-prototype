@@ -1,0 +1,88 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fa856fa0726af624e8f3c4baaa180a9e, type: 3}
+  m_Name: Novice_Release
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerSkillDefinition
+  skillId: novice_release
+  displayName: Novice Release
+  description: 
+  icon: {fileID: 0}
+  jobType: 0
+  skillType: 2
+  attackFamily: 1
+  executionKind: 1
+  combatTargetingKind: 2
+  hitBox:
+    localOffset: {x: 0, y: 0, z: 0}
+    forwardRangeScale: 1
+    backwardRangeScale: 0
+    upExtent: 0.9
+    downExtent: 0.35
+    depthExtent: 0.75
+  readyStateEmpower:
+    requiredReadyStateType: 0
+    consumeReadyStateOnSuccessfulHit: 0
+    damageMultiplier: 1
+    breakPowerMultiplier: 1
+    surgeChanceBonus: 0
+    surgePowerBonus: 0
+    bonusAreaOnSuccessfulHit:
+      range: 0
+      hitBox:
+        localOffset: {x: 0, y: 0, z: 0}
+        forwardRangeScale: 1
+        backwardRangeScale: 0
+        upExtent: 0.9
+        downExtent: 0.35
+        depthExtent: 0.75
+      damageMultiplier: 0
+      breakPowerMultiplier: 0
+      pulseCount: 1
+      pulseInterval: 0
+      maxTargets: 1
+      includePrimaryTarget: 0
+  utilitySkillProfile: {fileID: 0}
+  burstLinkedSkillProfile: {fileID: 11400000, guid: c179de1a817847e184ebccf3da492831, type: 2}
+  presentationCueSet: {fileID: 11400000, guid: ed3f92d815c0fb94e9e3d74ede5edd52, type: 2}
+  burstPresentationCueSet: {fileID: 11400000, guid: ed3f92d815c0fb94e9e3d74ede5edd52, type: 2}
+  defaultProjectileProfile: {fileID: 0}
+  projectileLaunchMode: 1
+  baseMomentumGain: 0
+  baseMomentumCost: 0
+  baseBreakPower: 0
+  baseSurgeChanceBonus: 0
+  baseSurgePowerBonus: 0
+  defaultElement: 0
+  levels:
+  - level: 1
+    manaCost: 0
+    cooldown: 0
+    recoveryTime: 0.4
+    range: 1.8
+    hitCount: 1
+    damageCoefficient: 1.5
+    extraSurgeChance: 0
+    extraSurgePower: 0
+    momentumGain: 0
+    momentumCost: 0
+    projectileProfile: {fileID: 0}
+  maxLevel: 1
+  defaultSlotIndex: 3
+  damageMultiplier: 1
+  hitInterval: 0
+  animationVariantIndex: 1
+  animatorStateName: Novice_Signature_Release
+  animationSpeed: 1
+  attackDuration: 1.5
+  maxTargets: 1
+  projectileCount: 1
+  projectileSpreadAngle: 0

@@ -118,21 +118,6 @@ public class CombatMomentumRuleBlock
     }
 }
 
-[System.Serializable]
-public class CombatElementRuleBlock
-{
-    public float NeutralMultiplier = 1f;
-    public float WeaknessMultiplier = 1.25f;
-    public float ResistanceMultiplier = 0.75f;
-
-    public void Sanitize()
-    {
-        NeutralMultiplier = Mathf.Max(0f, NeutralMultiplier);
-        WeaknessMultiplier = Mathf.Max(0f, WeaknessMultiplier);
-        ResistanceMultiplier = Mathf.Max(0f, ResistanceMultiplier);
-    }
-}
-
 [CreateAssetMenu(menuName = "Game Data/Combat/Combat Formula Profile")]
 public class CombatFormulaProfile : ScriptableObject
 {
@@ -144,7 +129,6 @@ public class CombatFormulaProfile : ScriptableObject
     [SerializeField] private CombatDamageRuleBlock damageRules = new CombatDamageRuleBlock();
     [SerializeField] private CombatSurgeRuleBlock surgeRules = new CombatSurgeRuleBlock();
     [SerializeField] private CombatMomentumRuleBlock momentumRules = new CombatMomentumRuleBlock();
-    [SerializeField] private CombatElementRuleBlock elementRules = new CombatElementRuleBlock();
 
     public string ProfileId => profileId;
     public string DisplayName => displayName;
@@ -154,7 +138,6 @@ public class CombatFormulaProfile : ScriptableObject
     public CombatDamageRuleBlock DamageRules => damageRules;
     public CombatSurgeRuleBlock SurgeRules => surgeRules;
     public CombatMomentumRuleBlock MomentumRules => momentumRules;
-    public CombatElementRuleBlock ElementRules => elementRules;
 
     private void OnValidate()
     {
@@ -166,13 +149,11 @@ public class CombatFormulaProfile : ScriptableObject
         damageRules ??= new CombatDamageRuleBlock();
         surgeRules ??= new CombatSurgeRuleBlock();
         momentumRules ??= new CombatMomentumRuleBlock();
-        elementRules ??= new CombatElementRuleBlock();
         statContributions.Sanitize();
         derivedStatRules.Sanitize();
         hitRules.Sanitize();
         damageRules.Sanitize();
         surgeRules.Sanitize();
         momentumRules.Sanitize();
-        elementRules.Sanitize();
     }
 }

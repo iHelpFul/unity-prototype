@@ -1,0 +1,75 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-4968657747391364894
+MonoBehaviour:
+  m_ObjectHideFlags: 11
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d0353a89b1f911e48b9e16bdc9f2e058, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  version: 10
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: PBRMaskTint01
+  m_Shader: {fileID: 4800000, guid: c260ff15a67faff4bbedbbd46046379a, type: 3}
+  m_Parent: {fileID: 2100000, guid: d9c0226bd4324f01bc178cf4a515ef84, type: 2}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses:
+  - MOTIONVECTORS
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _BaseMap:
+        m_Texture: {fileID: 2800000, guid: 29c3efea8d4cdfe46b7e38a86aeb8ad3, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _EmissionMap:
+        m_Texture: {fileID: 2800000, guid: 061dbfc5d7ad4dd09b7c255438aaae98, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _Color01Power: 6
+    - _Color02Power: 9.5
+    - _Color03Power: 6
+    - _Color04Power: 6
+    - _Color05Power: 6
+    - _Color06Power: 6
+    - _Color07Power: 6
+    - _Color08Power: 6
+    - _Color09Power: 6
+    - _RampSmoothing: 0.001
+    - _RampThreshold: 0.648
+    - _ReceiveShadowsOff: 1
+    m_Colors:
+    - _Color01: {r: 1, g: 1, b: 1, a: 0}
+    - _Color02: {r: 1, g: 1, b: 1, a: 0}
+    - _Color03: {r: 0.20392156, g: 0.45902193, b: 0.6666667, a: 0}
+    - _Color04: {r: 0.93207544, g: 0.5996353, b: 0.20927721, a: 0}
+    - _Color05: {r: 0.034225617, g: 0.30795157, b: 0.78867924, a: 0}
+    - _Color06: {r: 1, g: 1, b: 1, a: 0}
+    - _Color07: {r: 0.14509805, g: 0.41960788, b: 0.92549026, a: 0}
+    - _Color08: {r: 0.14478454, g: 0.4195356, b: 0.9245283, a: 0}
+    - _Color09_SKIN: {r: 1, g: 1, b: 1, a: 1}
+    - _EmissionPower: {r: 0.7490196, g: 0.7490196, b: 0.7490196, a: 0}
+    - _HColor: {r: 0.75, g: 0.75, b: 0.75, a: 1}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1

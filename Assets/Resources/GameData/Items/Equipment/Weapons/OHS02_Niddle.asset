@@ -22,6 +22,7 @@ MonoBehaviour:
   restoreMP: 0
   primaryColor: {r: 1, g: 1, b: 1, a: 1}
   accentColor: {r: 0.9, g: 0.9, b: 0.9, a: 1}
+  icon: {fileID: 0}
   worldLootPickupPrefab: {fileID: 5370180418782306496, guid: 64361899f54eb3e49a1e1137eeb79d7e, type: 3}
   equipmentSlot: 2
   equipmentStatBonuses:

@@ -8,7 +8,7 @@ public static class PlayerProgressionRules
             return;
 
         if (!System.Enum.IsDefined(typeof(PlayerJobType), data.CurrentJob))
-            data.CurrentJob = PlayerJobType.Drifter;
+            data.CurrentJob = PlayerJobType.Novice;
 
         if (data.Level <= 0)
             data.Level = 1;
@@ -32,7 +32,7 @@ public static class PlayerProgressionRules
             return;
 
         if (!System.Enum.IsDefined(typeof(PlayerJobType), data.CurrentJob))
-            data.CurrentJob = PlayerJobType.Drifter;
+            data.CurrentJob = PlayerJobType.Novice;
 
         if (data.Level <= 0)
             data.Level = 1;

@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ccbafe11ea44e174e9cf432acbe8fbd1, type: 3}
+  m_Name: Vanguard_BreakerRelease_BurstLinkedSkillProfile
+  m_EditorClassIdentifier: Assembly-CSharp::BurstLinkedSkillProfile
+  minimumGaugeToStart: 1
+  allowPartialGaugeSpend: 1
+  gaugeScalingProfile: {fileID: 11400000, guid: fd8606c53e4e972488055e593e5885ab, type: 2}
+  chargedHitBox:
+    localOffset: {x: 0, y: 0, z: 0}
+    forwardRangeScale: 1
+    backwardRangeScale: 1
+    upExtent: 1.3
+    downExtent: 0
+    depthExtent: 0.75
+  tapReleaseThreshold: 0.12
+  maxHoldDuration: 3.5
+  autoReleaseAtMaxHold: 1
+  chargeEntryAnimatorStateName: Vanguard_Breaker_Entry
+  chargeAnimatorStateName: Vanguard_Breaker_Charge
+  releaseAnimatorStateName: Vanguard_Breaker_Release
+  allowAerialBurst: 0
+  aerialMaxHoldDurationMultiplier: 0.7
+  aerialGaugeSpendMultiplier: 0.85
+  aerialDamageMultiplier: 0.9
+  interruptedByValidHit: 1
+  loseLockedGaugeOnInterrupt: 1

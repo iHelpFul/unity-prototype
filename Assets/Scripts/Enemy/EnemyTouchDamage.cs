@@ -9,6 +9,7 @@ public class EnemyTouchDamage : MonoBehaviour
     [SerializeField] private float colliderCenter;
 
     private int contactDamage = 5;
+    private float resolvedDamageCooldown = 1f;
     private readonly Dictionary<PlayerCharacter, float> nextDamageTimes = new Dictionary<PlayerCharacter, float>();
 
     private EnemyAI enemyAI;
@@ -62,7 +63,7 @@ public class EnemyTouchDamage : MonoBehaviour
             if (nextDamageTimes.TryGetValue(target, out float nextAllowedTime) && currentTime < nextAllowedTime)
                 continue;
 
-            nextDamageTimes[target] = currentTime + damageCooldown;
+            nextDamageTimes[target] = currentTime + resolvedDamageCooldown;
 
             EventBus.Publish(new PlayerDamagedEvent
             {
@@ -87,7 +88,13 @@ public class EnemyTouchDamage : MonoBehaviour
             enemyHealth = GetComponent<EnemyHealth>();
 
         if (enemyHealth != null && enemyHealth.Stats != null)
+        {
             contactDamage = enemyHealth.Stats.ContactDamage;
+            resolvedDamageCooldown = enemyHealth.Stats.CadenceProfile.ContactDamageCooldown;
+            return;
+        }
+
+        resolvedDamageCooldown = Mathf.Max(0.05f, damageCooldown);
     }
 
     private bool IsDamageableTarget(PlayerCharacter target)

@@ -470,7 +470,11 @@ public class MultiplayerPrototypeEnemyCoordinator : MonoBehaviour
         BroadcastDamageResult(result);
 
         if (networkManager.IsClient && result.DisplayDamage > 0)
-            enemy.PlayAuthoritativeDamageFeedback(result.DisplayDamage, direction, result.PlayImpactFeedback);
+            enemy.PlayAuthoritativeDamageFeedback(
+                result.DisplayDamage,
+                direction,
+                result.PlayImpactFeedback,
+                result.AppliedDamage);
 
         return true;
     }
@@ -609,10 +613,10 @@ public class MultiplayerPrototypeEnemyCoordinator : MonoBehaviour
 
     private static int ResolveDisplayDamage(EnemyHealth enemy, int resolvedDamage)
     {
-        if (enemy == null || enemy.Stats == null)
-            return Mathf.Max(1, resolvedDamage);
+        if (enemy == null)
+            return Mathf.Max(0, resolvedDamage);
 
-        return Mathf.Max(1, resolvedDamage - enemy.Stats.Defense);
+        return enemy.PreviewDisplayedDamage(resolvedDamage);
     }
 
     private void StartAuthoritativeSkillSequence(
@@ -872,7 +876,8 @@ public class MultiplayerPrototypeEnemyCoordinator : MonoBehaviour
             Enemy = enemy.transform,
             Killer = localPlayer,
             Type = enemy.Stats.EnemyType,
-            ExpReward = enemy.Stats.ExpReward
+            ExpReward = enemy.Stats.ExpReward,
+            GaugeReward = enemy.Stats.GaugeReward
         });
 
         EventBus.Publish(new GameplayNotificationEvent

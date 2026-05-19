@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5ab8a317b3787494d913f158f6cafb0f, type: 3}
+  m_Name: Shade
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerJobDefinition
+  jobType: 2
+  displayName: Shade
+  description: 
+  icon: {fileID: 0}
+  coreStat: 3
+  secondaryStat: 1
+  allowedWeaponTypes: 
+  advancementLevelRequirement: 12
+  basicAttackProfile: {fileID: 11400000, guid: 2e2898cf7bdc35b45b747a1eb7ae3c23, type: 2}
+  animationProfile: {fileID: 11400000, guid: b6ac79a2590624a4e8b5a5704b2ed2de, type: 2}
+  combatFormulaProfile: {fileID: 11400000, guid: 02eea45eaa673c54f9651a1a55fbc1fe, type: 2}
+  baseMaxGauge: 10
+  defaultSkills:
+  - {fileID: 11400000, guid: eb4b65d3c30710d4093b3fd8861c1099, type: 2}
+  - {fileID: 11400000, guid: 0f156011f61469f4ab028edd50646dba, type: 2}
+  - {fileID: 11400000, guid: 41c9df042e5f48f489197ce0aafdee0e, type: 2}
+  defaultPassives: []

@@ -43,7 +43,7 @@ public static class DamageCalculator
         return CalculateDamage(
             new PlayerCombatSnapshot
             {
-                CurrentJob = PlayerJobType.Drifter,
+                CurrentJob = PlayerJobType.Novice,
                 Might = might,
                 Precision = precision,
                 Arcane = arcane,
@@ -69,7 +69,7 @@ public static class DamageCalculator
         return CalculateDamageRange(
             new PlayerCombatSnapshot
             {
-                CurrentJob = PlayerJobType.Drifter,
+                CurrentJob = PlayerJobType.Novice,
                 Might = might,
                 Precision = precision,
                 Arcane = arcane,

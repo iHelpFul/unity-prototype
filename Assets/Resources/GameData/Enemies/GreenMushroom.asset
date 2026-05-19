@@ -13,9 +13,11 @@ MonoBehaviour:
   m_Name: GreenMushroom
   m_EditorClassIdentifier: Assembly-CSharp::EnemyDefinition
   enemyType: 2
+  role: 2
   maxHP: 30
   defense: 1
   expReward: 11
+  gaugeReward: 1
   contactDamage: 5
   animatedAttackDamage: 9
   minMesoDrop: 6

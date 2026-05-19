@@ -1,0 +1,88 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fa856fa0726af624e8f3c4baaa180a9e, type: 3}
+  m_Name: LuckySeven
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerSkillDefinition
+  skillId: shade_twin_fang
+  displayName: Twin Fang
+  description: 
+  icon: {fileID: 0}
+  jobType: 2
+  skillType: 2
+  attackFamily: 3
+  executionKind: 2
+  combatTargetingKind: 2
+  hitBox:
+    localOffset: {x: 0, y: 0, z: 0}
+    forwardRangeScale: 1
+    backwardRangeScale: 0
+    upExtent: 0.9
+    downExtent: 0.35
+    depthExtent: 0.75
+  readyStateEmpower:
+    requiredReadyStateType: 2
+    consumeReadyStateOnSuccessfulHit: 1
+    damageMultiplier: 1
+    breakPowerMultiplier: 1
+    surgeChanceBonus: 100
+    surgePowerBonus: 0
+    bonusAreaOnSuccessfulHit:
+      range: 3
+      hitBox:
+        localOffset: {x: 0, y: 0, z: 0}
+        forwardRangeScale: 1
+        backwardRangeScale: 1
+        upExtent: 0.8
+        downExtent: 0.3
+        depthExtent: 0.8
+      damageMultiplier: 0.35
+      breakPowerMultiplier: 0
+      pulseCount: 2
+      pulseInterval: 0.08
+      maxTargets: 3
+      includePrimaryTarget: 0
+  utilitySkillProfile: {fileID: 0}
+  burstLinkedSkillProfile: {fileID: 11400000, guid: b698d709b3863bf4697cc0ba1f6c5e89, type: 2}
+  presentationCueSet: {fileID: 11400000, guid: 7985865c42bcfad4d8e4ad206b17e628, type: 2}
+  burstPresentationCueSet: {fileID: 0}
+  defaultProjectileProfile: {fileID: 11400000, guid: 5a37b98e377ca82419a0867d86dc5d93, type: 2}
+  projectileLaunchMode: 0
+  baseMomentumGain: 0
+  baseMomentumCost: 0
+  baseBreakPower: 0
+  baseSurgeChanceBonus: 15
+  baseSurgePowerBonus: 1.3
+  defaultElement: 1
+  levels:
+  - level: 1
+    manaCost: 5
+    cooldown: 1
+    recoveryTime: 0
+    range: 7
+    hitCount: 1
+    damageCoefficient: 1.1
+    extraSurgeChance: 0
+    extraSurgePower: 0
+    momentumGain: 0
+    momentumCost: 0
+    projectileProfile: {fileID: 0}
+  maxLevel: 20
+  defaultSlotIndex: 1
+  damageMultiplier: 1
+  hitInterval: 0.12
+  animationVariantIndex: 6
+  animatorStateName: Shade_TwinFang_Tap
+  animationSpeed: 1
+  attackDuration: 4.62
+  maxTargets: 1
+  projectileCount: 2
+  projectileSpreadAngle: 0

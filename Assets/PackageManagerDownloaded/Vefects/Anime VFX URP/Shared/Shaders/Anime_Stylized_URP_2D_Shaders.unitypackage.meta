@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 6d47b42d53ec33e449c95b217d839ac3
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 229620
+  packageName: Anime Stylized VFX URP
+  packageVersion: 1.1.2023.05
+  assetPath: Assets/Vefects/Anime VFX URP/Shared/Shaders/Anime_Stylized_URP_2D_Shaders.unitypackage
+  uploadId: 854256

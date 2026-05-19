@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ccbafe11ea44e174e9cf432acbe8fbd1, type: 3}
+  m_Name: TwinFang_BurstLinkedSkillProfile
+  m_EditorClassIdentifier: Assembly-CSharp::BurstLinkedSkillProfile
+  minimumGaugeToStart: 1
+  allowPartialGaugeSpend: 1
+  gaugeScalingProfile: {fileID: 11400000, guid: 62cc58f7891fcab47ad56276c7b5c394, type: 2}
+  chargedHitBox:
+    localOffset: {x: 0, y: 0, z: 0}
+    forwardRangeScale: 1
+    backwardRangeScale: 0
+    upExtent: 0.9
+    downExtent: 0.35
+    depthExtent: 0.75
+  tapReleaseThreshold: 0.12
+  maxHoldDuration: 1
+  autoReleaseAtMaxHold: 1
+  chargeEntryAnimatorStateName: Shade_TwinFang_Entry
+  chargeAnimatorStateName: Shade_TwinFang_Charge
+  releaseAnimatorStateName: Shade_TwinFang_Release
+  allowAerialBurst: 1
+  aerialMaxHoldDurationMultiplier: 0.7
+  aerialGaugeSpendMultiplier: 0.85
+  aerialDamageMultiplier: 0.9
+  interruptedByValidHit: 1
+  loseLockedGaugeOnInterrupt: 1

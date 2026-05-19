@@ -23,7 +23,7 @@ public class PlayerRuntimeStateController : MonoBehaviour
     public PlayerRuntimeData RuntimeData => runtimeStats;
     public bool IsStunned => isStunned;
     public bool IsDead => isDead;
-    public PlayerJobType CurrentJob => runtimeStats != null ? runtimeStats.CurrentJob : PlayerJobType.Drifter;
+    public PlayerJobType CurrentJob => runtimeStats != null ? runtimeStats.CurrentJob : PlayerJobType.Novice;
     public bool HasPendingJobAdvancement => runtimeStats != null && runtimeStats.HasPendingJobAdvancement;
     public int UnspentStatPoints => runtimeStats != null ? runtimeStats.UnspentStatPoints : 0;
 
@@ -345,13 +345,26 @@ public class PlayerRuntimeStateController : MonoBehaviour
         if (isInvulnerable || isDead)
             return;
 
-        TakeDamage(e.Damage);
+        PlayerActionStateController actionStateController = character.ActionStateController;
+        bool negateDamage = actionStateController != null && actionStateController.ShouldNegateIncomingDamage;
+        bool negateKnockback = actionStateController != null && actionStateController.ShouldNegateIncomingKnockback;
+        bool negateStun = actionStateController != null && actionStateController.ShouldNegateIncomingStun;
+        bool fullyGuarded = negateDamage && negateKnockback && negateStun;
 
-        EventBus.Publish(new PlayerHitEvent
+        if (fullyGuarded)
+            return;
+
+        if (!negateDamage)
+            TakeDamage(e.Damage);
+
+        if (!negateStun)
         {
-            Target = character,
-            CharacterId = character.CharacterId
-        });
+            EventBus.Publish(new PlayerHitEvent
+            {
+                Target = character,
+                CharacterId = character.CharacterId
+            });
+        }
 
         float direction = Mathf.Sign(character.transform.position.x - e.HitDirection);
 
@@ -368,19 +381,29 @@ public class PlayerRuntimeStateController : MonoBehaviour
             Rotation = Quaternion.identity
         });
 
-        EventBus.Publish(new CharacterKnockbackEvent
+        if (!negateKnockback)
         {
-            Target = character.transform,
-            DirectionX = direction,
-            Force = 1.2f,
-            Duration = 0.15f
-        });
+            EventBus.Publish(new CharacterKnockbackEvent
+            {
+                Target = character.transform,
+                DirectionX = direction,
+                Force = 1.2f,
+                Duration = 0.15f
+            });
+        }
 
-        isStunned = true;
-        stunTimer = timeToStun;
-        isInvulnerable = true;
-        invulTimer = timeToInv;
-        playerHitFlash?.PlayFlash(timeToFlash);
+        if (!negateStun)
+        {
+            isStunned = true;
+            stunTimer = timeToStun;
+        }
+
+        if (!negateDamage)
+        {
+            isInvulnerable = true;
+            invulTimer = timeToInv;
+            playerHitFlash?.PlayFlash(timeToFlash);
+        }
     }
 
     private void Die()

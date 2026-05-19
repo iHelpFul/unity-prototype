@@ -1,0 +1,44 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7cd23eef574432b4ea0a05d284d19d5c, type: 3}
+  m_Name: Shade_ProjectileProfile
+  m_EditorClassIdentifier: Assembly-CSharp::ProjectileProfile
+  projectileId: 
+  displayName: New Projectile
+  projectilePrefab: {fileID: 7261841897055320823, guid: f70f49e7c8358874281978bf33bbbfd2, type: 3}
+  presentationCueSet: {fileID: 11400000, guid: a96ba7c72e60f974eaa2916da259e10c, type: 2}
+  travelStyle: 0
+  hitMode: 0
+  speed: 12
+  maxRange: 20
+  lifetime: 0.8
+  maxTargets: 3
+  collisionRange: 0.05
+  collisionHitBox:
+    localOffset: {x: 0, y: 0, z: 0}
+    forwardRangeScale: 1
+    backwardRangeScale: 1
+    upExtent: 1
+    downExtent: 0.6
+    depthExtent: 1
+  spawnForwardOffset: 0
+  spawnUpOffset: 0.6
+  visualScale: 0.2
+  visualRotationMode: 1
+  invertVisualRotationOffsetWhenFacingOppositeSide: 1
+  visualRotationOffsetEuler: {x: 1, y: 0, z: 0}
+  stopOnFirstValidHit: 1
+  arcHeight: 1.25
+  homingRadius: 5
+  homingTurnRate: 540
+  impactAreaRadius: 0
+  maxImpactAreaTargets: 1

@@ -19,6 +19,7 @@ public class PlayerMovementController : MonoBehaviour
     public float VerticalVelocity => movementModel != null ? movementModel.VerticalVelocity : 0f;
     public bool JumpedThisFrame => movementModel != null && movementModel.JumpedThisFrame;
     public bool IsGrounded => motor != null && motor.IsGrounded;
+    public Vector2 CurrentMoveInput => moveInput;
 
     public void Initialize(
         PlayerMotor motor,
@@ -119,6 +120,15 @@ public class PlayerMovementController : MonoBehaviour
 
         Quaternion targetRotation = Quaternion.LookRotation(inputDirection);
         visual.rotation = targetRotation;
+    }
+
+    public Vector3 ResolveWorldMoveDirection()
+    {
+        UpdateCameraVectors();
+
+        Vector3 inputDirection = cameraForward * moveInput.y + cameraRight * moveInput.x;
+        inputDirection.y = 0f;
+        return inputDirection.sqrMagnitude > 0.0001f ? inputDirection.normalized : Vector3.zero;
     }
 
     private void OnMove(MoveInputEvent e)

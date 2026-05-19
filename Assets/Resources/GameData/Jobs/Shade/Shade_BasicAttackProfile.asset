@@ -1,0 +1,102 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 61f9975f809c25f4fbf1c89c9d479653, type: 3}
+  m_Name: Shade_BasicAttackProfile
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerBasicAttackProfile
+  jobType: 2
+  attackId: shade_basic
+  displayName: Shade Basic Attack
+  attackFamily: 2
+  executionKind: 2
+  targetingKind: 2
+  presentationCueSet: {fileID: 11400000, guid: a96ba7c72e60f974eaa2916da259e10c, type: 2}
+  defaultProjectileProfile: {fileID: 11400000, guid: 5a37b98e377ca82419a0867d86dc5d93, type: 2}
+  projectileLaunchMode: 0
+  baseRange: 5
+  hitBox:
+    localOffset: {x: 0, y: 0, z: 0}
+    forwardRangeScale: 1
+    backwardRangeScale: 0
+    upExtent: 0.36
+    downExtent: 0.35
+    depthExtent: 0.75
+  hitCount: 1
+  damageCoefficient: 1
+  windupTime: 0.15
+  activeTime: 0.1
+  recoveryTime: 0.3
+  hasTimingWindow: 0
+  timingWindowStart: 0.1
+  timingWindowEnd: 0.2
+  momentumGainOnValidHit: 1
+  baseBreakPower: 5
+  baseSurgeChanceBonus: 0
+  baseSurgePowerBonus: 0
+  defaultElement: 0
+  buildsGauge: 1
+  flowStacksRequireValidHit: 1
+  resetAllFlowStacksOnTimeout: 1
+  resetFlowStacksOnMaxReached: 0
+  maxFlowStacks: 3
+  firstFlowWindowDuration: 3
+  chainedFlowWindowDuration: 2
+  gaugeGainOnValidHit: 1
+  gaugeGainOnChainFinisher: 2
+  gaugeGainMultiplierByFlowStack:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0.25
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 3
+      value: 1.75
+      inSlope: 0.25
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  aerialGaugeGainMultiplier: 0.75
+  empoweredBasic:
+    windowDuration: 5
+    animationSpeedMultiplier: 2.5
+    damageMultiplier: 1.5
+    surgeChanceBonus: 100
+    surgePowerBonus: 0.35
+    grantedReadyStateType: 2
+    grantedReadyStateDuration: 15
+  animationVariantCount: 3
+  maxChainCount: 1
+  selectionMode: 1
+  attackCooldown: 1
+  maxAttackDuration: 0.75
+  attackAnimationSpeed: 1
+  maxTargets: 1
+  basicDamageMultiplier: 1
+  maxComboCounter: 0
+  comboResetDelay: 0
+  comboDamageBonusPerStack: 0
+  supportsComboCounter: 0
+  animatorStateNames:
+  - Shade_BasicAttack01
+  - Shade_BasicAttack02
+  - Shade_BasicAttack03

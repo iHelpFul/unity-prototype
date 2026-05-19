@@ -6,12 +6,7 @@ public class PlayerTargetingService
     private readonly Transform ownerTransform;
     private readonly Transform visualTransform;
     private readonly LayerMask enemyLayer;
-    private readonly float skillFrontDotThreshold;
-    private readonly float skillAreaForwardOffsetFactor;
-    private readonly float skillAreaRadiusFactor;
-    private readonly float skillAreaMinRadius;
     private readonly float lockedSkillTargetGraceRange;
-    private readonly float attackLowerHeightAllowance;
 
     public PlayerTargetingService(
         Transform ownerTransform,
@@ -27,80 +22,28 @@ public class PlayerTargetingService
         this.ownerTransform = ownerTransform;
         this.visualTransform = visualTransform != null ? visualTransform : ownerTransform;
         this.enemyLayer = enemyLayer;
-        this.skillFrontDotThreshold = skillFrontDotThreshold;
-        this.skillAreaForwardOffsetFactor = skillAreaForwardOffsetFactor;
-        this.skillAreaRadiusFactor = skillAreaRadiusFactor;
-        this.skillAreaMinRadius = skillAreaMinRadius;
-        this.lockedSkillTargetGraceRange = lockedSkillTargetGraceRange;
-        this.attackLowerHeightAllowance = attackLowerHeightAllowance;
+        this.lockedSkillTargetGraceRange = Mathf.Max(0f, lockedSkillTargetGraceRange);
     }
 
     public EnemyHealth FindFrontSingleTarget(PlayerSkillDefinition definition, int skillLevel = 1)
     {
-        float resolvedRange = definition != null
-            ? definition.GetResolvedRange(skillLevel)
-            : 0f;
-        List<EnemyHealth> candidates = GetEnemiesInSphere(ownerTransform.position, resolvedRange);
+        if (definition == null)
+            return null;
 
-        EnemyHealth bestTarget = null;
-        float bestSqrDistance = float.MaxValue;
-
-        foreach (EnemyHealth candidate in candidates)
-        {
-            Vector3 targetPoint = GetEnemyTargetPoint(candidate);
-
-            if (!IsInFront(targetPoint))
-                continue;
-
-            if (!IsWithinAllowedAttackHeight(candidate, ownerTransform.position.y))
-                continue;
-
-            float sqrDistance = (targetPoint - ownerTransform.position).sqrMagnitude;
-            if (sqrDistance >= bestSqrDistance)
-                continue;
-
-            bestSqrDistance = sqrDistance;
-            bestTarget = candidate;
-        }
-
-        return bestTarget;
+        return FindFirstTargetInHitBox(
+            definition.HitBox,
+            definition.GetResolvedRange(skillLevel));
     }
 
     public List<EnemyHealth> FindSkillAreaTargets(PlayerSkillDefinition definition, int skillLevel = 1)
     {
-        float searchRadius = GetSkillAreaRadius(definition, skillLevel);
-        Vector3 center = GetSkillAreaCenter(definition, searchRadius, skillLevel);
+        if (definition == null)
+            return new List<EnemyHealth>();
 
-        List<EnemyHealth> candidates = GetEnemiesInSphere(center, searchRadius);
-        List<EnemyHealth> validTargets = new List<EnemyHealth>();
-
-        foreach (EnemyHealth candidate in candidates)
-        {
-            Vector3 targetPoint = GetEnemyTargetPoint(candidate);
-
-            if (!IsInFront(targetPoint))
-                continue;
-
-            if (!IsWithinAllowedAttackHeight(candidate, center.y))
-                continue;
-
-            validTargets.Add(candidate);
-        }
-
-        validTargets.Sort((left, right) =>
-        {
-            float leftDistance = (left.transform.position - ownerTransform.position).sqrMagnitude;
-            float rightDistance = (right.transform.position - ownerTransform.position).sqrMagnitude;
-            return leftDistance.CompareTo(rightDistance);
-        });
-
-        int maxTargets = definition != null
-            ? definition.GetResolvedMaxTargets(skillLevel)
-            : 1;
-        if (validTargets.Count > maxTargets)
-            validTargets.RemoveRange(maxTargets, validTargets.Count - maxTargets);
-
-        return validTargets;
+        return GetEnemiesInHitBox(
+            definition.HitBox,
+            definition.GetResolvedRange(skillLevel),
+            definition.GetResolvedMaxTargets(skillLevel));
     }
 
     public EnemyHealth ResolveLockedSkillTarget(
@@ -109,59 +52,92 @@ public class PlayerTargetingService
         bool allowReacquire,
         int skillLevel = 1)
     {
+        if (definition == null)
+            return null;
+
+        return ResolveLockedTargetInHitBox(
+            definition.HitBox,
+            definition.GetResolvedRange(skillLevel),
+            lockedTarget,
+            allowReacquire);
+    }
+
+    public EnemyHealth FindFirstTargetInHitBox(CombatHitBoxDefinition hitBox, float resolvedRange)
+    {
+        List<EnemyHealth> targets = GetEnemiesInHitBox(hitBox, resolvedRange, 1);
+        return targets.Count > 0 ? targets[0] : null;
+    }
+
+    public EnemyHealth ResolveLockedTargetInHitBox(
+        CombatHitBoxDefinition hitBox,
+        float resolvedRange,
+        EnemyHealth lockedTarget,
+        bool allowReacquire)
+    {
         if (lockedTarget != null && !lockedTarget.IsDead)
         {
-            Vector3 targetPoint = GetEnemyTargetPoint(lockedTarget);
-
-            if (!allowReacquire)
-                return lockedTarget;
-
-            if (!IsInFront(targetPoint))
-                return allowReacquire ? FindFrontSingleTarget(definition, skillLevel) : null;
-
-            if (!IsWithinAllowedAttackHeight(lockedTarget, ownerTransform.position.y))
-                return allowReacquire ? FindFrontSingleTarget(definition, skillLevel) : null;
-
-            float maxDistance = (definition != null ? definition.GetResolvedRange(skillLevel) : 0f) + lockedSkillTargetGraceRange;
-            float sqrMaxDistance = maxDistance * maxDistance;
-            float sqrDistance = (targetPoint - ownerTransform.position).sqrMagnitude;
-
-            if (sqrDistance <= sqrMaxDistance)
+            float expandedRange = Mathf.Max(0.05f, resolvedRange + lockedSkillTargetGraceRange);
+            if (IsTargetInsideHitBox(lockedTarget, hitBox, expandedRange))
                 return lockedTarget;
         }
 
-        return allowReacquire ? FindFrontSingleTarget(definition, skillLevel) : null;
+        return allowReacquire ? FindFirstTargetInHitBox(hitBox, resolvedRange) : null;
     }
 
-    public List<EnemyHealth> GetEnemiesInSphere(Vector3 center, float radius)
+    public List<EnemyHealth> GetEnemiesInHitBox(
+        CombatHitBoxDefinition hitBox,
+        float resolvedRange,
+        int maxTargets = int.MaxValue)
     {
-        Collider[] hits = Physics.OverlapSphere(center, radius, enemyLayer);
+        CombatHitBoxWorldQuery query = BuildWorldHitBoxQuery(hitBox, resolvedRange);
+        Collider[] hits = Physics.OverlapBox(query.Center, query.HalfExtents, query.Rotation, enemyLayer);
         List<EnemyHealth> enemies = new List<EnemyHealth>(hits.Length);
         HashSet<EnemyHealth> seenEnemies = new HashSet<EnemyHealth>();
 
-        foreach (Collider hit in hits)
+        for (int index = 0; index < hits.Length; index++)
         {
-            EnemyHealth enemy = hit.GetComponentInParent<EnemyHealth>();
+            Collider hit = hits[index];
+            EnemyHealth enemy = hit != null ? hit.GetComponentInParent<EnemyHealth>() : null;
             if (enemy == null || enemy.IsDead || !seenEnemies.Add(enemy))
                 continue;
 
             enemies.Add(enemy);
         }
 
+        Vector3 referencePoint = ownerTransform != null ? ownerTransform.position : query.Center;
         enemies.Sort((left, right) =>
         {
-            float leftDistance = (left.transform.position - center).sqrMagnitude;
-            float rightDistance = (right.transform.position - center).sqrMagnitude;
+            float leftDistance = (GetEnemyTargetPoint(left) - referencePoint).sqrMagnitude;
+            float rightDistance = (GetEnemyTargetPoint(right) - referencePoint).sqrMagnitude;
             return leftDistance.CompareTo(rightDistance);
         });
 
+        int resolvedMaxTargets = maxTargets <= 0 ? int.MaxValue : maxTargets;
+        if (resolvedMaxTargets != int.MaxValue && enemies.Count > resolvedMaxTargets)
+            enemies.RemoveRange(resolvedMaxTargets, enemies.Count - resolvedMaxTargets);
+
         return enemies;
+    }
+
+    public CombatHitBoxWorldQuery BuildWorldHitBoxQuery(CombatHitBoxDefinition hitBox, float resolvedRange)
+    {
+        Transform facingTransform = visualTransform != null ? visualTransform : ownerTransform;
+        return hitBox.BuildWorldQuery(facingTransform, resolvedRange);
+    }
+
+    public bool IsTargetInsideHitBox(EnemyHealth enemy, CombatHitBoxDefinition hitBox, float resolvedRange)
+    {
+        if (enemy == null)
+            return false;
+
+        CombatHitBoxWorldQuery query = BuildWorldHitBoxQuery(hitBox, resolvedRange);
+        return IsPointInsideQuery(GetEnemyTargetPoint(enemy), query);
     }
 
     public Vector3 GetEnemyTargetPoint(EnemyHealth enemy)
     {
         if (enemy == null)
-            return ownerTransform.position;
+            return ownerTransform != null ? ownerTransform.position : Vector3.zero;
 
         Collider enemyCollider = enemy.GetComponentInChildren<Collider>();
         if (enemyCollider != null)
@@ -170,51 +146,11 @@ public class PlayerTargetingService
         return enemy.transform.position + Vector3.up * 0.5f;
     }
 
-    public float GetEnemyTopY(EnemyHealth enemy)
+    private static bool IsPointInsideQuery(Vector3 point, CombatHitBoxWorldQuery query)
     {
-        if (enemy == null)
-            return ownerTransform.position.y;
-
-        Collider enemyCollider = enemy.GetComponentInChildren<Collider>();
-        if (enemyCollider != null)
-            return enemyCollider.bounds.max.y;
-
-        return enemy.transform.position.y + 1f;
-    }
-
-    public bool IsInFront(Vector3 targetPosition)
-    {
-        Transform facingTransform = visualTransform != null ? visualTransform : ownerTransform;
-        Vector3 directionToTarget = targetPosition - facingTransform.position;
-        directionToTarget.y = 0f;
-
-        if (directionToTarget.sqrMagnitude <= 0.0001f)
-            return true;
-
-        directionToTarget.Normalize();
-        return Vector3.Dot(facingTransform.forward, directionToTarget) >= skillFrontDotThreshold;
-    }
-
-    public bool IsWithinAllowedAttackHeight(EnemyHealth enemy, float referenceY)
-    {
-        return GetEnemyTopY(enemy) + attackLowerHeightAllowance >= referenceY;
-    }
-
-    public float GetSkillAreaRadius(PlayerSkillDefinition definition, int skillLevel = 1)
-    {
-        float resolvedRange = definition != null
-            ? definition.GetResolvedRange(skillLevel)
-            : 0f;
-        return Mathf.Max(skillAreaMinRadius, resolvedRange * skillAreaRadiusFactor);
-    }
-
-    public Vector3 GetSkillAreaCenter(PlayerSkillDefinition definition, float radius, int skillLevel = 1)
-    {
-        Transform facingTransform = visualTransform != null ? visualTransform : ownerTransform;
-        float resolvedRange = definition != null
-            ? definition.GetResolvedRange(skillLevel)
-            : 0f;
-        return facingTransform.position
-            + facingTransform.forward * Mathf.Max(radius * 0.25f, resolvedRange * skillAreaForwardOffsetFactor);
+        Vector3 localPoint = Quaternion.Inverse(query.Rotation) * (point - query.Center);
+        return Mathf.Abs(localPoint.x) <= query.HalfExtents.x
+            && Mathf.Abs(localPoint.y) <= query.HalfExtents.y
+            && Mathf.Abs(localPoint.z) <= query.HalfExtents.z;
     }
 }

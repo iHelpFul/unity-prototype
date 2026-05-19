@@ -1,0 +1,86 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fa856fa0726af624e8f3c4baaa180a9e, type: 3}
+  m_Name: Haste
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerSkillDefinition
+  skillId: shade_haste
+  displayName: Haste
+  description: 
+  icon: {fileID: 0}
+  jobType: 2
+  skillType: 1
+  attackFamily: 0
+  executionKind: 3
+  combatTargetingKind: 1
+  hitBox:
+    localOffset: {x: 0, y: 0, z: 0}
+    forwardRangeScale: 1
+    backwardRangeScale: 0
+    upExtent: 0.9
+    downExtent: 0.35
+    depthExtent: 0.75
+  readyStateEmpower:
+    requiredReadyStateType: 0
+    consumeReadyStateOnSuccessfulHit: 0
+    damageMultiplier: 1
+    breakPowerMultiplier: 1
+    surgeChanceBonus: 0
+    surgePowerBonus: 0
+    bonusAreaOnSuccessfulHit:
+      range: 0
+      hitBox:
+        localOffset: {x: 0, y: 0, z: 0}
+        forwardRangeScale: 1
+        backwardRangeScale: 0
+        upExtent: 0.9
+        downExtent: 0.35
+        depthExtent: 0.75
+      damageMultiplier: 0
+      breakPowerMultiplier: 0
+      pulseCount: 1
+      pulseInterval: 0
+      maxTargets: 1
+      includePrimaryTarget: 0
+  utilitySkillProfile: {fileID: 11400000, guid: 98be051de11f5734fb567f184ee762b3, type: 2}
+  burstLinkedSkillProfile: {fileID: 0}
+  presentationCueSet: {fileID: 11400000, guid: 55f1ac3a5f18974428962980874b06b7, type: 2}
+  defaultProjectileProfile: {fileID: 0}
+  projectileLaunchMode: 0
+  baseMomentumGain: 0
+  baseMomentumCost: 0
+  baseSurgeChanceBonus: 0
+  baseSurgePowerBonus: 0
+  defaultElement: 0
+  levels:
+  - level: 1
+    manaCost: 0
+    cooldown: 6
+    recoveryTime: 0
+    range: 0
+    hitCount: 1
+    damageCoefficient: 1
+    extraSurgeChance: 0
+    extraSurgePower: 0
+    momentumGain: 0
+    momentumCost: 0
+    projectileProfile: {fileID: 0}
+  maxLevel: 20
+  defaultSlotIndex: 2
+  damageMultiplier: 1
+  hitInterval: 0
+  animationVariantIndex: 1
+  animatorStateName: Shade_Haste
+  animationSpeed: 1
+  attackDuration: 0.05
+  maxTargets: 1
+  projectileCount: 1
+  projectileSpreadAngle: 0

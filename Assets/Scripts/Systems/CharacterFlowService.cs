@@ -251,7 +251,7 @@ public class CharacterFlowService : MonoBehaviour
                 character != null ? character.CharacterId : string.Empty,
                 character != null ? character.Nickname : string.Empty,
                 character != null && character.RuntimeData != null ? character.RuntimeData.Level : 0,
-                character != null && character.RuntimeData != null ? character.RuntimeData.CurrentJob : PlayerJobType.Drifter,
+                character != null && character.RuntimeData != null ? character.RuntimeData.CurrentJob : PlayerJobType.Novice,
                 character != null && character.RuntimeData != null
                     ? GameBootstrap.FormatJobName(character.RuntimeData.CurrentJob)
                     : string.Empty,

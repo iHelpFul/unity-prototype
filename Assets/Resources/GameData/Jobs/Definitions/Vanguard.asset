@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5ab8a317b3787494d913f158f6cafb0f, type: 3}
+  m_Name: Vanguard
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerJobDefinition
+  jobType: 1
+  displayName: Vanguard
+  description: 
+  icon: {fileID: 0}
+  coreStat: 0
+  secondaryStat: 1
+  allowedWeaponTypes: 
+  advancementLevelRequirement: 12
+  basicAttackProfile: {fileID: 11400000, guid: 0f897e8f2c823564e9d47863092a4de0, type: 2}
+  animationProfile: {fileID: 11400000, guid: d445915cf4ad0434c918a054348a1cb6, type: 2}
+  combatFormulaProfile: {fileID: 11400000, guid: bb9d089c144da9b4daa923b0c9b6442e, type: 2}
+  baseMaxGauge: 10
+  defaultSkills:
+  - {fileID: 11400000, guid: d28a88ab4d766814ba646e73b88bb4a6, type: 2}
+  - {fileID: 11400000, guid: e87a90b6b2e76ea4c945f305f8fc8c55, type: 2}
+  - {fileID: 11400000, guid: 61f4b2dea46b72e4fa8daf7b7a638fae, type: 2}
+  defaultPassives: []

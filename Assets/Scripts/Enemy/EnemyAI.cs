@@ -1,11 +1,5 @@
 using UnityEngine;
 
-public enum EnemyAttackType
-{
-    Contact,
-    Animated
-}
-
 [RequireComponent(typeof(CharacterController))]
 public class EnemyAI : MonoBehaviour
 {
@@ -61,6 +55,15 @@ public class EnemyAI : MonoBehaviour
     private float attackFallbackHitTimer;
     private float attackAnimationTimer;
     private float externalMovementLockTimer;
+    private EnemyRole resolvedRole;
+    private bool isSentinelReturningToAnchor;
+    private float resolvedMoveSpeed;
+    private EnemyAttackType resolvedAttackType;
+    private float resolvedDetectionRange;
+    private float resolvedLoseAggroDelay;
+    private float resolvedChaseBoundsPadding;
+    private float resolvedAttackCooldown;
+    private float resolvedAttackRecoveryDuration;
 
     public bool IsDead => isDead;
     public bool IsAggroActive => isAggroActive;
@@ -256,6 +259,7 @@ public class EnemyAI : MonoBehaviour
         attackFallbackHitTimer = 0f;
         attackAnimationTimer = 0f;
         externalMovementLockTimer = 0f;
+        isSentinelReturningToAnchor = false;
     }
 
     public void ResetAfterRespawn()
@@ -276,6 +280,7 @@ public class EnemyAI : MonoBehaviour
         attackFallbackHitTimer = 0f;
         attackAnimationTimer = 0f;
         externalMovementLockTimer = 0f;
+        isSentinelReturningToAnchor = false;
         ScheduleNextPatrolPause();
         RefreshConfiguredStats();
 
@@ -289,7 +294,31 @@ public class EnemyAI : MonoBehaviour
             enemyHealth = GetComponent<EnemyHealth>();
 
         if (enemyHealth != null && enemyHealth.Stats != null)
+        {
             attackDamage = enemyHealth.Stats.AnimatedAttackDamage;
+            resolvedRole = enemyHealth.Stats.Role;
+            isSentinelReturningToAnchor = false;
+
+            EnemyCadenceProfile cadence = enemyHealth.Stats.CadenceProfile;
+            resolvedAttackType = cadence.AttackType;
+            resolvedMoveSpeed = cadence.MoveSpeed;
+            resolvedDetectionRange = cadence.DetectionRange;
+            resolvedLoseAggroDelay = cadence.LoseAggroDelay;
+            resolvedChaseBoundsPadding = cadence.ChaseBoundsPadding;
+            resolvedAttackCooldown = cadence.AttackCooldown;
+            resolvedAttackRecoveryDuration = cadence.AttackRecoveryDuration;
+            return;
+        }
+
+        resolvedRole = EnemyRole.Skirmisher;
+        isSentinelReturningToAnchor = false;
+        resolvedAttackType = attackType;
+        resolvedMoveSpeed = Mathf.Max(0.05f, moveSpeed);
+        resolvedDetectionRange = Mathf.Max(0.1f, detectionRange);
+        resolvedLoseAggroDelay = Mathf.Max(0.1f, loseAggroDelay);
+        resolvedChaseBoundsPadding = Mathf.Max(0f, chaseBoundsPadding);
+        resolvedAttackCooldown = Mathf.Max(0f, attackCooldown);
+        resolvedAttackRecoveryDuration = Mathf.Max(0f, attackRecoveryDuration);
     }
 
     public void NotifyExternalKnockback(float duration)
@@ -313,10 +342,10 @@ public class EnemyAI : MonoBehaviour
     public float ClampHorizontalToMovementBounds(float worldX)
     {
         float minX = isAggroActive
-            ? GetLeftPatrolBoundaryX() - chaseBoundsPadding
+            ? GetLeftPatrolBoundaryX() - GetEffectiveChaseBoundsPadding()
             : GetLeftPatrolBoundaryX();
         float maxX = isAggroActive
-            ? GetRightPatrolBoundaryX() + chaseBoundsPadding
+            ? GetRightPatrolBoundaryX() + GetEffectiveChaseBoundsPadding()
             : GetRightPatrolBoundaryX();
 
         return Mathf.Clamp(worldX, minX, maxX);
@@ -357,7 +386,7 @@ public class EnemyAI : MonoBehaviour
 
         targetPlayer = attacker;
         isAggroActive = true;
-        loseAggroTimer = Mathf.Max(0.1f, loseAggroDelay);
+        loseAggroTimer = Mathf.Max(0.1f, resolvedLoseAggroDelay);
         patrolPauseTimer = 0f;
     }
 
@@ -378,11 +407,11 @@ public class EnemyAI : MonoBehaviour
         }
 
         float sqrDistance = (targetPlayer.transform.position - transform.position).sqrMagnitude;
-        float allowedRange = Mathf.Max(0.5f, detectionRange);
+        float allowedRange = Mathf.Max(0.5f, resolvedDetectionRange);
 
         if (sqrDistance <= allowedRange * allowedRange)
         {
-            loseAggroTimer = Mathf.Max(0.1f, loseAggroDelay);
+            loseAggroTimer = Mathf.Max(0.1f, resolvedLoseAggroDelay);
             return;
         }
 
@@ -405,13 +434,13 @@ public class EnemyAI : MonoBehaviour
         if (!IsTargetValid(targetPlayer))
             return false;
 
-        if (attackType != EnemyAttackType.Animated)
+        if (resolvedAttackType != EnemyAttackType.Animated)
             return false;
 
         if (isAttackInProgress || attackRecoveryTimer > 0f)
             return false;
 
-        if (Time.time < lastAttackTime + attackCooldown)
+        if (Time.time < lastAttackTime + resolvedAttackCooldown)
             return false;
 
         float distanceXToPlayer = Mathf.Abs(targetPlayer.transform.position.x - transform.position.x);
@@ -458,7 +487,7 @@ public class EnemyAI : MonoBehaviour
             return 0f;
         }
 
-        return patrolDirection * moveSpeed;
+        return patrolDirection * resolvedMoveSpeed;
     }
 
     private float GetAggroHorizontalSpeed()
@@ -466,7 +495,8 @@ public class EnemyAI : MonoBehaviour
         if (!IsTargetValid(targetPlayer))
             return 0f;
 
-        if (attackType == EnemyAttackType.Animated)
+        float roleMoveSpeed = ResolveRoleMoveSpeed();
+        if (resolvedAttackType == EnemyAttackType.Animated)
         {
             if (CanStartAnimatedAttack())
             {
@@ -474,28 +504,79 @@ public class EnemyAI : MonoBehaviour
                 return 0f;
             }
 
+            float deltaXToPlayer = targetPlayer.transform.position.x - transform.position.x;
+            float absoluteDeltaToPlayer = Mathf.Abs(deltaXToPlayer);
+
+            if (resolvedRole == EnemyRole.Skirmisher)
+            {
+                float retreatThreshold = Mathf.Max(0.35f, attackRangeForward * 0.45f);
+                float holdThreshold = Mathf.Max(retreatThreshold + 0.2f, attackRangeForward * 0.9f);
+
+                if (absoluteDeltaToPlayer < retreatThreshold)
+                    return -ResolveHorizontalDirection(deltaXToPlayer) * roleMoveSpeed * 0.85f;
+
+                if (absoluteDeltaToPlayer <= holdThreshold)
+                    return 0f;
+            }
+            else if (resolvedRole == EnemyRole.Sentinel)
+            {
+                float anchorLeash = ResolveSentinelAnchorLeash();
+                float anchorReturnThreshold = Mathf.Max(0.1f, anchorLeash * 0.55f);
+                float distanceFromAnchor = Mathf.Abs(transform.position.x - spawnX);
+
+                if (isSentinelReturningToAnchor)
+                {
+                    if (distanceFromAnchor <= anchorReturnThreshold)
+                    {
+                        isSentinelReturningToAnchor = false;
+                    }
+                    else
+                    {
+                        return Mathf.Sign(spawnX - transform.position.x) * roleMoveSpeed * 0.9f;
+                    }
+                }
+
+                if (distanceFromAnchor > anchorLeash && absoluteDeltaToPlayer > attackRangeForward * 0.85f)
+                {
+                    isSentinelReturningToAnchor = true;
+                    return Mathf.Sign(spawnX - transform.position.x) * roleMoveSpeed * 0.9f;
+                }
+
+                if (absoluteDeltaToPlayer <= attackRangeForward * 0.95f)
+                    return 0f;
+            }
+
             if (attackRecoveryTimer > 0f)
+            {
+                if (resolvedRole == EnemyRole.Bruiser && absoluteDeltaToPlayer > Mathf.Max(0.01f, patrolEdgePadding))
+                    return ResolveHorizontalDirection(deltaXToPlayer) * roleMoveSpeed * 0.75f;
+
                 return 0f;
+            }
         }
 
-        float minChaseX = GetLeftPatrolBoundaryX() - chaseBoundsPadding;
-        float maxChaseX = GetRightPatrolBoundaryX() + chaseBoundsPadding;
+        float chasePadding = GetEffectiveChaseBoundsPadding();
+        float minChaseX = GetLeftPatrolBoundaryX() - chasePadding;
+        float maxChaseX = GetRightPatrolBoundaryX() + chasePadding;
         float desiredTargetX = Mathf.Clamp(targetPlayer.transform.position.x, minChaseX, maxChaseX);
         float deltaX = desiredTargetX - transform.position.x;
+        float stopDistance = resolvedRole == EnemyRole.Bruiser
+            ? patrolEdgePadding * 0.35f
+            : patrolEdgePadding;
 
-        if (Mathf.Abs(deltaX) <= patrolEdgePadding)
+        if (Mathf.Abs(deltaX) <= Mathf.Max(0.01f, stopDistance))
             return 0f;
 
-        return Mathf.Sign(deltaX) * moveSpeed;
+        return ResolveHorizontalDirection(deltaX) * roleMoveSpeed;
     }
 
     private void ClampHorizontalPosition()
     {
         float minX = isAggroActive
-            ? GetLeftPatrolBoundaryX() - chaseBoundsPadding
+            ? GetLeftPatrolBoundaryX() - GetEffectiveChaseBoundsPadding()
             : GetLeftPatrolBoundaryX();
         float maxX = isAggroActive
-            ? GetRightPatrolBoundaryX() + chaseBoundsPadding
+            ? GetRightPatrolBoundaryX() + GetEffectiveChaseBoundsPadding()
             : GetRightPatrolBoundaryX();
 
         Vector3 position = transform.position;
@@ -515,6 +596,7 @@ public class EnemyAI : MonoBehaviour
         isAggroActive = false;
         loseAggroTimer = 0f;
         targetPlayer = null;
+        isSentinelReturningToAnchor = false;
         BeginPatrolPause();
     }
 
@@ -527,7 +609,7 @@ public class EnemyAI : MonoBehaviour
         didResolveCurrentAttackHit = false;
         attackFallbackHitTimer = 0f;
         attackAnimationTimer = 0f;
-        attackRecoveryTimer = Mathf.Max(0f, attackRecoveryDuration);
+        attackRecoveryTimer = Mathf.Max(0f, resolvedAttackRecoveryDuration);
     }
 
     private void BeginPatrolPause()
@@ -617,6 +699,43 @@ public class EnemyAI : MonoBehaviour
             && Mathf.Abs(delta.z) <= halfExtents.z;
     }
 
+    private float GetEffectiveChaseBoundsPadding()
+    {
+        float basePadding = Mathf.Max(0f, resolvedChaseBoundsPadding);
+        return resolvedRole switch
+        {
+            EnemyRole.Bruiser => basePadding + 0.75f,
+            EnemyRole.Sentinel => Mathf.Min(basePadding, 0.25f),
+            _ => basePadding
+        };
+    }
+
+    private float ResolveRoleMoveSpeed()
+    {
+        float baseSpeed = Mathf.Max(0.05f, resolvedMoveSpeed);
+        return resolvedRole switch
+        {
+            EnemyRole.Bruiser => baseSpeed * 1.05f,
+            EnemyRole.Sentinel => baseSpeed * 0.82f,
+            _ => baseSpeed
+        };
+    }
+
+    private float ResolveHorizontalDirection(float deltaX)
+    {
+        if (Mathf.Abs(deltaX) > 0.001f)
+            return Mathf.Sign(deltaX);
+
+        return GetFacingDirectionSign();
+    }
+
+    private float ResolveSentinelAnchorLeash()
+    {
+        GetPatrolBounds(out float leftX, out float rightX);
+        float patrolWidth = Mathf.Max(0.1f, rightX - leftX);
+        return Mathf.Max(0.35f, patrolWidth * 0.2f);
+    }
+
     private void OnDrawGizmosSelected()
     {
         GetPatrolBounds(out float leftX, out float rightX);
@@ -627,11 +746,13 @@ public class EnemyAI : MonoBehaviour
         Gizmos.DrawWireCube(patrolCenter, patrolSize);
 
         Gizmos.color = new Color(0.35f, 0.85f, 1f, 0.65f);
-        Gizmos.DrawWireSphere(transform.position, detectionRange);
+        float gizmoDetectionRange = resolvedDetectionRange > 0f ? resolvedDetectionRange : detectionRange;
+        Gizmos.DrawWireSphere(transform.position, gizmoDetectionRange);
 
         Gizmos.color = new Color(1f, 0.55f, 0.2f, 0.75f);
-        float chaseLeft = leftX - chaseBoundsPadding;
-        float chaseRight = rightX + chaseBoundsPadding;
+        float gizmoChasePadding = resolvedChaseBoundsPadding > 0f ? resolvedChaseBoundsPadding : chaseBoundsPadding;
+        float chaseLeft = leftX - gizmoChasePadding;
+        float chaseRight = rightX + gizmoChasePadding;
         Vector3 chaseCenter = new Vector3((chaseLeft + chaseRight) * 0.5f, transform.position.y + 0.22f, transform.position.z);
         Vector3 chaseSize = new Vector3(Mathf.Max(0.1f, chaseRight - chaseLeft), 0.15f, 0.6f);
         Gizmos.DrawWireCube(chaseCenter, chaseSize);

@@ -306,7 +306,7 @@ public class PlayerProgressionPanelController : MonoBehaviour
             for (int slotIndex = 1; slotIndex <= 15; slotIndex++)
             {
                 PlayerSkillDefinition definition = skillSession.GetAssignedSkillDefinition(slotIndex);
-                if (definition == null || definition.SkillType != PlayerSkillType.ActiveAttack)
+                if (definition == null || definition.SkillType != PlayerSkillType.Attack)
                     continue;
 
                 if (bestAssigned == null || definition.DefaultSlotIndex < bestAssigned.DefaultSlotIndex)
@@ -329,7 +329,7 @@ public class PlayerProgressionPanelController : MonoBehaviour
         PlayerSkillDefinition best = null;
         foreach (PlayerSkillDefinition skill in definition.DefaultSkills)
         {
-            if (skill == null || skill.SkillType != PlayerSkillType.ActiveAttack)
+            if (skill == null || skill.SkillType != PlayerSkillType.Attack)
                 continue;
 
             if (best == null || skill.DefaultSlotIndex < best.DefaultSlotIndex)
