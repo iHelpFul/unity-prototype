@@ -2,8 +2,19 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+public enum PlayerRotationMode
+{
+    MovementDirection = 0,
+    CameraForward = 1,
+    None = 2
+}
+
 public class PlayerMovementController : MonoBehaviour
 {
+    [Header("Rotation")]
+    [SerializeField] private PlayerRotationMode rotationMode = PlayerRotationMode.MovementDirection;
+    [SerializeField, Min(0f)] private float rotationSharpness;
+
     private PlayerMotor motor;
     private Transform visual;
     private Transform cameraTransform;
@@ -20,6 +31,12 @@ public class PlayerMovementController : MonoBehaviour
     public bool JumpedThisFrame => movementModel != null && movementModel.JumpedThisFrame;
     public bool IsGrounded => motor != null && motor.IsGrounded;
     public Vector2 CurrentMoveInput => moveInput;
+    public PlayerRotationMode RotationMode => rotationMode;
+
+    public void SetRotationMode(PlayerRotationMode newRotationMode)
+    {
+        rotationMode = newRotationMode;
+    }
 
     public void Initialize(
         PlayerMotor motor,
@@ -109,17 +126,41 @@ public class PlayerMovementController : MonoBehaviour
 
     private void HandleRotation()
     {
-        if (visual == null)
+        if (visual == null || rotationMode == PlayerRotationMode.None)
             return;
 
-        Vector3 inputDirection = cameraForward * moveInput.y + cameraRight * moveInput.x;
-        inputDirection.y = 0f;
+        Vector3 desiredForward = ResolveDesiredRotationDirection();
+        desiredForward.y = 0f;
 
-        if (inputDirection.sqrMagnitude < 0.01f)
+        if (desiredForward.sqrMagnitude < 0.01f)
             return;
 
-        Quaternion targetRotation = Quaternion.LookRotation(inputDirection);
-        visual.rotation = targetRotation;
+        Quaternion targetRotation = Quaternion.LookRotation(desiredForward.normalized, Vector3.up);
+        float sharpness = Mathf.Max(0f, rotationSharpness);
+
+        if (sharpness <= 0f)
+        {
+            visual.rotation = targetRotation;
+            return;
+        }
+
+        float interpolation = 1f - Mathf.Exp(-sharpness * Time.deltaTime);
+        visual.rotation = Quaternion.Slerp(visual.rotation, targetRotation, interpolation);
+    }
+
+    private Vector3 ResolveDesiredRotationDirection()
+    {
+        switch (rotationMode)
+        {
+            case PlayerRotationMode.CameraForward:
+                return cameraForward;
+
+            case PlayerRotationMode.None:
+                return Vector3.zero;
+
+            default:
+                return cameraForward * moveInput.y + cameraRight * moveInput.x;
+        }
     }
 
     public Vector3 ResolveWorldMoveDirection()

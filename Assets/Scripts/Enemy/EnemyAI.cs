@@ -1,8 +1,18 @@
 using UnityEngine;
 
+public enum EnemyMovementPlaneMode
+{
+    LockedZ = 0,
+    Full3D = 1
+}
+
 [RequireComponent(typeof(CharacterController))]
 public class EnemyAI : MonoBehaviour
 {
+    [Header("Movement Plane")]
+    [SerializeField] private EnemyMovementPlaneMode movementPlaneMode = EnemyMovementPlaneMode.LockedZ;
+    [SerializeField] private float patrolHalfDepth = 2.5f;
+
     [Header("Patrol Settings")]
     [SerializeField] private float moveSpeed = 2f;
     [SerializeField] private Transform leftBoundary;
@@ -44,7 +54,9 @@ public class EnemyAI : MonoBehaviour
     private float lastAttackTime;
     private float lockedZ;
     private float spawnX;
+    private Vector3 spawnPosition;
     private float patrolDirection = 1f;
+    private Vector3 patrolPlanarDirection;
     private float patrolPauseTimer;
     private float nextPatrolPauseTime;
     private float loseAggroTimer;
@@ -68,6 +80,21 @@ public class EnemyAI : MonoBehaviour
     public bool IsDead => isDead;
     public bool IsAggroActive => isAggroActive;
     public bool IsExternallyLocked => externalMovementLockTimer > 0f;
+    public EnemyMovementPlaneMode MovementPlaneMode => movementPlaneMode;
+
+    public void SetMovementPlaneMode(EnemyMovementPlaneMode planeMode, bool recacheMovementAnchor = true)
+    {
+        movementPlaneMode = planeMode;
+
+        if (!recacheMovementAnchor)
+            return;
+
+        lockedZ = transform.position.z;
+        spawnX = transform.position.x;
+        spawnPosition = transform.position;
+        ChooseRandomPatrolPlanarDirection();
+        ScheduleNextPatrolPause();
+    }
 
     private void Awake()
     {
@@ -76,7 +103,9 @@ public class EnemyAI : MonoBehaviour
         enemyHealth = GetComponent<EnemyHealth>();
         lockedZ = transform.position.z;
         spawnX = transform.position.x;
+        spawnPosition = transform.position;
         patrolDirection = Random.value < 0.5f ? -1f : 1f;
+        ChooseRandomPatrolPlanarDirection();
         ScheduleNextPatrolPause();
         RefreshConfiguredStats();
     }
@@ -99,7 +128,9 @@ public class EnemyAI : MonoBehaviour
         if (externalMovementLockTimer > 0f)
         {
             externalMovementLockTimer -= Time.deltaTime;
-            LockZAxis();
+            if (!IsFull3DMovement())
+                LockZAxis();
+
             animationController?.SetSpeed(0f);
             return;
         }
@@ -125,20 +156,20 @@ public class EnemyAI : MonoBehaviour
 
         UpdateAggroState();
 
-        float horizontalSpeed = 0f;
+        Vector3 planarVelocity = Vector3.zero;
 
         if (!isAttackInProgress)
         {
-            horizontalSpeed = isAggroActive
-                ? GetAggroHorizontalSpeed()
-                : GetPatrolHorizontalSpeed();
+            planarVelocity = isAggroActive
+                ? GetAggroPlanarVelocity()
+                : GetPatrolPlanarVelocity();
         }
         else if (IsTargetValid(targetPlayer))
         {
-            FaceTarget(Mathf.Sign(targetPlayer.transform.position.x - transform.position.x));
+            FaceTargetPosition(targetPlayer.transform.position);
         }
 
-        ApplyMovement(horizontalSpeed);
+        ApplyMovement(planarVelocity);
     }
 
     private void BeginAnimatedAttack()
@@ -155,7 +186,7 @@ public class EnemyAI : MonoBehaviour
         patrolPauseTimer = 0f;
 
         if (IsTargetValid(targetPlayer))
-            FaceTarget(Mathf.Sign(targetPlayer.transform.position.x - transform.position.x));
+            FaceTargetPosition(targetPlayer.transform.position);
 
         animationController?.PlayAttack();
         animationController?.SetSpeed(0f);
@@ -180,7 +211,7 @@ public class EnemyAI : MonoBehaviour
         Collider[] hitColliders = Physics.OverlapBox(
             GetAttackHitboxCenter(),
             GetAttackHitboxHalfExtents(),
-            Quaternion.identity,
+            GetAttackHitboxRotation(),
             ~0,
             QueryTriggerInteraction.Collide);
 
@@ -221,23 +252,55 @@ public class EnemyAI : MonoBehaviour
         transform.rotation = Quaternion.LookRotation(new Vector3(direction, 0f, 0f));
     }
 
-    private void ApplyMovement(float horizontalSpeed)
+    private void FaceTargetPosition(Vector3 worldPosition)
+    {
+        Vector3 direction = worldPosition - transform.position;
+        direction.y = 0f;
+
+        if (direction.sqrMagnitude <= 0.0001f)
+            return;
+
+        FacePlanarDirection(direction);
+    }
+
+    private void FacePlanarDirection(Vector3 direction)
+    {
+        direction.y = 0f;
+
+        if (direction.sqrMagnitude <= 0.0001f)
+            return;
+
+        transform.rotation = Quaternion.LookRotation(direction.normalized, Vector3.up);
+    }
+
+    private void ApplyMovement(Vector3 planarVelocity)
     {
         if (controller.isGrounded && verticalVelocity < 0f)
             verticalVelocity = -2f;
 
         verticalVelocity += gravity * Time.deltaTime;
 
-        Vector3 motion = new Vector3(horizontalSpeed, verticalVelocity, 0f);
+        planarVelocity.y = 0f;
+        Vector3 motion = planarVelocity + Vector3.up * verticalVelocity;
         controller.Move(motion * Time.deltaTime);
 
-        ClampHorizontalPosition();
-        LockZAxis();
+        if (IsFull3DMovement())
+        {
+            ClampPlanarPosition();
 
-        if (Mathf.Abs(horizontalSpeed) > 0.001f)
-            FaceTarget(Mathf.Sign(horizontalSpeed));
+            if (planarVelocity.sqrMagnitude > 0.0001f)
+                FacePlanarDirection(planarVelocity);
+        }
+        else
+        {
+            ClampHorizontalPosition();
+            LockZAxis();
 
-        animationController?.SetSpeed(Mathf.Abs(horizontalSpeed));
+            if (Mathf.Abs(planarVelocity.x) > 0.001f)
+                FaceTarget(Mathf.Sign(planarVelocity.x));
+        }
+
+        animationController?.SetSpeed(planarVelocity.magnitude);
     }
 
     private void OnEnemyDied(EnemyDiedEvent e)
@@ -269,11 +332,13 @@ public class EnemyAI : MonoBehaviour
         lastAttackTime = Time.time + 0.35f;
         lockedZ = transform.position.z;
         spawnX = transform.position.x;
+        spawnPosition = transform.position;
         targetPlayer = null;
         isAggroActive = false;
         loseAggroTimer = 0f;
         patrolPauseTimer = 0f;
         patrolDirection = Random.value < 0.5f ? -1f : 1f;
+        ChooseRandomPatrolPlanarDirection();
         isAttackInProgress = false;
         didResolveCurrentAttackHit = false;
         attackRecoveryTimer = 0f;
@@ -353,6 +418,7 @@ public class EnemyAI : MonoBehaviour
 
     private void OnValidate()
     {
+        patrolHalfDepth = Mathf.Max(0.2f, patrolHalfDepth);
         moveSpeed = Mathf.Max(0.05f, moveSpeed);
         patrolHalfWidth = Mathf.Max(0.2f, patrolHalfWidth);
         patrolEdgePadding = Mathf.Max(0f, patrolEdgePadding);
@@ -443,8 +509,11 @@ public class EnemyAI : MonoBehaviour
         if (Time.time < lastAttackTime + resolvedAttackCooldown)
             return false;
 
-        float distanceXToPlayer = Mathf.Abs(targetPlayer.transform.position.x - transform.position.x);
-        if (distanceXToPlayer > attackRangeForward)
+        float planarDistanceToPlayer = IsFull3DMovement()
+            ? GetPlanarDistanceTo(targetPlayer.transform.position)
+            : Mathf.Abs(targetPlayer.transform.position.x - transform.position.x);
+
+        if (planarDistanceToPlayer > attackRangeForward)
             return false;
 
         float verticalDistanceToPlayer = Mathf.Abs(targetPlayer.transform.position.y - transform.position.y);
@@ -570,6 +639,92 @@ public class EnemyAI : MonoBehaviour
         return ResolveHorizontalDirection(deltaX) * roleMoveSpeed;
     }
 
+    private Vector3 GetPatrolPlanarVelocity()
+    {
+        if (!IsFull3DMovement())
+            return new Vector3(GetPatrolHorizontalSpeed(), 0f, 0f);
+
+        return GetFull3DPatrolVelocity();
+    }
+
+    private Vector3 GetAggroPlanarVelocity()
+    {
+        if (!IsFull3DMovement())
+            return new Vector3(GetAggroHorizontalSpeed(), 0f, 0f);
+
+        if (!IsTargetValid(targetPlayer))
+            return Vector3.zero;
+
+        float roleMoveSpeed = ResolveRoleMoveSpeed();
+        Vector3 deltaToPlayer = GetPlanarDeltaTo(targetPlayer.transform.position);
+        float distanceToPlayer = deltaToPlayer.magnitude;
+
+        if (resolvedAttackType == EnemyAttackType.Animated)
+        {
+            if (CanStartAnimatedAttack())
+            {
+                BeginAnimatedAttack();
+                return Vector3.zero;
+            }
+
+            Vector3 directionToPlayer = distanceToPlayer > 0.001f
+                ? deltaToPlayer / distanceToPlayer
+                : transform.forward;
+
+            if (resolvedRole == EnemyRole.Skirmisher)
+            {
+                float retreatThreshold = Mathf.Max(0.35f, attackRangeForward * 0.45f);
+                float holdThreshold = Mathf.Max(retreatThreshold + 0.2f, attackRangeForward * 0.9f);
+
+                if (distanceToPlayer < retreatThreshold)
+                    return -directionToPlayer * roleMoveSpeed * 0.85f;
+
+                if (distanceToPlayer <= holdThreshold)
+                    return Vector3.zero;
+            }
+            else if (resolvedRole == EnemyRole.Sentinel)
+            {
+                float anchorLeash = ResolveSentinelAnchorLeash();
+                float anchorReturnThreshold = Mathf.Max(0.1f, anchorLeash * 0.55f);
+                float distanceFromAnchor = GetPlanarDistanceFromAnchor();
+
+                if (isSentinelReturningToAnchor)
+                {
+                    if (distanceFromAnchor <= anchorReturnThreshold)
+                    {
+                        isSentinelReturningToAnchor = false;
+                    }
+                    else
+                    {
+                        return GetPlanarDirectionTo(spawnPosition) * roleMoveSpeed * 0.9f;
+                    }
+                }
+
+                if (distanceFromAnchor > anchorLeash && distanceToPlayer > attackRangeForward * 0.85f)
+                {
+                    isSentinelReturningToAnchor = true;
+                    return GetPlanarDirectionTo(spawnPosition) * roleMoveSpeed * 0.9f;
+                }
+
+                if (distanceToPlayer <= attackRangeForward * 0.95f)
+                    return Vector3.zero;
+            }
+
+            if (attackRecoveryTimer > 0f)
+            {
+                if (resolvedRole == EnemyRole.Bruiser && distanceToPlayer > Mathf.Max(0.01f, patrolEdgePadding))
+                    return directionToPlayer * roleMoveSpeed * 0.75f;
+
+                return Vector3.zero;
+            }
+        }
+
+        if (distanceToPlayer <= Mathf.Max(0.01f, patrolEdgePadding))
+            return Vector3.zero;
+
+        return deltaToPlayer.normalized * roleMoveSpeed;
+    }
+
     private void ClampHorizontalPosition()
     {
         float minX = isAggroActive
@@ -586,8 +741,22 @@ public class EnemyAI : MonoBehaviour
 
     private void LockZAxis()
     {
+        if (IsFull3DMovement())
+            return;
+
         Vector3 position = transform.position;
         position.z = lockedZ;
+        transform.position = position;
+    }
+
+    private void ClampPlanarPosition()
+    {
+        GetPlanarPatrolBounds(out float leftX, out float rightX, out float minZ, out float maxZ);
+        float chasePadding = isAggroActive ? GetEffectiveChaseBoundsPadding() : 0f;
+
+        Vector3 position = transform.position;
+        position.x = Mathf.Clamp(position.x, leftX - chasePadding, rightX + chasePadding);
+        position.z = Mathf.Clamp(position.z, minZ, maxZ);
         transform.position = position;
     }
 
@@ -629,6 +798,58 @@ public class EnemyAI : MonoBehaviour
         nextPatrolPauseTime = Time.time + Random.Range(minMove, maxMove);
     }
 
+    private Vector3 GetFull3DPatrolVelocity()
+    {
+        if (patrolPauseTimer > 0f)
+        {
+            patrolPauseTimer -= Time.deltaTime;
+
+            if (patrolPauseTimer <= 0f)
+            {
+                ChooseRandomPatrolPlanarDirection();
+                ScheduleNextPatrolPause();
+            }
+
+            return Vector3.zero;
+        }
+
+        if (Time.time >= nextPatrolPauseTime)
+        {
+            BeginPatrolPause();
+            return Vector3.zero;
+        }
+
+        GetPlanarPatrolBounds(out float leftX, out float rightX, out float minZ, out float maxZ);
+        Vector3 position = transform.position;
+        bool shouldPause = false;
+
+        if ((position.x <= leftX + patrolEdgePadding && patrolPlanarDirection.x < 0f)
+            || (position.x >= rightX - patrolEdgePadding && patrolPlanarDirection.x > 0f))
+        {
+            patrolPlanarDirection.x *= -1f;
+            shouldPause = true;
+        }
+
+        if ((position.z <= minZ + patrolEdgePadding && patrolPlanarDirection.z < 0f)
+            || (position.z >= maxZ - patrolEdgePadding && patrolPlanarDirection.z > 0f))
+        {
+            patrolPlanarDirection.z *= -1f;
+            shouldPause = true;
+        }
+
+        if (patrolPlanarDirection.sqrMagnitude <= 0.0001f)
+            ChooseRandomPatrolPlanarDirection();
+
+        if (shouldPause)
+        {
+            patrolPlanarDirection.Normalize();
+            BeginPatrolPause();
+            return Vector3.zero;
+        }
+
+        return patrolPlanarDirection.normalized * resolvedMoveSpeed;
+    }
+
     private float GetLeftPatrolBoundaryX()
     {
         GetPatrolBounds(out float leftX, out _);
@@ -655,6 +876,30 @@ public class EnemyAI : MonoBehaviour
         }
     }
 
+    private void GetPlanarPatrolBounds(out float leftX, out float rightX, out float minZ, out float maxZ)
+    {
+        GetPatrolBounds(out leftX, out rightX);
+
+        float centerZ = Application.isPlaying ? spawnPosition.z : transform.position.z;
+        float halfDepth = Mathf.Max(0.2f, patrolHalfDepth);
+        minZ = centerZ - halfDepth;
+        maxZ = centerZ + halfDepth;
+    }
+
+    private void ChooseRandomPatrolPlanarDirection()
+    {
+        Vector2 randomDirection = Random.insideUnitCircle;
+
+        if (randomDirection.sqrMagnitude <= 0.0001f)
+            randomDirection = new Vector2(patrolDirection, 0f);
+
+        randomDirection.Normalize();
+        patrolPlanarDirection = new Vector3(randomDirection.x, 0f, randomDirection.y);
+
+        if (Mathf.Abs(patrolPlanarDirection.x) > 0.001f)
+            patrolDirection = Mathf.Sign(patrolPlanarDirection.x);
+    }
+
     private bool IsDamageableAttackTarget(PlayerCharacter candidate)
     {
         return IsTargetValid(candidate);
@@ -672,8 +917,16 @@ public class EnemyAI : MonoBehaviour
 
     private Vector3 GetAttackHitboxCenter()
     {
-        float facingSign = GetFacingDirectionSign();
         float verticalOffset = Mathf.Max(0.05f, attackHitboxHeight) * 0.5f;
+
+        if (IsFull3DMovement())
+        {
+            return transform.position
+                + transform.forward * attackHitboxForwardOffset
+                + Vector3.up * verticalOffset;
+        }
+
+        float facingSign = GetFacingDirectionSign();
 
         return transform.position
             + Vector3.right * (facingSign * attackHitboxForwardOffset)
@@ -688,11 +941,18 @@ public class EnemyAI : MonoBehaviour
             0.55f);
     }
 
+    private Quaternion GetAttackHitboxRotation()
+    {
+        return IsFull3DMovement() ? transform.rotation : Quaternion.identity;
+    }
+
     private bool IsInsideAttackHitbox(Vector3 worldPosition)
     {
         Vector3 center = GetAttackHitboxCenter();
         Vector3 halfExtents = GetAttackHitboxHalfExtents();
-        Vector3 delta = worldPosition - center;
+        Vector3 delta = IsFull3DMovement()
+            ? Quaternion.Inverse(GetAttackHitboxRotation()) * (worldPosition - center)
+            : worldPosition - center;
 
         return Mathf.Abs(delta.x) <= halfExtents.x
             && Mathf.Abs(delta.y) <= halfExtents.y
@@ -734,6 +994,36 @@ public class EnemyAI : MonoBehaviour
         GetPatrolBounds(out float leftX, out float rightX);
         float patrolWidth = Mathf.Max(0.1f, rightX - leftX);
         return Mathf.Max(0.35f, patrolWidth * 0.2f);
+    }
+
+    private bool IsFull3DMovement()
+    {
+        return movementPlaneMode == EnemyMovementPlaneMode.Full3D;
+    }
+
+    private Vector3 GetPlanarDeltaTo(Vector3 worldPosition)
+    {
+        Vector3 delta = worldPosition - transform.position;
+        delta.y = 0f;
+        return delta;
+    }
+
+    private Vector3 GetPlanarDirectionTo(Vector3 worldPosition)
+    {
+        Vector3 delta = GetPlanarDeltaTo(worldPosition);
+        return delta.sqrMagnitude > 0.0001f ? delta.normalized : Vector3.zero;
+    }
+
+    private float GetPlanarDistanceTo(Vector3 worldPosition)
+    {
+        return GetPlanarDeltaTo(worldPosition).magnitude;
+    }
+
+    private float GetPlanarDistanceFromAnchor()
+    {
+        Vector3 delta = transform.position - spawnPosition;
+        delta.y = 0f;
+        return delta.magnitude;
     }
 
     private void OnDrawGizmosSelected()
