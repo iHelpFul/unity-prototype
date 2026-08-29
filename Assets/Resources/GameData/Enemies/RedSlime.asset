@@ -24,7 +24,7 @@ MonoBehaviour:
     animatedAttackDamageMultiplier: 1.35
     expRewardMultiplier: 1.75
     poiseThresholdMultiplier: 1.35
-  maxHP: 1500
+  maxHP: 100
   defense: 1
   avoidance: 1
   expReward: 1000
@@ -32,6 +32,11 @@ MonoBehaviour:
   contactDamage: 4
   animatedAttackDamage: 12
   hitReactionDamageThreshold: 0
+  enableHitKnockback: 0
+  hitKnockbackForce: 0.18
+  hitKnockbackDuration: 0.08
+  hitKnockbackDamageThreshold: 999999
+  hitReactionMovementLockDuration: 0.16
   cadenceProfile:
     attackType: 1
     moveSpeed: 2

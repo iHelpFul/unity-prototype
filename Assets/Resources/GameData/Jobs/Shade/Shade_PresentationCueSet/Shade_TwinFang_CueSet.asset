@@ -20,12 +20,12 @@ MonoBehaviour:
     delay: 0
     followTarget: 1
     playVfx: 1
-    vfxType: 15
+    vfxType: 20
     persistVfxUntilStopped: 1
     overrideVfxLifetime: 0
     vfxLifetime: 0
     playSfx: 1
-    sfxType: 11
+    sfxType: 19
     persistSfxUntilStopped: 1
   - phase: 4
     condition: 0
@@ -48,10 +48,10 @@ MonoBehaviour:
     delay: 0
     followTarget: 1
     playVfx: 1
-    vfxType: 14
+    vfxType: 22
     persistVfxUntilStopped: 1
     overrideVfxLifetime: 0
     vfxLifetime: 0
     playSfx: 1
-    sfxType: 13
-    persistSfxUntilStopped: 1
+    sfxType: 21
+    persistSfxUntilStopped: 0

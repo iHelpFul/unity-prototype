@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fa856fa0726af624e8f3c4baaa180a9e, type: 3}
-  m_Name: Novice_Release
+  m_Name: Novice_Release_Skill
   m_EditorClassIdentifier: Assembly-CSharp::PlayerSkillDefinition
   skillId: novice_release
   displayName: Novice Release

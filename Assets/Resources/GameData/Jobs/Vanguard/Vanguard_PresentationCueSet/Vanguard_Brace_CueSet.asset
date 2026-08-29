@@ -20,11 +20,10 @@ MonoBehaviour:
     delay: 0.1
     followTarget: 1
     playVfx: 1
-    vfxType: 16
-    followVfxRotation: 1
+    vfxType: 18
     persistVfxUntilStopped: 1
     overrideVfxLifetime: 0
     vfxLifetime: 0
     playSfx: 1
-    sfxType: 18
+    sfxType: 17
     persistSfxUntilStopped: 0

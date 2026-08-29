@@ -20,7 +20,7 @@ MonoBehaviour:
     delay: 0
     followTarget: 1
     playVfx: 1
-    vfxType: 9
+    vfxType: 12
     persistVfxUntilStopped: 1
     overrideVfxLifetime: 0
     vfxLifetime: 0
@@ -34,7 +34,7 @@ MonoBehaviour:
     delay: 0.2
     followTarget: 1
     playVfx: 1
-    vfxType: 10
+    vfxType: 13
     persistVfxUntilStopped: 1
     overrideVfxLifetime: 0
     vfxLifetime: 0
@@ -48,7 +48,7 @@ MonoBehaviour:
     delay: 0
     followTarget: 0
     playVfx: 1
-    vfxType: 11
+    vfxType: 17
     persistVfxUntilStopped: 0
     overrideVfxLifetime: 0
     vfxLifetime: 0

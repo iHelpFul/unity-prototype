@@ -186,83 +186,19 @@ MonoBehaviour:
   - {fileID: 4868127516569365137, guid: 74a483582d16c56429225a5048a4c5ff, type: 3}
   - {fileID: 9111688114782735545, guid: 25941e0c24f39f241a65ff294120df01, type: 3}
   - {fileID: 8869421672497430697, guid: a8872e3372a004e4493166c48740f6f2, type: 3}
-  - {fileID: 5425066865938875623, guid: 8eae8b2676fff5448a58eecc44ee3542, type: 3}
-  - {fileID: 2310525138355948377, guid: d9c6475469614b742aced48fdc4185bc, type: 3}
-  - {fileID: 2750496990681310840, guid: a6e9fe8784607f448ad1d476489d7403, type: 3}
-  - {fileID: 4841868917189266306, guid: 1f4fbe169a5773f4881b0c8e6bf56911, type: 3}
-  - {fileID: 6353967189881591359, guid: 754f4ebbae05e5e418bd0232f3c21ff3, type: 3}
-  - {fileID: 1356301932577151166, guid: f2283a441b22279429cc9f5603ef2576, type: 3}
-  - {fileID: 7636343320498181953, guid: b2390f6e10c53ae4183b351a53ebd648, type: 3}
-  - {fileID: 3903935146598037229, guid: 5254f089910865b48a338c324de31e47, type: 3}
-  - {fileID: 2868575816492033006, guid: cbe3da707b9cabc478005162b65029c9, type: 3}
-  - {fileID: 1774068285058485182, guid: f927b018a4181674c89c135c96199498, type: 3}
-  - {fileID: 8756210460019225027, guid: ad0a2c721a3b86446a5b66359f95a694, type: 3}
-  - {fileID: 434130312225154150, guid: c54ff95f30d6aa048b6df89776da6f81, type: 3}
-  - {fileID: 105330026338652716, guid: 7c1bea231975e054a92a9b80e45d3b58, type: 3}
-  - {fileID: 739742945298066874, guid: cde05d9f5b7e633449020ef5cfec66b8, type: 3}
-  - {fileID: 8595455460010666509, guid: 9f35bb037271255449d137bbefc7cc2f, type: 3}
-  - {fileID: 94321623115088943, guid: 8f7b87e4d8348bf4c9bc22efd40d3bd9, type: 3}
-  - {fileID: 5590973939866936017, guid: 2163328e6456868469b74287ea4e339e, type: 3}
-  - {fileID: 3649229877698843150, guid: 5976be59f83edea4c9b9274436bde9c4, type: 3}
-  - {fileID: 3226541256292288411, guid: df9973e33a4a6f24ea54a5359153963f, type: 3}
-  - {fileID: 4982286294080638875, guid: 8d421abd83bb4bc47b209726239e9c7b, type: 3}
-  - {fileID: 8856873311493829150, guid: 7d6ebfc3045697f4289b954ac62804fe, type: 3}
-  - {fileID: 1390206143915040777, guid: 97e23d8104e4d0746b4b513ee63bfe72, type: 3}
-  - {fileID: 6395295542640705531, guid: edfa1a489ef1f1641a00b3b4217d1c4c, type: 3}
-  - {fileID: 8395720077212715571, guid: 234d03380e5c10c4eba086aaec1d842f, type: 3}
-  - {fileID: 2931167018517034013, guid: 336143ff3f839614da232224f660b439, type: 3}
-  - {fileID: 7528927226727878536, guid: bc77bd86992935642b31ddfb1f8a4b6d, type: 3}
-  - {fileID: 220097991182719356, guid: 4b33d2fac6c4cc7479d21adbda6d7d71, type: 3}
-  - {fileID: 722684311008571646, guid: 89e437b6e465c0f4d8366ec029717fd0, type: 3}
-  - {fileID: 3991481632202286074, guid: c338b7441b599be438c76371e81f90c2, type: 3}
-  - {fileID: 4886009300139219777, guid: 54a133fc9d037d846b9c48a0993410d1, type: 3}
-  - {fileID: 7497950302590104858, guid: 625fb8d057d097e4d9ff28bc45be6ddb, type: 3}
-  - {fileID: 4355690304508323321, guid: c06b0fd77cc73c844a198c5e0a195839, type: 3}
-  - {fileID: 8143105461283912891, guid: 358c3d68e6b27b74fa2c3e4d8d7ee0a9, type: 3}
-  - {fileID: 3166236655893097903, guid: 09ce036e92b792c4fabf0b1ee030930c, type: 3}
-  - {fileID: 7844403475499548299, guid: 488eb0bcd215d0b478f31cb67b433922, type: 3}
-  - {fileID: 8049383162833566307, guid: 4c915373f23723442a93cd7aaf005845, type: 3}
-  - {fileID: 651702413861120284, guid: 5bedd0ba83fa6794792420e2e4bf9a99, type: 3}
-  - {fileID: 7609749488687818742, guid: e2fa035dc0f1afd45bedd26d67456f4f, type: 3}
-  - {fileID: 6425027286517928612, guid: 5ac3579ceaa53584f93a5b6668179718, type: 3}
-  - {fileID: 6239404448315390599, guid: 15c2778d0c846db4f9adb54eac6765e9, type: 3}
-  - {fileID: 8877521295723036827, guid: 93aef4e11dc29414086b131ca3c20d83, type: 3}
-  - {fileID: 3895032235937320273, guid: 4460277cd47ec2a46a38dff3153dbd60, type: 3}
-  - {fileID: 5080015787577591283, guid: 3354d66d547cbeb4383d1dc825d13936, type: 3}
-  - {fileID: 4514081185173831483, guid: 90777122c7015c840add4b8c927bd817, type: 3}
-  - {fileID: 140443969247494201, guid: 13cb8f16a1b87dd44aa3e23c7b230869, type: 3}
-  - {fileID: 3981671617361734351, guid: 7fb4d10309d75f249928743200fe4199, type: 3}
-  - {fileID: 628271824928984231, guid: a4c08b7c12595554786c4a398d61456e, type: 3}
-  - {fileID: 6279718738202952194, guid: bc5cf9bd22b4cb543a8cc8c6a1916cc5, type: 3}
-  - {fileID: 1495969887051431448, guid: 728392f6a0e3b454c8e088d323e51e63, type: 3}
-  - {fileID: 3974031967245017539, guid: 71b80585ed90e5c44bbcec6638a67e7c, type: 3}
-  - {fileID: 3067526908712663840, guid: ff8c61923f9872e42b1926279cce7e63, type: 3}
-  - {fileID: 2709832842429985344, guid: b10f8b5e6240a62459299692e2485b07, type: 3}
-  - {fileID: 4974879800727455347, guid: ea517ecade2f33e42a4b6e67d68ed9d7, type: 3}
-  - {fileID: 2629135200099949490, guid: 661af8881e487d34d8c68d444a7fe78a, type: 3}
-  - {fileID: 5047555325350538659, guid: 5f3ff5b496965fc4ba76ce47651b46e5, type: 3}
-  - {fileID: 8654252156831664080, guid: b9519e0da7bf79b4ebcf3234d09536bc, type: 3}
-  - {fileID: 1013649843093526342, guid: 71ce79f92419efd44a1d0b26a1e48ec1, type: 3}
-  - {fileID: 2170944650872798877, guid: c6e3f70192ec43d49976c70e58db6d32, type: 3}
-  - {fileID: 7842932020647102325, guid: e12920360667db5418d6bb36c92f15e0, type: 3}
-  - {fileID: 1039854219688072515, guid: 2d5cb638a25076a418f58244e03011a6, type: 3}
-  - {fileID: 6237651724656642528, guid: 833f7b844cd130d448a28e5b7b9aa9e3, type: 3}
-  - {fileID: 8013782994615946045, guid: 2c13c98788a8b1e48b433b06b56e35fd, type: 3}
-  - {fileID: 9195091606224646356, guid: 7844195834dd1b34187ecc1618164b2b, type: 3}
-  - {fileID: 4204037294527878050, guid: ba3ba9fc1bd440042a7b4bea1f214807, type: 3}
   mapName: Level 0
   mapPosition: {x: 0, y: 0, z: 0}
-  mapSize: 40
-  holesCount: 0
-  holesSizes: 0
-  heightsCount: 5
-  heightsSizes: 1
+  mapSize: 15
+  holesCount: 1
+  holesSizes: 1
+  heightsCount: 3
+  heightsSizes: 2
   maxHeight: 3
   heightSmoothing: 0
   generateAsCorridor: 0
-  corridorWidth: 7
+  corridorWidth: 2
   tileSpacing: 2
-  additionalFilling: 2
+  additionalFilling: 0
   treesPrefabs:
   - {fileID: 1687494914108153508, guid: e210ebea04bce84469ad6f1288cd01dd, type: 3}
   - {fileID: 8847317597837719128, guid: b6aa43770f0b53144918294e619831a1, type: 3}
@@ -381,7 +317,7 @@ MonoBehaviour:
   - {fileID: 8960825593483226978, guid: 4ae9b966eedeace49a0dcddac3b18f2f, type: 3}
   - {fileID: 2488216250123182063, guid: cd1a252ca0f629c40a5f78b20aa15858, type: 3}
   - {fileID: 8524526965597934329, guid: 3c4262210b46e7546a8a81b410fea959, type: 3}
-  contentOnMap: 0
+  contentOnMap: 1
   poiCount: 3
   startTile: {fileID: 2947821936702218048, guid: 1f7e3309b6328bc46bcd7b9c0dcb1959, type: 3}
   endTile: {fileID: 7152912618661380596, guid: 8fdeb355f24700647be0f1a3347d4de8, type: 3}
@@ -405,12 +341,12 @@ MonoBehaviour:
   roadBridges:
   - {fileID: 6883316995979822405, guid: 5b3b49edb90f9374786d8dfa6930e8d1, type: 3}
   - {fileID: 4297767803720012062, guid: cd176a92d28dc5248aff500ea38ddff0, type: 3}
-  ladders: 0
+  ladders: 1
   laddersChance: 50
   laddersTiles:
   - {fileID: 3585722098787000442, guid: eb2de1257f7541e4b93900cde54f2586, type: 3}
   - {fileID: 2516388841491927868, guid: b2de37c43e3209146a695d6c46af2243, type: 3}
-  TapToGenerate: 0
+  TapToGenerate: 1
 --- !u!4 &298203301
 Transform:
   m_ObjectHideFlags: 0
@@ -769,6 +705,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1465501465}
   - component: {fileID: 1465501464}
+  - component: {fileID: 1465501466}
   m_Layer: 0
   m_Name: Directional Light
   m_TagString: Untagged
@@ -856,6 +793,35 @@ Transform:
   m_Children: []
   m_Father: {fileID: 932034850}
   m_LocalEulerAnglesHint: {x: 48.85, y: 80, z: -7.1840005}
+--- !u!114 &1465501466
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1465501463}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 474bcb49853aa07438625e644c072ee6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.UniversalAdditionalLightData
+  m_UsePipelineSettings: 1
+  m_AdditionalLightsShadowResolutionTier: 2
+  m_CustomShadowLayers: 0
+  m_LightCookieSize: {x: 1, y: 1}
+  m_LightCookieOffset: {x: 0, y: 0}
+  m_SoftShadowQuality: 0
+  m_RenderingLayersMask:
+    serializedVersion: 0
+    m_Bits: 1
+  m_ShadowRenderingLayersMask:
+    serializedVersion: 0
+    m_Bits: 1
+  m_Version: 4
+  m_LightLayerMask: 1
+  m_ShadowLayerMask: 1
+  m_RenderingLayers: 1
+  m_ShadowRenderingLayers: 1
 --- !u!1 &1728155582
 GameObject:
   m_ObjectHideFlags: 0

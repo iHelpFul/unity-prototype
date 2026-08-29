@@ -24,8 +24,8 @@ MonoBehaviour:
     animatedAttackDamageMultiplier: 1.35
     expRewardMultiplier: 1.75
     poiseThresholdMultiplier: 1.35
-  maxHP: 1200
-  defense: 40
+  maxHP: 45
+  defense: 1
   avoidance: 0
   expReward: 14
   gaugeReward: 0.1

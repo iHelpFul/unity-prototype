@@ -5134,7 +5134,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8910aa20be8793d4cae65075df956968, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameBootstrap
-  defaultCharacterStartMapId: Map_00
+  defaultCharacterStartMapId: Map_01
   defaultCharacterStartSpawnId: from_left
   runtimePrefabCatalog: {fileID: 11400000, guid: 32ea12f5c93fa194b90d66c66636e13b, type: 2}
 --- !u!4 &878859256

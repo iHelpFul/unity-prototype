@@ -20,12 +20,12 @@ MonoBehaviour:
     delay: 0
     followTarget: 1
     playVfx: 1
-    vfxType: 13
+    vfxType: 15
     persistVfxUntilStopped: 1
     overrideVfxLifetime: 0
     vfxLifetime: 0
     playSfx: 1
-    sfxType: 15
+    sfxType: 14
     persistSfxUntilStopped: 1
   - phase: 4
     condition: 0
@@ -34,12 +34,12 @@ MonoBehaviour:
     delay: 0
     followTarget: 1
     playVfx: 1
-    vfxType: 14
+    vfxType: 16
     persistVfxUntilStopped: 1
     overrideVfxLifetime: 0
     vfxLifetime: 0
     playSfx: 1
-    sfxType: 16
+    sfxType: 15
     persistSfxUntilStopped: 0
   - phase: 7
     condition: 1
@@ -48,10 +48,10 @@ MonoBehaviour:
     delay: 0
     followTarget: 0
     playVfx: 1
-    vfxType: 15
+    vfxType: 17
     persistVfxUntilStopped: 0
     overrideVfxLifetime: 0
     vfxLifetime: 0
     playSfx: 1
-    sfxType: 17
+    sfxType: 16
     persistSfxUntilStopped: 0

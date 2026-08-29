@@ -22,6 +22,14 @@ MonoBehaviour:
     UseFacingYaw: 0
     RightFacingYaw: 0
     LeftFacingYaw: 180
+  - Type: 1
+    Prefabs: []
+    MinScale: 1
+    MaxScale: 1
+    DefaultLifetime: 3
+    UseFacingYaw: 0
+    RightFacingYaw: 0
+    LeftFacingYaw: 180
   - Type: 4
     Prefabs:
     - {fileID: 980645872172274450, guid: 3bc3fa6417d9630448519104a79b3483, type: 3}
@@ -58,18 +66,27 @@ MonoBehaviour:
     UseFacingYaw: 0
     RightFacingYaw: 0
     LeftFacingYaw: 180
-  - Type: 9
+  - Type: 8
     Prefabs:
     - {fileID: 3449915806975676988, guid: 073c6927915e996478926904e5d348a2, type: 3}
-    MinScale: 0.8
+    MinScale: 1
     MaxScale: 1
     DefaultLifetime: 3
-    UseFacingYaw: 0
+    UseFacingYaw: 1
+    RightFacingYaw: 0
+    LeftFacingYaw: 0
+  - Type: 9
+    Prefabs:
+    - {fileID: 8508855284383177433, guid: 21a0afa6b6131c741a1a43a36e9db684, type: 3}
+    MinScale: 0.3
+    MaxScale: 0.3
+    DefaultLifetime: 3
+    UseFacingYaw: 1
     RightFacingYaw: 0
     LeftFacingYaw: 180
   - Type: 10
     Prefabs:
-    - {fileID: 6011612589751780557, guid: 310b493e67d204040a58de5b7ce5d583, type: 3}
+    - {fileID: 6187511633303672642, guid: 329a906302961f245b865d2cb1e7ecf3, type: 3}
     MinScale: 0.8
     MaxScale: 0.8
     DefaultLifetime: 3
@@ -78,20 +95,29 @@ MonoBehaviour:
     LeftFacingYaw: 180
   - Type: 11
     Prefabs:
-    - {fileID: 7963070265621199737, guid: d8b3feef50c293240b1ef25d86eb2da7, type: 3}
+    - {fileID: 1792576064889412418, guid: abd3c7787f3164441b6eba1a421793f9, type: 3}
     MinScale: 0.5
     MaxScale: 0.55
     DefaultLifetime: 3
     UseFacingYaw: 0
     RightFacingYaw: 0
     LeftFacingYaw: 180
-  - Type: 13
+  - Type: 12
     Prefabs:
     - {fileID: 3449915806975676988, guid: 073c6927915e996478926904e5d348a2, type: 3}
     MinScale: 1
     MaxScale: 1
     DefaultLifetime: 3
-    UseFacingYaw: 0
+    UseFacingYaw: 1
+    RightFacingYaw: 0
+    LeftFacingYaw: 0
+  - Type: 13
+    Prefabs:
+    - {fileID: 6011612589751780557, guid: 310b493e67d204040a58de5b7ce5d583, type: 3}
+    MinScale: 1
+    MaxScale: 1
+    DefaultLifetime: 3
+    UseFacingYaw: 1
     RightFacingYaw: 0
     LeftFacingYaw: 180
   - Type: 14
@@ -114,19 +140,96 @@ MonoBehaviour:
     LeftFacingYaw: 0
   - Type: 16
     Prefabs:
-    - {fileID: 3952708904848852155, guid: 29b94d1008ca8664ab0a5f36296d442e, type: 3}
-    MinScale: 0.5
-    MaxScale: 0.55
+    - {fileID: 4597925975597660890, guid: 525129ba94e0e9b48b8cddca7e08b0f0, type: 3}
+    MinScale: 0.3
+    MaxScale: 0.3
     DefaultLifetime: 3
-    UseFacingYaw: 0
+    UseFacingYaw: 1
     RightFacingYaw: 0
     LeftFacingYaw: 180
-  - Type: 21
+  - Type: 17
     Prefabs:
-    - {fileID: 1591741557984491361, guid: ce422f6acb53b1d46b650e2311d6261f, type: 3}
+    - {fileID: 7963070265621199737, guid: d8b3feef50c293240b1ef25d86eb2da7, type: 3}
     MinScale: 0.3
     MaxScale: 0.3
     DefaultLifetime: 3
     UseFacingYaw: 1
     RightFacingYaw: 0
     LeftFacingYaw: 0
+  - Type: 18
+    Prefabs:
+    - {fileID: 3952708904848852155, guid: 29b94d1008ca8664ab0a5f36296d442e, type: 3}
+    MinScale: 0.6
+    MaxScale: 0.6
+    DefaultLifetime: 3
+    UseFacingYaw: 1
+    RightFacingYaw: 0
+    LeftFacingYaw: 0
+  - Type: 19
+    Prefabs:
+    - {fileID: 1591741557984491361, guid: ce422f6acb53b1d46b650e2311d6261f, type: 3}
+    MinScale: 1
+    MaxScale: 1
+    DefaultLifetime: 3
+    UseFacingYaw: 1
+    RightFacingYaw: 0
+    LeftFacingYaw: 0
+  - Type: 20
+    Prefabs:
+    - {fileID: 3449915806975676988, guid: 073c6927915e996478926904e5d348a2, type: 3}
+    MinScale: 1
+    MaxScale: 1
+    DefaultLifetime: 3
+    UseFacingYaw: 1
+    RightFacingYaw: 0
+    LeftFacingYaw: 0
+  - Type: 21
+    Prefabs:
+    - {fileID: 1591741557984491361, guid: ce422f6acb53b1d46b650e2311d6261f, type: 3}
+    MinScale: 0.5
+    MaxScale: 0.55
+    DefaultLifetime: 3
+    UseFacingYaw: 1
+    RightFacingYaw: 0
+    LeftFacingYaw: 180
+  - Type: 22
+    Prefabs:
+    - {fileID: 3678807393505812906, guid: b07cdccfaf793ab46ac496f67be02aa4, type: 3}
+    MinScale: 0.3
+    MaxScale: 0.3
+    DefaultLifetime: 3
+    UseFacingYaw: 0
+    RightFacingYaw: 0
+    LeftFacingYaw: 180
+  - Type: 23
+    Prefabs: []
+    MinScale: 1
+    MaxScale: 1
+    DefaultLifetime: 3
+    UseFacingYaw: 0
+    RightFacingYaw: 0
+    LeftFacingYaw: 180
+  - Type: 24
+    Prefabs: []
+    MinScale: 1
+    MaxScale: 1
+    DefaultLifetime: 3
+    UseFacingYaw: 0
+    RightFacingYaw: 0
+    LeftFacingYaw: 180
+  - Type: 25
+    Prefabs: []
+    MinScale: 1
+    MaxScale: 1
+    DefaultLifetime: 3
+    UseFacingYaw: 0
+    RightFacingYaw: 0
+    LeftFacingYaw: 180
+  - Type: 26
+    Prefabs: []
+    MinScale: 1
+    MaxScale: 1
+    DefaultLifetime: 3
+    UseFacingYaw: 0
+    RightFacingYaw: 0
+    LeftFacingYaw: 180

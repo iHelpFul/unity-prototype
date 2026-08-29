@@ -20,21 +20,21 @@ MonoBehaviour:
     delay: 0
     followTarget: 1
     playVfx: 1
-    vfxType: 5
+    vfxType: 8
     persistVfxUntilStopped: 1
     overrideVfxLifetime: 0
     vfxLifetime: 3
     playSfx: 1
-    sfxType: 6
-    persistSfxUntilStopped: 0
+    sfxType: 7
+    persistSfxUntilStopped: 1
   - phase: 4
     condition: 0
     spawnTarget: 1
     positionOffset: {x: 2.5, y: 0.5, z: 0}
-    delay: 0.2
-    followTarget: 0
+    delay: 0
+    followTarget: 1
     playVfx: 1
-    vfxType: 6
+    vfxType: 9
     persistVfxUntilStopped: 1
     overrideVfxLifetime: 0
     vfxLifetime: 3
@@ -48,7 +48,7 @@ MonoBehaviour:
     delay: 0
     followTarget: 0
     playVfx: 1
-    vfxType: 7
+    vfxType: 10
     persistVfxUntilStopped: 0
     overrideVfxLifetime: 0
     vfxLifetime: 3

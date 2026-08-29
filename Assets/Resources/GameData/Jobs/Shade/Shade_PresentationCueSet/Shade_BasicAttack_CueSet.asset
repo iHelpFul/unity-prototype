@@ -18,9 +18,9 @@ MonoBehaviour:
     spawnTarget: 4
     positionOffset: {x: 0, y: 1, z: 0}
     delay: 0
-    followTarget: 0
-    playVfx: 0
-    vfxType: 19
+    followTarget: 1
+    playVfx: 1
+    vfxType: 21
     persistVfxUntilStopped: 0
     overrideVfxLifetime: 0
     vfxLifetime: 3
@@ -32,12 +32,12 @@ MonoBehaviour:
     spawnTarget: 4
     positionOffset: {x: 0, y: 1, z: 0}
     delay: 0
-    followTarget: 0
+    followTarget: 1
     playVfx: 1
-    vfxType: 19
+    vfxType: 22
     persistVfxUntilStopped: 0
     overrideVfxLifetime: 0
     vfxLifetime: 3
     playSfx: 1
-    sfxType: 18
+    sfxType: 21
     persistSfxUntilStopped: 0
